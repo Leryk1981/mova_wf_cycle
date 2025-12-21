@@ -1,0 +1,20 @@
+{
+  "hypothesis_id": "flashslot_dentist_A",
+  "tenant": "bright_smiles_care",
+  "scenario": "Open morning cleaning slot offered with standard price to loyalty patients",
+  "offer": {
+    "offer_id": "flashslot-20251222-A",
+    "service_type": "dentist_cleaning",
+    "starts_at": "2025-12-22T08:30:00Z",
+    "duration_min": 45,
+    "location_id": "chair_1",
+    "price": 180,
+    "currency": "USD",
+    "channel": "sms",
+    "audience_filter": "segment:loyalty_cleanings",
+    "expires_at": "2025-12-21T22:30:00Z",
+    "notes": "Morning cleaning slot with routine whitening add-on upsell"
+  },
+  "audience_hint": "Patients with recurring cleanings every 6 months",
+  "success_metric": "Slot rebooked before close of business"
+}
