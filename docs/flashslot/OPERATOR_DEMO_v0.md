@@ -30,4 +30,4 @@ npm run flashslot:experiment -- --set packs/flashslot_v0/examples/hypothesis_set
 - `experiment_summary.json` — сводка по каждому A/B/C и победителю.
 - `winner_pack/` — скопированные offer/request/result/stdout/stderr/evidence для победителя.
 - `attempts/<hypothesis_id>/` — оффер, входной запрос, результат и логи для каждой гипотезы.
-- Смоук для CI без Inngest: `npm run smoke:flashslot:experiment` (использует закоммиченный набор стоматологии, noop, dry-run).
+- Смоук для CI без Inngest: `npm run smoke:flashslot:experiment` (использует закоммиченные наборы стоматологии и барбершопа: `hypothesis_set_001_dentist_abc.json`, `hypothesis_set_002_barbershop_abc.json`; noop, dry-run).
