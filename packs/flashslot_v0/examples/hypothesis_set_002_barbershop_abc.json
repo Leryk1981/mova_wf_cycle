@@ -1,0 +1,17 @@
+{
+  "id": "flashslot_barbershop_set_002",
+  "hypotheses": [
+    {
+      "id": "A",
+      "offer_path": "packs/flashslot_v0/examples/hypotheses/hyp_A_barbershop.json"
+    },
+    {
+      "id": "B",
+      "offer_path": "packs/flashslot_v0/examples/hypotheses/hyp_B_barbershop.json"
+    },
+    {
+      "id": "C",
+      "offer_path": "packs/flashslot_v0/examples/hypotheses/hyp_C_barbershop.json"
+    }
+  ]
+}

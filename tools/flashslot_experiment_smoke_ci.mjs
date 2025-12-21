@@ -7,7 +7,10 @@ import { spawn } from "node:child_process";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.join(__dirname, "..");
 const cliScript = path.join(repoRoot, "tools", "flashslot_experiment_cli.mjs");
-const setPath = path.join(repoRoot, "packs", "flashslot_v0", "examples", "hypothesis_set_001_dentist_abc.json");
+const setPaths = [
+  path.join(repoRoot, "packs", "flashslot_v0", "examples", "hypothesis_set_001_dentist_abc.json"),
+  path.join(repoRoot, "packs", "flashslot_v0", "examples", "hypothesis_set_002_barbershop_abc.json"),
+];
 const runsRoot = path.join(repoRoot, "lab", "flashslot_runs");
 
 function runNode(args) {
@@ -34,20 +37,15 @@ function expectFile(filePath) {
   }
 }
 
-async function main() {
-  fs.mkdirSync(runsRoot, { recursive: true });
-  const runId = `${Date.now()}_experiment_smoke`;
-  const outDir = path.join(runsRoot, runId, "flashslot_experiment");
-  await runNode([cliScript, "--set", setPath, "--driver", "noop", "--dry-run", "--out", outDir]);
-
+async function validateExperiment(setPath, outDir) {
   const summaryPath = path.join(outDir, "experiment_summary.json");
   expectFile(summaryPath);
   const summary = JSON.parse(fs.readFileSync(summaryPath, "utf8"));
   if (summary.ok !== true) {
-    throw new Error("FlashSlot experiment smoke failed: summary.ok !== true");
+    throw new Error(`[${path.basename(setPath)}] FlashSlot experiment smoke failed: summary.ok !== true`);
   }
   if (!Array.isArray(summary.attempts) || summary.attempts.length === 0) {
-    throw new Error("FlashSlot experiment smoke failed: no attempts recorded");
+    throw new Error(`[${path.basename(setPath)}] FlashSlot experiment smoke failed: no attempts recorded`);
   }
 
   for (const attempt of summary.attempts) {
@@ -60,15 +58,34 @@ async function main() {
   const winnerPackDir = summary.winner_pack_dir
     ? path.resolve(repoRoot, summary.winner_pack_dir)
     : path.join(outDir, "winner_pack");
+  if (!fs.existsSync(winnerPackDir) || !fs.statSync(winnerPackDir).isDirectory()) {
+    throw new Error(`[${path.basename(setPath)}] FlashSlot experiment smoke failed: missing winner_pack directory`);
+  }
+  const winnerEntries = fs.readdirSync(winnerPackDir);
+  if (winnerEntries.length === 0) {
+    throw new Error(`[${path.basename(setPath)}] FlashSlot experiment smoke failed: winner_pack is empty`);
+  }
   expectFile(path.join(winnerPackDir, "offer.json"));
   expectFile(path.join(winnerPackDir, "result.json"));
 
   const winnerResult = JSON.parse(fs.readFileSync(path.join(winnerPackDir, "result.json"), "utf8"));
   if (winnerResult.ok !== true) {
-    throw new Error("FlashSlot experiment smoke failed: winner result not ok");
+    throw new Error(`[${path.basename(setPath)}] FlashSlot experiment smoke failed: winner result not ok`);
   }
 
-  console.log(`[flashslot_experiment_smoke_ci] PASS: ${outDir}`);
+  console.log(`[flashslot_experiment_smoke_ci] PASS: ${path.basename(setPath)} -> ${outDir}`);
+}
+
+async function main() {
+  fs.mkdirSync(runsRoot, { recursive: true });
+  const runId = `${Date.now()}_experiment_smoke`;
+
+  for (const setPath of setPaths) {
+    const setLabel = path.basename(setPath, ".json");
+    const outDir = path.join(runsRoot, `${runId}_${setLabel}`, "flashslot_experiment");
+    await runNode([cliScript, "--set", setPath, "--driver", "noop", "--dry-run", "--out", outDir]);
+    await validateExperiment(setPath, outDir);
+  }
 }
 
 try {

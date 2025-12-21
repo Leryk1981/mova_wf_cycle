@@ -1,0 +1,20 @@
+{
+  "hypothesis_id": "flashslot_barbershop_A",
+  "tenant": "uptown_blades_grooming",
+  "scenario": "Prime fade slot cancelled same morning; send flash SMS to VIP waitlist",
+  "offer": {
+    "offer_id": "flashslot-20251222-A-barber",
+    "service_type": "barbershop_skin_fade",
+    "starts_at": "2025-12-22T10:00:00Z",
+    "duration_min": 45,
+    "location_id": "chair_1",
+    "price": 55,
+    "currency": "USD",
+    "channel": "sms",
+    "audience_filter": "segment:vip_waitlist_fades",
+    "expires_at": "2025-12-22T08:30:00Z",
+    "notes": "Same barber, hot towel finish included; offer to clients who asked for earlier reschedule"
+  },
+  "audience_hint": "VIP clients on waitlist with recent fade cancellations",
+  "success_metric": "Slot confirmed before 09:30 local"
+}
