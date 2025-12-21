@@ -25,7 +25,8 @@ export default function wfCycleSmoke(inngest) {
     { event: "lab/wf_cycle.smoke" },
     async ({ event, step }) => {
       const repoRoot = resolve(process.cwd(), "..", "..");
-      const runId = `${Date.now()}_${event.id || "no_event_id"}`;
+      const eventTag = event?.id || "no_event_id";
+      const runId = event?.id ? String(event.id) : `${Date.now()}_${eventTag}`;
       const outDir = join(repoRoot, "lab", "inngest_runs", runId);
       mkdirSync(outDir, { recursive: true });
 
