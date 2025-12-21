@@ -1,0 +1,20 @@
+{
+  "hypothesis_id": "flashslot_dentist_001",
+  "tenant": "bright_smiles_care",
+  "scenario": "Crown prep cancelled 18h before appointment; offer slot to loyalty patients",
+  "offer": {
+    "offer_id": "flashslot-20251222-001",
+    "service_type": "dentist_crown_prep",
+    "starts_at": "2025-12-22T09:00:00Z",
+    "duration_min": 30,
+    "location_id": "chair_2",
+    "price": 450,
+    "currency": "USD",
+    "channel": "sms",
+    "audience_filter": "segment:existing_patients",
+    "expires_at": "2025-12-21T22:00:00Z",
+    "notes": "20% off crown prep tomorrow morning; remind about sedation availability"
+  },
+  "audience_hint": "Existing patients who had consults in last 6 months",
+  "success_metric": "Slot rebooked before 22:00 local"
+}

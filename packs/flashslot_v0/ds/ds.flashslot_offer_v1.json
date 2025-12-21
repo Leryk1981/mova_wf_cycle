@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mova.dev/packs/flashslot_v0/ds.flashslot_offer_v1.json",
+  "title": "FlashSlot Offer v1",
+  "description": "Time-bound offer generated when a scheduled slot is freed up and needs rapid backfill.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "offer_id",
+    "service_type",
+    "starts_at",
+    "duration_min",
+    "location_id",
+    "price",
+    "currency",
+    "channel",
+    "audience_filter",
+    "expires_at"
+  ],
+  "properties": {
+    "offer_id": {
+      "type": "string",
+      "description": "Identifier of the flash slot offer (idempotent key)."
+    },
+    "service_type": {
+      "type": "string",
+      "description": "Type of service being offered (e.g. dentist_cleaning, tasting_menu)."
+    },
+    "starts_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Start time of the freed slot (ISO 8601)."
+    },
+    "duration_min": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Slot duration in minutes."
+    },
+    "location_id": {
+      "type": "string",
+      "description": "Location / chair / station identifier."
+    },
+    "price": {
+      "type": "number",
+      "description": "Offered price for the slot (before discounts)."
+    },
+    "currency": {
+      "type": "string",
+      "description": "Three-letter currency code (ISO 4217)."
+    },
+    "channel": {
+      "type": "string",
+      "description": "Channel where the offer will be pushed (sms, email, app_push, etc.)."
+    },
+    "audience_filter": {
+      "type": "string",
+      "description": "Query/filter describing who should receive the offer (segment id, audience rule)."
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this offer should be considered stale."
+    },
+    "notes": {
+      "type": "string",
+      "description": "Additional context for agents/operators.",
+      "default": ""
+    },
+    "meta": {
+      "type": "object",
+      "description": "Implementation-specific metadata (creator, tenant, labels).",
+      "additionalProperties": true
+    },
+    "ext": {
+      "type": "object",
+      "description": "Extension space for downstream systems (analytics, routing hints).",
+      "additionalProperties": true
+    }
+  }
+}
