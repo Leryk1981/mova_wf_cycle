@@ -34,3 +34,5 @@ executors/cloudflare_worker_gateway_v0/worker/wrangler.dev.jsonc
 /pults/**/node_modules/
 /pults/**/.server_pid
 /pults/**/.server_pid_*
+lab/flashslot_runs/
+
