@@ -165,7 +165,7 @@ async function waitForFile(filePath, label, timeoutMs) {
 }
 
 async function waitForArtifacts(runId, options = {}) {
-  const { expectFull = false, expectExperiment = false, timeoutMs = 300000 } = options;
+  const { expectFull = false, expectExperiment = false, expectFlashslot = false, timeoutMs = 300000 } = options;
   const baseDir = path.join(labRunsDir, runId);
   await waitForFile(path.join(baseDir, "result.json"), `result for ${runId}`, timeoutMs);
   if (expectFull) {
@@ -179,6 +179,13 @@ async function waitForArtifacts(runId, options = {}) {
     await waitForFile(
       path.join(baseDir, "wf_cycle_experiment", "experiment_summary.json"),
       `wf_cycle_experiment summary for ${runId}`,
+      timeoutMs
+    );
+  }
+  if (expectFlashslot) {
+    await waitForFile(
+      path.join(baseDir, "flashslot_publish", "result.json"),
+      `flashslot publish result for ${runId}`,
       timeoutMs
     );
   }
@@ -206,8 +213,14 @@ async function main() {
     timeoutMs: 900000
   });
 
+  const flashslotEventId = await triggerEvent("lab/flashslot.publish");
+  const flashslotDir = await waitForArtifacts(flashslotEventId, {
+    expectFlashslot: true,
+    timeoutMs: 600000
+  });
+
   console.log(
-    `[pult_inngest_smoke_ci] PASS: smoke=${smokeDir}, full=${fullDir}, experiment=${experimentDir}`
+    `[pult_inngest_smoke_ci] PASS: smoke=${smokeDir}, full=${fullDir}, experiment=${experimentDir}, flashslot=${flashslotDir}`
   );
 }
 
