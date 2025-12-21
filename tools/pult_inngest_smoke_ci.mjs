@@ -27,7 +27,6 @@ if (missingDeps.length > 0) {
 
 const processes = new Set();
 let shuttingDown = false;
-const killStrayEnabled = process.env.PULT_SMOKE_KILL_STRAY === "1";
 
 function startProcess(command, args, options = {}) {
   console.log(`[pult_inngest_smoke_ci] starting: ${command} ${args.join(" ")}`);
@@ -71,22 +70,6 @@ function startShellCommand(command, options = {}) {
   return child;
 }
 
-async function runDetached(command, args) {
-  return new Promise((resolve) => {
-    const child = spawn(command, args, { stdio: "ignore", shell: false });
-    child.on("exit", () => resolve());
-    child.on("error", () => resolve());
-  });
-}
-
-async function killStrayInngestProcesses() {
-  if (process.platform === "win32") {
-    await runDetached("taskkill", ["/IM", "inngest.exe", "/F"]);
-  } else {
-    await runDetached("pkill", ["-f", "inngest"]);
-  }
-}
-
 async function cleanup() {
   shuttingDown = true;
   for (const child of processes) {
@@ -99,12 +82,6 @@ async function cleanup() {
     }
   }
   await sleep(1000);
-  if (killStrayEnabled) {
-    console.log("[pult_inngest_smoke_ci] killStray enabled: terminating running inngest processes");
-    await killStrayInngestProcesses();
-  } else {
-    console.log("[pult_inngest_smoke_ci] skip killStray (set PULT_SMOKE_KILL_STRAY=1 to enable)");
-  }
 }
 
 process.on("SIGINT", async () => {
@@ -204,7 +181,9 @@ async function main() {
 
   const nodeBinary = process.execPath;
   startProcess(nodeBinary, ["server.mjs"], { cwd: pultDir });
-  startShellCommand("npx inngest-cli@latest dev -u http://localhost:3000/api/inngest", { cwd: pultDir });
+  startProcess("npx", ["--no-install", "inngest-cli", "dev", "-u", "http://localhost:3000/api/inngest"], {
+    cwd: pultDir
+  });
 
   await waitForHealth();
 
