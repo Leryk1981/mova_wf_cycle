@@ -1,8 +1,10 @@
 #!/usr/bin/env node
 
+import { spawn } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { setTimeout as sleep } from "node:timers/promises";
 
 import flashslotPublish from "../pults/inngest_wf_cycle_v0/src/inngest/flashslot_publish.mjs";
 import wfCycleExperiment from "../pults/inngest_wf_cycle_v0/src/inngest/wf_cycle_experiment.mjs";
@@ -56,6 +58,58 @@ async function runHandler(factory, label) {
   const result = await handler({ event: { id: eventId }, step: createStepAdapter() });
   const runId = result?.runId ?? eventId;
   return { result, runId, runDir: resolveRunDir(runId) };
+}
+
+function startProcess(command, args, options = {}) {
+  console.log(`[pult_inngest_smoke_ci] starting: ${command} ${args.join(" ")}`);
+  let child;
+  try {
+    child = spawn(command, args, {
+      stdio: "inherit",
+      shell: false,
+      ...options
+    });
+  } catch (err) {
+    throw new Error(`failed to spawn ${command}: ${err.message}`);
+  }
+  processes.add(child);
+  child.on("exit", (code, signal) => {
+    if (!shuttingDown && (code ?? 0) !== 0) {
+      console.warn(`[pult_inngest_smoke_ci] process ${command} exited with code=${code} signal=${signal}`);
+    }
+  });
+  return child;
+}
+
+function startShellCommand(command, options = {}) {
+  console.log(`[pult_inngest_smoke_ci] starting shell: ${command}`);
+  let child;
+  try {
+    child = spawn(command, {
+      stdio: "inherit",
+      shell: true,
+      ...options
+    });
+  } catch (err) {
+    throw new Error(`failed to spawn shell command ${command}: ${err.message}`);
+  }
+  processes.add(child);
+  child.on("exit", (code, signal) => {
+    if (!shuttingDown && (code ?? 0) !== 0) {
+      console.warn(`[pult_inngest_smoke_ci] shell command exited with code=${code} signal=${signal}`);
+    }
+  });
+  return child;
+}
+
+async function runDetached(command, args) {
+  return new Promise((resolve) => {
+    const child = spawn(command, args, { stdio: "ignore", shell: false });
+    child.on("exit", () => resolve());
+    child.on("error", () => resolve());
+  });
+}
+
 async function killStrayInngestProcesses() {
   if (process.platform === "win32") {
     await runDetached("taskkill", ["/IM", "inngest.exe", "/F"]);
@@ -207,6 +261,7 @@ async function main() {
   } finally {
     process.chdir(originalCwd);
   }
+
   const nodeBinary = process.execPath;
   startProcess(nodeBinary, ["server.mjs"], { cwd: pultDir });
   startProcess("npx", ["--no-install", "inngest-cli", "dev", "-u", "http://localhost:3000/api/inngest"], {
@@ -232,7 +287,13 @@ async function main() {
   );
 }
 
-main().catch((error) => {
+try {
+  await killStrayInngestProcesses();
+  await main();
+  await cleanup();
+  process.exit(0);
+} catch (error) {
   console.error("[pult_inngest_smoke_ci] FAIL:", error.message);
+  await cleanup();
   process.exit(1);
-});
+}
