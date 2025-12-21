@@ -5,3 +5,6 @@ Trigger full (PowerShell): Invoke-WebRequest -UseBasicParsing -Uri http://localh
 Trigger experiment (PowerShell): Invoke-WebRequest -UseBasicParsing -Uri http://localhost:8288/e/dev -Headers @{'Content-Type'='application/json'} -Method POST -Body '{"name":"lab/wf_cycle.experiment","data":{}}'
 Artifacts: lab/inngest_runs/<runId>/steps/... (smoke) and lab/inngest_runs/<runId>/(wf_cycle_full|wf_cycle_experiment)/...
 MOVA context pack: ./MOVA_CONTEXT_PACK.md
+По умолчанию smoke:pult не убивает сторонние процессы.
+Для CI/форс-режима: PULT_SMOKE_KILL_STRAY=1
+

@@ -13,6 +13,7 @@ const healthUrl = "http://localhost:3000/health";
 const eventUrl = "http://localhost:8288/e/dev";
 const processes = new Set();
 let shuttingDown = false;
+const killStrayEnabled = process.env.PULT_SMOKE_KILL_STRAY === "1";
 
 function startProcess(command, args, options = {}) {
   console.log(`[pult_inngest_smoke_ci] starting: ${command} ${args.join(" ")}`);
@@ -84,7 +85,12 @@ async function cleanup() {
     }
   }
   await sleep(1000);
-  await killStrayInngestProcesses();
+  if (killStrayEnabled) {
+    console.log("[pult_inngest_smoke_ci] killStray enabled: terminating running inngest processes");
+    await killStrayInngestProcesses();
+  } else {
+    console.log("[pult_inngest_smoke_ci] skip killStray (set PULT_SMOKE_KILL_STRAY=1 to enable)");
+  }
 }
 
 process.on("SIGINT", async () => {
