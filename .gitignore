@@ -29,3 +29,8 @@ executors/opencode_server_v1/docker/.env
 
 # Cloudflare Worker local dev config (contains real IDs)
 executors/cloudflare_worker_gateway_v0/worker/wrangler.dev.jsonc
+
+/lab/inngest_runs/
+/pults/**/node_modules/
+/pults/**/.server_pid
+/pults/**/.server_pid_*
