@@ -56,32 +56,20 @@ function startShellCommand(command, options = {}) {
   return child;
 }
 
-async function killStrayInngestProcesses() {
-  if (process.platform === "win32") {
-    await runDetachedCommand("taskkill", ["/IM", "inngest.exe", "/F"], true);
-  } else {
-    await runDetachedCommand("pkill", ["-f", "inngest"], true);
-  }
+async function runDetached(command, args) {
+  return new Promise((resolve) => {
+    const child = spawn(command, args, { stdio: "ignore", shell: false });
+    child.on("exit", () => resolve());
+    child.on("error", () => resolve());
+  });
 }
 
-function runDetachedCommand(command, args, ignoreErrors = false) {
-  return new Promise((resolve, reject) => {
-    const child = spawn(command, args, { stdio: "ignore", shell: false });
-    child.on("exit", (code) => {
-      if (!ignoreErrors && code !== 0) {
-        reject(new Error(`${command} exited with code ${code}`));
-      } else {
-        resolve();
-      }
-    });
-    child.on("error", (err) => {
-      if (ignoreErrors) {
-        resolve();
-      } else {
-        reject(err);
-      }
-    });
-  });
+async function killStrayInngestProcesses() {
+  if (process.platform === "win32") {
+    await runDetached("taskkill", ["/IM", "inngest.exe", "/F"]);
+  } else {
+    await runDetached("pkill", ["-f", "inngest"]);
+  }
 }
 
 async function cleanup() {
@@ -96,7 +84,7 @@ async function cleanup() {
     }
   }
   await sleep(1000);
-  await killStrayInngestProcesses().catch(() => {});
+  await killStrayInngestProcesses();
 }
 
 process.on("SIGINT", async () => {
@@ -121,7 +109,7 @@ async function waitForHealth(timeoutMs = 60000) {
           return;
         }
       }
-    } catch (err) {
+    } catch {
       // retry
     }
     await sleep(1000);
@@ -159,7 +147,7 @@ async function triggerEvent(name) {
   throw new Error(`failed to trigger ${name}: ${lastError?.message ?? "timeout"}`);
 }
 
-async function waitForFile(filePath, label, timeoutMs = 180000) {
+async function waitForFile(filePath, label, timeoutMs) {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     if (fs.existsSync(filePath)) {
@@ -170,11 +158,23 @@ async function waitForFile(filePath, label, timeoutMs = 180000) {
   throw new Error(`timeout waiting for ${label}: ${filePath}`);
 }
 
-async function waitForArtifacts(runId, expectFull) {
+async function waitForArtifacts(runId, options = {}) {
+  const { expectFull = false, expectExperiment = false, timeoutMs = 300000 } = options;
   const baseDir = path.join(labRunsDir, runId);
-  await waitForFile(path.join(baseDir, "result.json"), `result for ${runId}`);
+  await waitForFile(path.join(baseDir, "result.json"), `result for ${runId}`, timeoutMs);
   if (expectFull) {
-    await waitForFile(path.join(baseDir, "wf_cycle_full", "run_summary.json"), `run_summary for ${runId}`);
+    await waitForFile(
+      path.join(baseDir, "wf_cycle_full", "run_summary.json"),
+      `wf_cycle_full summary for ${runId}`,
+      timeoutMs
+    );
+  }
+  if (expectExperiment) {
+    await waitForFile(
+      path.join(baseDir, "wf_cycle_experiment", "experiment_summary.json"),
+      `wf_cycle_experiment summary for ${runId}`,
+      timeoutMs
+    );
   }
   return baseDir;
 }
@@ -184,18 +184,25 @@ async function main() {
 
   const nodeBinary = process.execPath;
   startProcess(nodeBinary, ["server.mjs"], { cwd: pultDir });
-  const cliCommand = "npx inngest-cli@latest dev -u http://localhost:3000/api/inngest";
-  startShellCommand(cliCommand, { cwd: pultDir });
+  startShellCommand("npx inngest-cli@latest dev -u http://localhost:3000/api/inngest", { cwd: pultDir });
 
   await waitForHealth();
 
   const smokeEventId = await triggerEvent("lab/wf_cycle.smoke");
-  const smokeDir = await waitForArtifacts(smokeEventId, false);
+  const smokeDir = await waitForArtifacts(smokeEventId, { timeoutMs: 600000 });
 
   const fullEventId = await triggerEvent("lab/wf_cycle.full");
-  const fullDir = await waitForArtifacts(fullEventId, true);
+  const fullDir = await waitForArtifacts(fullEventId, { expectFull: true, timeoutMs: 600000 });
 
-  console.log(`[pult_inngest_smoke_ci] PASS: smoke=${smokeDir}, full=${fullDir}`);
+  const experimentEventId = await triggerEvent("lab/wf_cycle.experiment");
+  const experimentDir = await waitForArtifacts(experimentEventId, {
+    expectExperiment: true,
+    timeoutMs: 900000
+  });
+
+  console.log(
+    `[pult_inngest_smoke_ci] PASS: smoke=${smokeDir}, full=${fullDir}, experiment=${experimentDir}`
+  );
 }
 
 try {
