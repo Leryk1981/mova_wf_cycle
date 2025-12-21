@@ -1,0 +1,18 @@
+{
+  "experiment_id": "WF_EX_OPENCODE_001_arch_to_mova",
+  "experiment_dir": "lab/experiments/WF_EX_OPENCODE_001_arch_to_mova",
+  "participants": ["codex_ide", "codex_cli"],
+  "domain": "opencode",
+  "title": "arch_to_mova",
+  "slug": "arch_to_mova",
+  "attempt_id": "A_ide",
+  "inputs_seed": {
+    "files": [
+      {
+        "rel_path": "workflow_target.md",
+        "content": "Workflow Target\n================\nDomain: opencode\nTitle: arch_to_mova\nExperiment: WF_EX_OPENCODE_001_arch_to_mova\nAttempt: A_ide\n\nGoal: Describe current OpenCode (sst/opencode) architecture as-is in MOVA terms (components/flows/interfaces/controls/artifacts), using only repo evidence.\nScope: read-only analysis of tmp/external/opencode + its docs; produce MOVA mapping docs inside this experiment folder.\nNo-Go: no code execution inside opencode; no secrets; no network except git clone already done; no modifications under tmp/external/opencode."
+      }
+    ]
+  },
+  "options": { "safe_mode": true, "write_files": true }
+}

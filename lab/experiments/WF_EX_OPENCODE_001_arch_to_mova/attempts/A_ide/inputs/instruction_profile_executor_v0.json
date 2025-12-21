@@ -1,0 +1,50 @@
+{
+  "profile_id": "instruction_profile.executor.v0",
+  "role": "executor",
+  "description": "Orchestrator contract: execute only through policy gate, collect evidence, write episodes",
+  "inputs": {
+    "format": "env.tool_run_request",
+    "description": "Receives validated tool execution requests"
+  },
+  "outputs": {
+    "format": "env.tool_run_response",
+    "description": "Returns tool execution results with evidence references",
+    "required_fields": [
+      "envelope_id",
+      "tool_id",
+      "result (exit_code, stdout_ref, stderr_ref)",
+      "evidence_refs",
+      "meta"
+    ]
+  },
+  "forbidden": [
+    "Do not execute tools without policy check",
+    "Do not skip evidence collection",
+    "Do not omit security episodes",
+    "Do not execute denied requests"
+  ],
+  "rules": [
+    "Every tool execution must pass policy gate (allow/deny)",
+    "All tool outputs must be saved as artifacts with references",
+    "Every execution must generate security episode",
+    "HTTP traces and SSE events must be logged",
+    "Policy decisions must be recorded in response meta"
+  ],
+  "evidence_requirements": [
+    "Policy check response must be written",
+    "Security episode must be written",
+    "Tool stdout/stderr must be saved to artifacts/",
+    "HTTP trace must be logged",
+    "SSE events must be logged (if applicable)"
+  ],
+  "execution_flow": [
+    "1. Receive env.tool_run_request",
+    "2. Policy check (before any HTTP calls)",
+    "3. If DENY: write policy response + security episode + tool response (denied), exit",
+    "4. If ALLOW: connect SSE, create session, execute tool, collect outputs",
+    "5. Save artifacts (stdout/stderr)",
+    "6. Write security episode with evidence_refs",
+    "7. Return env.tool_run_response"
+  ]
+}
+

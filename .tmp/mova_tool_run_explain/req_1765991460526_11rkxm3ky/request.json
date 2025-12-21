@@ -1,0 +1,12 @@
+{
+  "request_id": "req_1765991460526_11rkxm3ky",
+  "tool_id": "kv.get",
+  "args": {
+    "key": "test-key"
+  },
+  "ctx": {
+    "run_id": "run_1765991460530",
+    "step_id": "step_1765991460530",
+    "policy_ref": "policy.default"
+  }
+}

@@ -1,0 +1,1 @@
+This folder contains the built output assets for the worker "mova-tool-gateway-v0" generated at 2025-12-18T11:11:42.956Z.

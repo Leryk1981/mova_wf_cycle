@@ -1,0 +1,13 @@
+{
+  "request_id": "test_allow_001",
+  "tool_id": "kv.get",
+  "args": {
+    "key": "test-key"
+  },
+  "ctx": {
+    "run_id": "test_run_allow",
+    "step_id": "test_step_allow",
+    "policy_ref": "policy.default"
+  }
+}
+

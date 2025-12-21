@@ -1,0 +1,12 @@
+{
+  "request_id": "req_1765990530496_t2qnscf1d",
+  "tool_id": "kv.get",
+  "args": {
+    "url": "https://example.com"
+  },
+  "ctx": {
+    "run_id": "run_1765990530518",
+    "step_id": "step_1765990530518",
+    "policy_ref": "policy.default"
+  }
+}

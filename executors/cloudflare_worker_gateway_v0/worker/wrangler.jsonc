@@ -1,0 +1,83 @@
+{
+  // Cloudflare Worker Tool Gateway v0 Configuration
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  
+  "name": "mova-tool-gateway-v0",
+  "main": "src/index.ts",
+  "compatibility_date": "2024-12-17",
+  
+  // Development server port
+  "dev": {
+    "port": 8787
+  },
+  
+  // KV Namespaces
+  "kv_namespaces": [
+    {
+      "binding": "POLICY_KV",
+      "id": "3207599953ab40e9b1f5d629216af00f",
+      "preview_id": "2fc3ff40ab4f4f45a1c6bf51feef4da4"
+    }
+  ],
+  
+  // D1 Databases
+  // NOTE: Real IDs are in wrangler.dev.jsonc (gitignored)
+  "d1_databases": [
+    {
+      "binding": "EPISODES_DB",
+      "database_name": "mova_gateway_episodes_dev",
+      "database_id": "REPLACE_ME",
+      "preview_database_id": "REPLACE_ME"
+    }
+  ],
+  
+  // R2 Buckets
+  "r2_buckets": [
+    {
+      "binding": "ARTIFACTS",
+      "bucket_name": "mova-gateway-artifacts-dev",
+      "preview_bucket_name": "mova-gateway-artifacts-dev-preview"
+    }
+  ],
+  
+  // Environment variables (non-sensitive config only)
+  "vars": {
+    "GATEWAY_VERSION": "cloudflare_worker_gateway_v0",
+    "DEFAULT_POLICY_REF": "policy.default"
+  },
+  
+  // Secrets (set via wrangler secret put, not in this file):
+  // GATEWAY_AUTH_TOKEN
+  
+  // Dev environment (remote)
+  // NOTE: Real IDs are in wrangler.dev.jsonc (gitignored)
+  // Copy this file to wrangler.dev.jsonc and replace REPLACE_ME with actual IDs
+  "env": {
+    "dev": {
+      "vars": {
+        "GATEWAY_VERSION": "cloudflare_worker_gateway_v0",
+        "DEFAULT_POLICY_REF": "policy.default"
+      },
+      "kv_namespaces": [
+        {
+          "binding": "POLICY_KV",
+          "id": "REPLACE_ME"
+        }
+      ],
+      "d1_databases": [
+        {
+          "binding": "EPISODES_DB",
+          "database_name": "mova_gateway_episodes_dev",
+          "database_id": "REPLACE_ME"
+        }
+      ],
+      "r2_buckets": [
+        {
+          "binding": "ARTIFACTS",
+          "bucket_name": "mova-gateway-artifacts-dev"
+        }
+      ]
+    }
+  }
+}
+

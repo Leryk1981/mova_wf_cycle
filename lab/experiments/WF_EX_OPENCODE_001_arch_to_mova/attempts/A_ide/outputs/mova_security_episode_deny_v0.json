@@ -1,0 +1,17 @@
+{
+  "episode_id": "episode.security_policy_gate.v0",
+  "ts": "2025-12-16T21:44:02.570Z",
+  "action": "env.tool_run_request",
+  "decision": "deny",
+  "targets": {
+    "tool_id": "shell",
+    "command": "whoami"
+  },
+  "evidence_refs": [
+    "inputs/mova_policy_profile_shell_allowlist_v0.json",
+    "inputs/mova_tool_run_request_deny_v0.json",
+    "outputs/mova_env_policy_check_response_deny_v0.json",
+    "outputs/mova_security_episode_deny_v0.json",
+    "outputs/mova_env_tool_run_response_deny_v0.json"
+  ]
+}

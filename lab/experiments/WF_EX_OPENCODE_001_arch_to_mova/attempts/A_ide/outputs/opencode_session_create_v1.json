@@ -1,0 +1,6 @@
+{
+  "name": "UnknownError",
+  "data": {
+    "message": "Error: Malformed JSON in request body\n    at <anonymous> (/work/node_modules/.bun/hono@4.10.7/node_modules/hono/dist/validator/validator.js:21:21)\n    at processTicksAndRejections (native:7:39)"
+  }
+}

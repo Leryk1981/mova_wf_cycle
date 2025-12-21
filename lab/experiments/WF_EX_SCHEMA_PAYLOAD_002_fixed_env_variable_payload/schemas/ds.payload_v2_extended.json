@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mova.dev/schemas/ds.payload_v2.schema.json",
+  "title": "ds.payload_v2_extended",
+  "description": "Extended payload schema (adds fields to v1) - demonstrates flexibility without code release",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "kind",
+    "data"
+  ],
+  "properties": {
+    "kind": {
+      "type": "string",
+      "description": "Payload kind identifier"
+    },
+    "data": {
+      "type": "object",
+      "description": "Payload data (domain-neutral structure)",
+      "additionalProperties": true
+    },
+    "meta": {
+      "type": "object",
+      "description": "Optional metadata",
+      "additionalProperties": true,
+      "properties": {
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "source": {
+          "type": "string"
+        }
+      }
+    },
+    "tags": {
+      "type": "array",
+      "description": "Extended field: tags array (new in v2)",
+      "items": {
+        "type": "string"
+      }
+    },
+    "priority": {
+      "type": "integer",
+      "description": "Extended field: priority level (new in v2)",
+      "minimum": 0,
+      "maximum": 10
+    },
+    "context": {
+      "type": "object",
+      "description": "Extended field: context object (new in v2)",
+      "additionalProperties": true,
+      "properties": {
+        "environment": {
+          "type": "string"
+        },
+        "region": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
+

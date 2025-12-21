@@ -1,0 +1,25 @@
+{
+  "policy_id": "policy.shell_allowlist.v0",
+  "default_decision": "deny",
+  "rules": [
+    {
+      "rule_id": "allow.echo_mova_smoke",
+      "decision": "allow",
+      "tool_id": "shell",
+      "command_regex": "^echo MOVA_SMOKE$"
+    },
+    {
+      "rule_id": "allow.read_opencode_src",
+      "decision": "allow",
+      "tool_id": "file.read",
+      "path_prefixes": ["packages/opencode/src/"]
+    },
+    {
+      "rule_id": "allow.list_opencode_src",
+      "decision": "allow",
+      "tool_id": "file.list",
+      "path_prefixes": ["packages/opencode/src/"]
+    }
+  ]
+}
+

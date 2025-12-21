@@ -1,0 +1,12 @@
+{
+  "request_id": "req_1765990688098_shtoxlw6o",
+  "tool_id": "http.fetch",
+  "args": {
+    "url": "https://example.com"
+  },
+  "ctx": {
+    "run_id": "run_1765990688111",
+    "step_id": "step_1765990688111",
+    "policy_ref": "policy.default"
+  }
+}

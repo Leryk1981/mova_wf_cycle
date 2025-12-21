@@ -1,0 +1,27 @@
+{
+  "variant": "v1",
+  "schema_ref": "payload@v1",
+  "runs": 50,
+  "warmup": 10,
+  "cache_hit_rate": 100,
+  "cache_hits": 50,
+  "compile_ms": {
+    "avg": 0,
+    "p95": 0,
+    "min": 0,
+    "max": 0
+  },
+  "validate_ms": {
+    "avg": 0,
+    "p95": 0,
+    "min": 0,
+    "max": 0
+  },
+  "total_ms": {
+    "avg": 890.12,
+    "p95": 1017,
+    "min": 738,
+    "max": 1247
+  },
+  "timestamp": "2025-12-18T11:18:46.685Z"
+}

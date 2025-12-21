@@ -1,0 +1,7 @@
+{
+  "envelope_id": "env.tool_run_request_v1.example",
+  "tool_id": "file.list",
+  "args": {
+    "path": "packages/opencode/src/server/"
+  }
+}

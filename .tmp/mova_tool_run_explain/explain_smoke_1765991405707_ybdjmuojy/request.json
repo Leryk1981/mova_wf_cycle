@@ -1,0 +1,12 @@
+{
+  "request_id": "explain_smoke_1765991405707_ybdjmuojy",
+  "tool_id": "kv.get",
+  "args": {
+    "key": "test-key"
+  },
+  "ctx": {
+    "run_id": "run_1765991405893",
+    "step_id": "step_1765991405893",
+    "policy_ref": "policy.default"
+  }
+}

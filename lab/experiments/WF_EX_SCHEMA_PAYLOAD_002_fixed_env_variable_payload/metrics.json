@@ -1,0 +1,67 @@
+{
+  "experiment_id": "WF_EX_SCHEMA_PAYLOAD_002",
+  "experiment_name": "Fixed Env, Variable Payload",
+  "close_date": "2025-12-18",
+  "close_time": "~15:00 UTC",
+  "baseline_gates_pass": true,
+  "remote_payload_validate_pass": true,
+  "blocker": "workers_disallow_dynamic_codegen",
+  "blocker_resolved": true,
+  "blocker_error_snippet": "Code generation from strings disallowed for this context",
+  "blocker_solution": "Replaced AJV with @cfworker/json-schema (worker-safe validator)",
+  "tested_variants": [
+    "v0",
+    "v1",
+    "v2(deny)"
+  ],
+  "variant_results": {
+    "v0": {
+      "status": "pass",
+      "description": "Hardcoded schema validation works"
+    },
+    "v1": {
+      "status": "pass",
+      "description": "Schema from registry (KV) works, flexibility without code release confirmed"
+    },
+    "v2": {
+      "status": "pass",
+      "description": "Inline schema correctly denied by default policy, episodes recorded"
+    }
+  },
+  "performance_metrics": {
+    "cache_hit_rate": "100%",
+    "compile_ms_avg": 0.00,
+    "compile_ms_p95": 0.00,
+    "validate_ms_avg": 0.00,
+    "validate_ms_p95": 0.00,
+    "total_ms_avg": 890.12,
+    "total_ms_p95": 1017.00
+  },
+  "episode_completeness": {
+    "total_episodes_checked": 4,
+    "episodes_with_all_fields": 4,
+    "required_fields": [
+      "ds_payload_ref",
+      "ds_payload_hash",
+      "cache_hit",
+      "compile_ms",
+      "validate_ms"
+    ],
+    "completeness_rate": "100%"
+  },
+  "notes": [
+    "V2 inline schema deny-by-default confirmed and working",
+    "V1 architecture validated: flexibility without code release",
+    "AJV blocker resolved by replacing with @cfworker/json-schema",
+    "Performance maintained after validator replacement",
+    "All episodes contain required fields for reproducibility"
+  ],
+  "next_steps": [
+    "Deploy to production with @cfworker/json-schema",
+    "Establish schema registry governance process",
+    "Monitor cache hit rate and validation latency",
+    "Consider LRU cache optimization",
+    "Document schema authoring guidelines"
+  ]
+}
+

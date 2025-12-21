@@ -1,0 +1,34 @@
+npm warn Unknown cli config "--base_url". This will stop working in the next major version of npm.
+
+> mova_skills_lab@0.1.0 smoke:schema_payload
+> node tools/schema_payload_smoke_v0.mjs
+
+[smoke] GATEWAY_AUTH_TOKEN found (length: 64)
+[smoke] ADMIN_AUTH_TOKEN found (length: 64)
+[smoke] Schema Payload Smoke Test v0
+[smoke] Gateway URL: https://mova-tool-gateway-v0-dev.s-myasoedov81.workers.dev
+
+[smoke] Testing V0 (hardcoded schema)...
+[smoke] ✅ V0 validation PASS
+[smoke]   ds_payload_ref: payload@v1
+[smoke]   cache_hit: false
+[smoke]   compile_ms: 0
+[smoke]   validate_ms: 0
+
+[smoke] Testing V1 (schema from registry)...
+[smoke] ✅ V1 validation PASS
+[smoke]   ds_payload_ref: payload@v1
+[smoke]   cache_hit: false
+
+[smoke] Testing V1 with extended schema (v2)...
+[smoke] ✅ V1 extended validation PASS
+[smoke]   ds_payload_ref: payload@v2
+[smoke]   New fields validated without code change!
+
+[smoke] Testing V2 (inline schema - should be denied)...
+[smoke] ✅ V2 deny PASS
+[smoke]   Denied as expected: V2 inline schema not allowed (deny-by-default)
+[smoke]   Rule ID: v2_inline_schema_deny
+
+[smoke] ================================
+[smoke] ✅ All smoke tests PASS

@@ -1,0 +1,5 @@
+- opencode commit sha
+- referenced files/paths list (with short quotes <=25 words if needed)
+- produced MOVA mapping docs (as-is)
+- git status -sb
+- command outputs for gates (PASS/FAIL)

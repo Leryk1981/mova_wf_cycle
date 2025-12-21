@@ -1,0 +1,7 @@
+total 100
+drwxrwxrwx  2 root root  4096 Dec 16 16:57 .
+drwxrwxrwx 34 root root  4096 Dec 16 16:57 ..
+-rwxrwxrwx  1 root root   875 Dec 16 16:57 error.ts
+-rwxrwxrwx  1 root root  2272 Dec 16 16:57 project.ts
+-rwxrwxrwx  1 root root 79064 Dec 16 16:57 server.ts
+-rwxrwxrwx  1 root root  1828 Dec 16 16:57 tui.ts

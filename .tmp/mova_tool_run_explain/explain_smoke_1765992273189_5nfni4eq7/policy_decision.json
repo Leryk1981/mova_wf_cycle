@@ -1,0 +1,5 @@
+{
+  "decision": "deny",
+  "reason": "Tool http.fetch not in allowlist (default deny)",
+  "rule_id": "default_deny"
+}

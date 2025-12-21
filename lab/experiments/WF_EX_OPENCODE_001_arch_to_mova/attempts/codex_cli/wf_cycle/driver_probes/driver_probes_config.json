@@ -1,0 +1,18 @@
+{
+  "gate_id": "GATE_EXECUTOR_DRIVER_PROBES",
+  "offline_ok": true,
+  "timeout_ms": 10000,
+  "drivers": [
+    {
+      "driver_id": "local_shell_echo",
+      "executor_ref": "local_shell_v0",
+      "tool_id": "shell",
+      "expect_ok": true,
+      "timeout_ms": 8000,
+      "args": {
+        "command": "node -e \"process.exit(0)\""
+      },
+      "notes": "Offline probe copied into experiment scaffold."
+    }
+  ]
+}

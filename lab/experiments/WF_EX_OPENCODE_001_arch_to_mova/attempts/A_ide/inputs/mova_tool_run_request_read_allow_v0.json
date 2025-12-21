@@ -1,0 +1,7 @@
+{
+  "envelope_id": "env.tool_run_request_v1.example",
+  "tool_id": "file.read",
+  "args": { "path": "packages/opencode/src/server/server.ts", "max_bytes": 4096 },
+  "policy_ref": { "policy_id": "policy.shell_allowlist.v0" }
+}
+

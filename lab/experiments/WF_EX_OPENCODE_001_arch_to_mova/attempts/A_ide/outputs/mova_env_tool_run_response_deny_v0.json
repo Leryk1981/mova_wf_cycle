@@ -1,0 +1,24 @@
+{
+  "envelope_id": "env.tool_run_response_v1.example",
+  "tool_id": "shell",
+  "result": {
+    "exit_code": null,
+    "stdout_ref": null,
+    "stderr_ref": null,
+    "denied": true,
+    "reason": "default_deny"
+  },
+  "evidence_refs": [
+    "inputs/mova_policy_profile_shell_allowlist_v0.json",
+    "inputs/mova_tool_run_request_deny_v0.json",
+    "outputs/mova_env_policy_check_response_deny_v0.json",
+    "outputs/mova_security_episode_deny_v0.json",
+    "outputs/mova_env_tool_run_response_deny_v0.json"
+  ],
+  "meta": {
+    "ts": "2025-12-16T21:44:02.571Z",
+    "denied": true,
+    "policy_decision": "deny",
+    "command": "whoami"
+  }
+}

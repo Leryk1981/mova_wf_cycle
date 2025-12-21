@@ -1,0 +1,23 @@
+{
+  "gateway_version": "cloudflare_worker_gateway_v0",
+  "cf_metadata": {
+    "colo": "LHR",
+    "country": "DE",
+    "asn": 3320
+  },
+  "config": {
+    "bindings": {
+      "kv_namespaces": [
+        "POLICY_KV"
+      ],
+      "d1_databases": [
+        "EPISODES_DB"
+      ],
+      "r2_buckets": [
+        "ARTIFACTS"
+      ]
+    },
+    "env": "production"
+  },
+  "timestamp": "2025-12-17T17:10:06.254Z"
+}

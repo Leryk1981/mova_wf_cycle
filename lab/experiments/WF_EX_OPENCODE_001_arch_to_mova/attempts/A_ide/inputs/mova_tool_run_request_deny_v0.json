@@ -1,0 +1,7 @@
+{
+  "envelope_id": "env.tool_run_request_v1.example",
+  "tool_id": "shell",
+  "args": { "command": "whoami" },
+  "policy_ref": { "policy_id": "policy.shell_allowlist.v0" }
+}
+

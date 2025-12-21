@@ -1,0 +1,106 @@
+import { BusEvent } from "@/bus/bus-event"
+import { Bus } from "@/bus"
+import { GlobalBus } from "@/bus/global"
+import { Log } from "../util/log"
+import { describeRoute, generateSpecs, validator, resolver, openAPIRouteHandler } from "hono-openapi"
+import { Hono } from "hono"
+import { cors } from "hono/cors"
+import { stream, streamSSE } from "hono/streaming"
+import { proxy } from "hono/proxy"
+import { Session } from "../session"
+import z from "zod"
+import { Provider } from "../provider/provider"
+import { filter, mapValues, sortBy, pipe } from "remeda"
+import { NamedError } from "@opencode-ai/util/error"
+import { ModelsDev } from "../provider/models"
+import { Ripgrep } from "../file/ripgrep"
+import { Config } from "../config/config"
+import { File } from "../file"
+import { LSP } from "../lsp"
+import { Format } from "../format"
+import { MessageV2 } from "../session/message-v2"
+import { TuiRoute } from "./tui"
+import { Permission } from "../permission"
+import { Instance } from "../project/instance"
+import { Vcs } from "../project/vcs"
+import { Agent } from "../agent/agent"
+import { Auth } from "../auth"
+import { Command } from "../command"
+import { ProviderAuth } from "../provider/auth"
+import { Global } from "../global"
+import { ProjectRoute } from "./project"
+import { ToolRegistry } from "../tool/registry"
+import { zodToJsonSchema } from "zod-to-json-schema"
+import { SessionPrompt } from "../session/prompt"
+import { SessionCompaction } from "../session/compaction"
+import { SessionRevert } from "../session/revert"
+import { lazy } from "../util/lazy"
+import { Todo } from "../session/todo"
+import { InstanceBootstrap } from "../project/bootstrap"
+import { MCP } from "../mcp"
+import { Storage } from "../storage/storage"
+import type { ContentfulStatusCode } from "hono/utils/http-status"
+import { TuiEvent } from "@/cli/cmd/tui/event"
+import { Snapshot } from "@/snapshot"
+import { SessionSummary } from "@/session/summary"
+import { SessionStatus } from "@/session/status"
+import { upgradeWebSocket, websocket } from "hono/bun"
+import { errors } from "./error"
+import { Pty } from "@/pty"
+
+// @ts-ignore This global is needed to prevent ai-sdk from logging warnings to stdout https://github.com/vercel/ai/blob/2dc67e0ef538307f21368db32d5a12345d98831b/packages/ai/src/logger/log-warnings.ts#L85
+globalThis.AI_SDK_LOG_WARNINGS = false
+
+export namespace Server {
+  const log = Log.create({ service: "server" })
+
+  export const Event = {
+    Connected: BusEvent.define("server.connected", z.object({})),
+    Disposed: BusEvent.define("global.disposed", z.object({})),
+  }
+
+  const app = new Hono()
+  export const App = lazy(() =>
+    app
+      .onError((err, c) => {
+        log.error("failed", {
+          error: err,
+        })
+        if (err instanceof NamedError) {
+          let status: ContentfulStatusCode
+          if (err instanceof Storage.NotFoundError) status = 404
+          else if (err instanceof Provider.ModelNotFoundError) status = 400
+          else status = 500
+          return c.json(err.toObject(), { status })
+        }
+        const message = err instanceof Error && err.stack ? err.stack : err.toString()
+        return c.json(new NamedError.Unknown({ message }).toObject(), {
+          status: 500,
+        })
+      })
+      .use(async (c, next) => {
+        const skipLogging = c.req.path === "/log"
+        if (!skipLogging) {
+          log.info("request", {
+            method: c.req.method,
+            path: c.req.path,
+          })
+        }
+        const timer = log.time("request", {
+          method: c.req.method,
+          path: c.req.path,
+        })
+        await next()
+        if (!skipLogging) {
+          timer.stop()
+        }
+      })
+      .use(cors())
+      .get(
+        "/global/event",
+        describeRoute({
+          summary: "Get global events",
+          description: "Subscribe to global events from the OpenCode system using server-sent events.",
+          operationId: "global.event",
+          responses: {
+      

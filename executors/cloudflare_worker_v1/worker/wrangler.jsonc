@@ -1,0 +1,30 @@
+{
+  // Cloudflare Worker Configuration (JSONC format)
+  // Wrangler officially supports and recommends wrangler.jsonc
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  
+  // Worker name
+  "name": "mova-cloudflare-worker-v1",
+  
+  // Main entry point
+  "main": "src/index.ts",
+  
+  // Compatibility date (required)
+  "compatibility_date": "2024-12-17",
+  
+  // Compatibility flags (optional)
+  "compatibility_flags": [
+    "nodejs_compat"
+  ]
+  
+  // Future: bindings will be added here
+  // Example:
+  // "kv_namespaces": [
+  //   { "binding": "MY_KV", "id": "..." }
+  // ]
+  // [[kv_namespaces]]
+  // [[d1_databases]]
+  // [[r2_buckets]]
+  // etc.
+}
+

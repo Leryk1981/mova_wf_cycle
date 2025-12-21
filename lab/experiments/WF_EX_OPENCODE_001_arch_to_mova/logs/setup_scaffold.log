@@ -1,0 +1,81 @@
+# scaffold run 2025-12-16T16:59:32.850Z
+[info] scaffold start experiment=WF_EX_OPENCODE_001_arch_to_mova safe_mode=true write_files=true
+[dir] created lab/experiments/WF_EX_OPENCODE_001_arch_to_mova
+[dir] created lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/rules
+[dir] created lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/inputs
+[dir] created lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts
+[dir] created lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/compare
+[dir] created lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/outputs
+[dir] created lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/logs
+[write] lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/rules/SCOPE.md
+[write] lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/rules/EVIDENCE_CHECKLIST.md
+[copy] wf_formalization_cycle_v1/tools/check_diff_allowed.sh -> lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/rules/check_diff_allowed.sh
+[copy] wf_formalization_cycle_v1/tools/check_diff_allowed.ps1 -> lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/rules/check_diff_allowed.ps1
+[write] lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/inputs/workflow_target.md
+[write] lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/README.md
+[dir] created lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_ide
+[dir] created lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_ide/wf_cycle
+[dir] created lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_ide/wf_cycle/artifacts
+[dir] created lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_ide/wf_cycle/bindings
+[copy] wf_formalization_cycle_v1/artifacts/instructions.json -> lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_ide/wf_cycle/artifacts/instructions.json
+[copy] wf_formalization_cycle_v1/artifacts/method.json -> lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_ide/wf_cycle/artifacts/method.json
+[copy] wf_formalization_cycle_v1/artifacts/operations.json -> lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_ide/wf_cycle/artifacts/operations.json
+[copy] wf_formalization_cycle_v1/artifacts/procedure.json -> lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_ide/wf_cycle/artifacts/procedure.json
+[dir] created lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_ide/wf_cycle/runs
+[dir] created lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_ide/wf_cycle/runs/A_spiral
+[dir] created lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_ide/wf_cycle/runs/A_spiral/artifacts_snapshot
+[copy] wf_formalization_cycle_v1/runs/WF_RUN_0001_spiral/artifacts_snapshot/README.md -> lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_ide/wf_cycle/runs/A_spiral/artifacts_snapshot/README.md
+[copy] wf_formalization_cycle_v1/runs/WF_RUN_0001_spiral/event_log.jsonl -> lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_ide/wf_cycle/runs/A_spiral/event_log.jsonl
+[copy] wf_formalization_cycle_v1/runs/WF_RUN_0001_spiral/metrics.json -> lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_ide/wf_cycle/runs/A_spiral/metrics.json
+[copy] wf_formalization_cycle_v1/runs/WF_RUN_0001_spiral/notes.md -> lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_ide/wf_cycle/runs/A_spiral/notes.md
+[copy] wf_formalization_cycle_v1/runs/WF_RUN_0001_spiral/scorecard.json -> lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_ide/wf_cycle/runs/A_spiral/scorecard.json
+[dir] created lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_ide/wf_cycle/runs/B_topdown
+[dir] created lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_ide/wf_cycle/runs/B_topdown/artifacts_snapshot
+[copy] wf_formalization_cycle_v1/runs/WF_RUN_0002_topdown/artifacts_snapshot/README.md -> lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_ide/wf_cycle/runs/B_topdown/artifacts_snapshot/README.md
+[copy] wf_formalization_cycle_v1/runs/WF_RUN_0002_topdown/event_log.jsonl -> lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_ide/wf_cycle/runs/B_topdown/event_log.jsonl
+[copy] wf_formalization_cycle_v1/runs/WF_RUN_0002_topdown/metrics.json -> lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_ide/wf_cycle/runs/B_topdown/metrics.json
+[copy] wf_formalization_cycle_v1/runs/WF_RUN_0002_topdown/notes.md -> lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_ide/wf_cycle/runs/B_topdown/notes.md
+[copy] wf_formalization_cycle_v1/runs/WF_RUN_0002_topdown/scorecard.json -> lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_ide/wf_cycle/runs/B_topdown/scorecard.json
+[dir] created lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_ide/wf_cycle/runs/C_bottomup
+[dir] created lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_ide/wf_cycle/runs/C_bottomup/artifacts_snapshot
+[copy] wf_formalization_cycle_v1/runs/WF_RUN_0003_bottomup/artifacts_snapshot/README.md -> lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_ide/wf_cycle/runs/C_bottomup/artifacts_snapshot/README.md
+[copy] wf_formalization_cycle_v1/runs/WF_RUN_0003_bottomup/event_log.jsonl -> lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_ide/wf_cycle/runs/C_bottomup/event_log.jsonl
+[copy] wf_formalization_cycle_v1/runs/WF_RUN_0003_bottomup/metrics.json -> lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_ide/wf_cycle/runs/C_bottomup/metrics.json
+[copy] wf_formalization_cycle_v1/runs/WF_RUN_0003_bottomup/notes.md -> lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_ide/wf_cycle/runs/C_bottomup/notes.md
+[copy] wf_formalization_cycle_v1/runs/WF_RUN_0003_bottomup/scorecard.json -> lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_ide/wf_cycle/runs/C_bottomup/scorecard.json
+[write] lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_ide/wf_cycle/bindings/binding_map.md
+[write] lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_ide/00_participant_brief.md
+[dir] created lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_cli
+[dir] created lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_cli/wf_cycle
+[dir] created lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_cli/wf_cycle/artifacts
+[dir] created lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_cli/wf_cycle/bindings
+[copy] wf_formalization_cycle_v1/artifacts/instructions.json -> lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_cli/wf_cycle/artifacts/instructions.json
+[copy] wf_formalization_cycle_v1/artifacts/method.json -> lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_cli/wf_cycle/artifacts/method.json
+[copy] wf_formalization_cycle_v1/artifacts/operations.json -> lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_cli/wf_cycle/artifacts/operations.json
+[copy] wf_formalization_cycle_v1/artifacts/procedure.json -> lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_cli/wf_cycle/artifacts/procedure.json
+[dir] created lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_cli/wf_cycle/runs
+[dir] created lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_cli/wf_cycle/runs/A_spiral
+[dir] created lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_cli/wf_cycle/runs/A_spiral/artifacts_snapshot
+[copy] wf_formalization_cycle_v1/runs/WF_RUN_0001_spiral/artifacts_snapshot/README.md -> lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_cli/wf_cycle/runs/A_spiral/artifacts_snapshot/README.md
+[copy] wf_formalization_cycle_v1/runs/WF_RUN_0001_spiral/event_log.jsonl -> lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_cli/wf_cycle/runs/A_spiral/event_log.jsonl
+[copy] wf_formalization_cycle_v1/runs/WF_RUN_0001_spiral/metrics.json -> lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_cli/wf_cycle/runs/A_spiral/metrics.json
+[copy] wf_formalization_cycle_v1/runs/WF_RUN_0001_spiral/notes.md -> lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_cli/wf_cycle/runs/A_spiral/notes.md
+[copy] wf_formalization_cycle_v1/runs/WF_RUN_0001_spiral/scorecard.json -> lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_cli/wf_cycle/runs/A_spiral/scorecard.json
+[dir] created lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_cli/wf_cycle/runs/B_topdown
+[dir] created lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_cli/wf_cycle/runs/B_topdown/artifacts_snapshot
+[copy] wf_formalization_cycle_v1/runs/WF_RUN_0002_topdown/artifacts_snapshot/README.md -> lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_cli/wf_cycle/runs/B_topdown/artifacts_snapshot/README.md
+[copy] wf_formalization_cycle_v1/runs/WF_RUN_0002_topdown/event_log.jsonl -> lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_cli/wf_cycle/runs/B_topdown/event_log.jsonl
+[copy] wf_formalization_cycle_v1/runs/WF_RUN_0002_topdown/metrics.json -> lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_cli/wf_cycle/runs/B_topdown/metrics.json
+[copy] wf_formalization_cycle_v1/runs/WF_RUN_0002_topdown/notes.md -> lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_cli/wf_cycle/runs/B_topdown/notes.md
+[copy] wf_formalization_cycle_v1/runs/WF_RUN_0002_topdown/scorecard.json -> lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_cli/wf_cycle/runs/B_topdown/scorecard.json
+[dir] created lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_cli/wf_cycle/runs/C_bottomup
+[dir] created lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_cli/wf_cycle/runs/C_bottomup/artifacts_snapshot
+[copy] wf_formalization_cycle_v1/runs/WF_RUN_0003_bottomup/artifacts_snapshot/README.md -> lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_cli/wf_cycle/runs/C_bottomup/artifacts_snapshot/README.md
+[copy] wf_formalization_cycle_v1/runs/WF_RUN_0003_bottomup/event_log.jsonl -> lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_cli/wf_cycle/runs/C_bottomup/event_log.jsonl
+[copy] wf_formalization_cycle_v1/runs/WF_RUN_0003_bottomup/metrics.json -> lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_cli/wf_cycle/runs/C_bottomup/metrics.json
+[copy] wf_formalization_cycle_v1/runs/WF_RUN_0003_bottomup/notes.md -> lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_cli/wf_cycle/runs/C_bottomup/notes.md
+[copy] wf_formalization_cycle_v1/runs/WF_RUN_0003_bottomup/scorecard.json -> lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_cli/wf_cycle/runs/C_bottomup/scorecard.json
+[write] lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_cli/wf_cycle/bindings/binding_map.md
+[write] lab/experiments/WF_EX_OPENCODE_001_arch_to_mova/attempts/codex_cli/00_participant_brief.md
+[summary] wrote=77 skipped=0 warnings=0
+

@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mova.dev/schemas/ds.payload_v1.schema.json",
+  "title": "ds.payload_v1",
+  "description": "Minimal domain-neutral payload schema for WF_EX_SCHEMA_PAYLOAD_002",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "kind",
+    "data"
+  ],
+  "properties": {
+    "kind": {
+      "type": "string",
+      "description": "Payload kind identifier"
+    },
+    "data": {
+      "type": "object",
+      "description": "Payload data (domain-neutral structure)",
+      "additionalProperties": true
+    },
+    "meta": {
+      "type": "object",
+      "description": "Optional metadata",
+      "additionalProperties": true,
+      "properties": {
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "source": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
+

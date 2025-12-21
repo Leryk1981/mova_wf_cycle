@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  opencode:
+    image: ${OPENCODE_IMAGE}
+    # mova/opencode-engine: uses default command (bun run packages/opencode/src/index.ts serve)
+    # ghcr.io/sst/opencode: uncomment command below and volumes
+    # command: ["opencode", "serve", "--port", "4096", "--hostname", "0.0.0.0"]
+    ports:
+      - "${OPENCODE_PORT:-4096}:4096"
+    # volumes:
+    #   - ${WORKSPACE_ROOT:-./../..}:/work:rw
+    # working_dir: /work
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "exit 0"]  # Simplified - real health via healthcheck_sse.mjs
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+

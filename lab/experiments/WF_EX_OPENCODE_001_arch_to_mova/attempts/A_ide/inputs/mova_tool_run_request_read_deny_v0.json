@@ -1,0 +1,7 @@
+{
+  "envelope_id": "env.tool_run_request_v1.example",
+  "tool_id": "file.read",
+  "args": { "path": "/etc/passwd", "max_bytes": 256 },
+  "policy_ref": { "policy_id": "policy.shell_allowlist.v0" }
+}
+

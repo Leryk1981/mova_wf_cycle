@@ -1,0 +1,31 @@
+node_modules/
+.vscode/
+.idea/
+.DS_Store
+dist/
+tmp/
+.cursor/
+skill_seekers_development/
+
+lab/init_runs/
+lab/memory/query_runs/
+
+
+# local-only (do not commit)
+/lab/memory/**
+/spec/**
+
+# OpenCode executor (local env)
+executors/opencode_server_v1/docker/.env
+
+# Temporary opencode engine artifacts
+.tmp/opencode_engine_*
+
+# Cloudflare Worker local dev secrets
+**/.dev.vars
+
+# Cloudflare Worker local dev state (miniflare)
+**/.wrangler/
+
+# Cloudflare Worker local dev config (contains real IDs)
+executors/cloudflare_worker_gateway_v0/worker/wrangler.dev.jsonc

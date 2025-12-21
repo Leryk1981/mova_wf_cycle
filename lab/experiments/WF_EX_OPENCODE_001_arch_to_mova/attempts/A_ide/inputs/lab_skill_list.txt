@@ -1,0 +1,6 @@
+npm warn Unknown cli config "--list". This will stop working in the next major version of npm.
+
+> mova_skills_lab@0.1.0 lab:run
+> node tools/lab_run.mjs
+
+[lab:run] ERROR Provide --case or --env (and optionally --skill) so the runner can identify a skill.

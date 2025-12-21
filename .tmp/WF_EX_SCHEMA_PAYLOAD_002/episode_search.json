@@ -1,0 +1,80 @@
+{
+  "ok": true,
+  "results": [
+    {
+      "id": "payload_validate_1766063151891_0icq50wox",
+      "ts": 1766063152381,
+      "type": "payload_validate",
+      "run_id": "run_payload_validate_1766063151891_0icq50wox",
+      "step_id": "step_payload_validate_1766063151891_0icq50wox",
+      "policy_ref": "schema_payload_experiment",
+      "policy_version": "v1",
+      "engine_ref": "cloudflare_worker_gateway_v0@LHR",
+      "decision": "deny",
+      "reason": "Payload invalid: V2 inline schema not allowed (deny-by-default)",
+      "evidence_refs": [
+        "payload_validate/payload_validate_1766063151891_0icq50wox/request.json",
+        "payload_validate/payload_validate_1766063151891_0icq50wox/engine_identity.json",
+        "payload_validate/payload_validate_1766063151891_0icq50wox/policy_deny.json"
+      ],
+      "payload_json": "{\"kind\":\"test\",\"variant\":\"v2\",\"ds_payload_ref\":null,\"ds_payload_hash\":null,\"cache_hit\":false,\"compile_ms\":0,\"validate_ms\":0,\"valid\":false,\"errors\":[\"V2 inline schema not allowed (deny-by-default)\"]}"
+    },
+    {
+      "id": "payload_validate_1766063151039_ymih8kbuf",
+      "ts": 1766063151765,
+      "type": "payload_validate",
+      "run_id": "run_payload_validate_1766063151039_ymih8kbuf",
+      "step_id": "step_payload_validate_1766063151039_ymih8kbuf",
+      "policy_ref": "schema_payload_experiment",
+      "policy_version": "v1",
+      "engine_ref": "cloudflare_worker_gateway_v0@LHR",
+      "decision": "allow",
+      "reason": "Payload valid",
+      "evidence_refs": [
+        "payload_validate/payload_validate_1766063151039_ymih8kbuf/request.json",
+        "payload_validate/payload_validate_1766063151039_ymih8kbuf/engine_identity.json",
+        "payload_validate/payload_validate_1766063151039_ymih8kbuf/validate_result.json",
+        "payload_validate/payload_validate_1766063151039_ymih8kbuf/response.json"
+      ],
+      "payload_json": "{\"kind\":\"test\",\"data\":{\"foo\":\"bar\"},\"tags\":[\"tag1\",\"tag2\"],\"priority\":5,\"context\":{\"environment\":\"test\",\"region\":\"us-east\"},\"variant\":\"v1\",\"ds_payload_ref\":\"payload@v2\",\"ds_payload_hash\":\"d49c1bf7c4e689c9c13742f7a08a02208cbe747ad5e817748e2253053a812cfc\",\"cache_hit\":false,\"compile_ms\":0,\"validate_ms\":0,\"valid\":true,\"errors\":[]}"
+    },
+    {
+      "id": "payload_validate_1766063150080_qx7rld08t",
+      "ts": 1766063150736,
+      "type": "payload_validate",
+      "run_id": "run_payload_validate_1766063150080_qx7rld08t",
+      "step_id": "step_payload_validate_1766063150080_qx7rld08t",
+      "policy_ref": "schema_payload_experiment",
+      "policy_version": "v1",
+      "engine_ref": "cloudflare_worker_gateway_v0@LHR",
+      "decision": "allow",
+      "reason": "Payload valid",
+      "evidence_refs": [
+        "payload_validate/payload_validate_1766063150080_qx7rld08t/request.json",
+        "payload_validate/payload_validate_1766063150080_qx7rld08t/engine_identity.json",
+        "payload_validate/payload_validate_1766063150080_qx7rld08t/validate_result.json",
+        "payload_validate/payload_validate_1766063150080_qx7rld08t/response.json"
+      ],
+      "payload_json": "{\"kind\":\"test\",\"data\":{\"foo\":\"bar\"},\"variant\":\"v1\",\"ds_payload_ref\":\"payload@v1\",\"ds_payload_hash\":\"d1d0e0ba9941144da7845062dc41cd11ac0f34bf178de3c12e8d8a259871dc41\",\"cache_hit\":false,\"compile_ms\":0,\"validate_ms\":0,\"valid\":true,\"errors\":[]}"
+    },
+    {
+      "id": "payload_validate_1766063148647_28mnalgtn",
+      "ts": 1766063149309,
+      "type": "payload_validate",
+      "run_id": "run_payload_validate_1766063148647_28mnalgtn",
+      "step_id": "step_payload_validate_1766063148647_28mnalgtn",
+      "policy_ref": "schema_payload_experiment",
+      "policy_version": "v1",
+      "engine_ref": "cloudflare_worker_gateway_v0@LHR",
+      "decision": "allow",
+      "reason": "Payload valid",
+      "evidence_refs": [
+        "payload_validate/payload_validate_1766063148647_28mnalgtn/request.json",
+        "payload_validate/payload_validate_1766063148647_28mnalgtn/engine_identity.json",
+        "payload_validate/payload_validate_1766063148647_28mnalgtn/validate_result.json",
+        "payload_validate/payload_validate_1766063148647_28mnalgtn/response.json"
+      ],
+      "payload_json": "{\"kind\":\"test\",\"data\":{\"foo\":\"bar\"},\"meta\":{\"timestamp\":\"2025-12-18T13:05:48.250Z\"},\"variant\":\"v0\",\"ds_payload_ref\":\"payload@v1\",\"ds_payload_hash\":\"18006e9c4ab195054c5fbfb489a90bf8b2367d143db05cc335ba7238dc85287a\",\"cache_hit\":false,\"compile_ms\":0,\"validate_ms\":0,\"valid\":true,\"errors\":[]}"
+    }
+  ]
+}

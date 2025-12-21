@@ -1,0 +1,25 @@
+{
+  "envelope_id": "env.tool_run_response_v1.example",
+  "tool_id": "shell",
+  "result": {
+    "exit_code": 0,
+    "stdout_ref": "artifacts/shell_stdout.txt",
+    "stderr_ref": null
+  },
+  "evidence_refs": [
+    "tmp/external/opencode/packages/opencode/src/server/server.ts",
+    "tmp/external/opencode/packages/opencode/src/tool/registry.ts",
+    "inputs/mova_policy_profile_shell_allowlist_v0.json",
+    "logs/opencode_sse_events_v0.log",
+    "logs/opencode_http_trace_v0.jsonl"
+  ],
+  "meta": {
+    "ts": "2025-12-16T20:24:19.774Z",
+    "session_id": "ses_4d72a30a6ffeTfcAB0fBEgSjeC",
+    "command": "echo MOVA_SMOKE",
+    "server_connected_event": "present",
+    "sse_events_count": 12,
+    "policy_decision": "allow",
+    "policy_rule_id": "allow.echo_mova_smoke"
+  }
+}

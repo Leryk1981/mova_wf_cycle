@@ -1,0 +1,10 @@
+{
+  "policy_id": "policy.default",
+  "policy_version": "v0.1.0",
+  "default_decision": "deny",
+  "tool_allowlist": [
+    "kv.get"
+  ],
+  "http_fetch_hostname_allowlist": []
+}
+

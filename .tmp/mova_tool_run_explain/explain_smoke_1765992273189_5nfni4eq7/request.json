@@ -1,0 +1,12 @@
+{
+  "request_id": "explain_smoke_1765992273189_5nfni4eq7",
+  "tool_id": "http.fetch",
+  "args": {
+    "url": "https://example.com"
+  },
+  "ctx": {
+    "run_id": "run_1765992273346",
+    "step_id": "step_1765992273346",
+    "policy_ref": "policy.default"
+  }
+}

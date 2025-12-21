@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mova.dev/schemas/ds.payload_attack_v1.schema.json",
+  "title": "ds.payload_attack_v1",
+  "description": "Heavy/suspicious schema for V2 risk demonstration (Schema-DoS, hidden behavior extension)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "kind",
+    "data"
+  ],
+  "properties": {
+    "kind": {
+      "type": "string"
+    },
+    "data": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "meta": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "nested_deep": {
+      "type": "object",
+      "description": "Deeply nested structure to demonstrate schema compilation cost",
+      "properties": {
+        "level1": {
+          "type": "object",
+          "properties": {
+            "level2": {
+              "type": "object",
+              "properties": {
+                "level3": {
+                  "type": "object",
+                  "properties": {
+                    "level4": {
+                      "type": "object",
+                      "properties": {
+                        "level5": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "large_enum": {
+      "type": "string",
+      "description": "Large enum to demonstrate schema size",
+      "enum": [
+        "value_001", "value_002", "value_003", "value_004", "value_005",
+        "value_006", "value_007", "value_008", "value_009", "value_010",
+        "value_011", "value_012", "value_013", "value_014", "value_015",
+        "value_016", "value_017", "value_018", "value_019", "value_020"
+      ]
+    },
+    "complex_patterns": {
+      "type": "object",
+      "properties": {
+        "pattern1": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+        },
+        "pattern2": {
+          "type": "string",
+          "pattern": "^https?://[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}(/.*)?$"
+        },
+        "pattern3": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{3})?Z?$"
+        }
+      }
+    }
+  }
+}
+

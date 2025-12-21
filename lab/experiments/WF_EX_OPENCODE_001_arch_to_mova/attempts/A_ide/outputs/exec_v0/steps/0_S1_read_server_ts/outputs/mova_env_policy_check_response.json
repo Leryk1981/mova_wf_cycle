@@ -1,0 +1,9 @@
+{
+  "envelope_id": "env.policy_check_response_v0",
+  "decision": "allow",
+  "rule_id": "allow.read_opencode_src",
+  "reason": "matched_rule:allow.read_opencode_src",
+  "meta": {
+    "ts": "2025-12-16T23:17:58.927Z"
+  }
+}

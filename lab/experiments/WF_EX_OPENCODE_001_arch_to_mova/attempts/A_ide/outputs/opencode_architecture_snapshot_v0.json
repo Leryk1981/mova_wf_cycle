@@ -1,0 +1,396 @@
+{
+  "schema_id": "ds.opencode_architecture_snapshot_v0",
+  "source": {
+    "repo": "https://github.com/sst/opencode",
+    "commit": "11b3927dc239160e718a37a57ca9463499b6e589"
+  },
+  "components": [
+    {
+      "id": "client_tui",
+      "type": "client",
+      "description": "Terminal UI client (primary interactive interface)",
+      "location": "packages/opencode/src/cli/cmd/tui/",
+      "entry": "packages/opencode/src/cli/cmd/tui/attach.ts",
+      "evidence_paths": [
+        "packages/opencode/src/cli/cmd/tui/attach.ts"
+      ]
+    },
+    {
+      "id": "client_web",
+      "type": "client",
+      "description": "Web-based client (console app)",
+      "location": "packages/console/app/",
+      "unverified": true,
+      "note": "Location inferred from directory structure, no direct evidence in Context7 docs"
+    },
+    {
+      "id": "client_desktop",
+      "type": "client",
+      "description": "Desktop client (Tauri-based)",
+      "location": "packages/desktop/",
+      "unverified": true,
+      "note": "Location inferred from directory structure, no direct evidence in Context7 docs"
+    },
+    {
+      "id": "server",
+      "type": "server",
+      "description": "Headless HTTP server (Hono-based, supports REST + WebSocket/SSE)",
+      "location": "packages/opencode/src/server/server.ts",
+      "entry": "packages/opencode/src/cli/cmd/serve.ts",
+      "evidence_paths": [
+        "packages/opencode/src/server/server.ts",
+        "packages/opencode/src/cli/cmd/serve.ts"
+      ]
+    },
+    {
+      "id": "agent_system",
+      "type": "agent",
+      "description": "Agent profile system (build, plan, general, explore)",
+      "location": "packages/opencode/src/agent/agent.ts",
+      "profiles": ["build", "plan", "general", "explore"],
+      "evidence_paths": [
+        "packages/opencode/src/agent/agent.ts"
+      ]
+    },
+    {
+      "id": "tool_registry",
+      "type": "registry",
+      "description": "Tool registry (built-in + custom + MCP + plugin tools)",
+      "location": "packages/opencode/src/tool/registry.ts",
+      "builtin_tools": ["bash", "read", "write", "edit", "grep", "glob", "ls", "task", "todo", "webfetch", "websearch", "codesearch", "multiedit", "patch", "lsp-hover", "lsp-diagnostics", "batch"],
+      "evidence_paths": [
+        "packages/opencode/src/tool/registry.ts",
+        "packages/opencode/src/tool/"
+      ]
+    },
+    {
+      "id": "mcp_integration",
+      "type": "integration",
+      "description": "MCP (Model Context Protocol) server integration",
+      "location": "packages/opencode/src/mcp/index.ts",
+      "transports": ["stdio", "sse", "streamable-http"],
+      "evidence_paths": [
+        "packages/opencode/src/mcp/index.ts"
+      ]
+    },
+    {
+      "id": "lsp_integration",
+      "type": "integration",
+      "description": "Language Server Protocol integration",
+      "location": "packages/opencode/src/lsp/server.ts",
+      "evidence_paths": [
+        "packages/opencode/src/lsp/server.ts"
+      ]
+    },
+    {
+      "id": "config_system",
+      "type": "config",
+      "description": "Configuration system (opencode.jsonc, .opencode/opencode.jsonc, hierarchical merge)",
+      "location": "packages/opencode/src/config/config.ts",
+      "evidence_paths": [
+        "packages/opencode/src/config/config.ts"
+      ]
+    },
+    {
+      "id": "session_manager",
+      "type": "session",
+      "description": "Session management (conversation state, message history, compaction)",
+      "location": "packages/opencode/src/session/",
+      "evidence_paths": [
+        "packages/opencode/src/session/",
+        "packages/opencode/src/session/compaction.ts"
+      ]
+    },
+    {
+      "id": "project_instance",
+      "type": "project",
+      "description": "Project/Instance management (directory context, state isolation)",
+      "location": "packages/opencode/src/project/instance.ts",
+      "evidence_paths": [
+        "packages/opencode/src/project/instance.ts"
+      ]
+    },
+    {
+      "id": "provider_system",
+      "type": "provider",
+      "description": "LLM provider abstraction (OpenAI-compatible, Claude, Google, local models)",
+      "location": "packages/opencode/src/provider/",
+      "unverified": true,
+      "note": "Location inferred from directory structure, no direct evidence in Context7 docs"
+    }
+  ],
+  "interfaces": [
+    {
+      "id": "http_rest",
+      "type": "api",
+      "protocol": "HTTP REST",
+      "description": "REST API for headless operations",
+      "location": "packages/opencode/src/server/server.ts",
+      "endpoints": [
+        "POST /session",
+        "POST /session/{id}/message",
+        "GET /session",
+        "GET /session/{id}",
+        "POST /session/{id}/fork",
+        "POST /session/{id}/abort",
+        "POST /session/{id}/revert",
+        "POST /session/{id}/share",
+        "GET /session/{id}/diff",
+        "GET /session/{id}/children",
+        "POST /session/{id}/summarize",
+        "GET /project",
+        "GET /tool",
+        "GET /mcp",
+        "GET /global/event"
+      ],
+      "evidence_paths": [
+        "packages/opencode/src/server/server.ts"
+      ]
+    },
+    {
+      "id": "websocket_sse",
+      "type": "streaming",
+      "protocol": "Server-Sent Events",
+      "description": "Real-time streaming for TUI client via SSE",
+      "location": "packages/opencode/src/server/server.ts",
+      "endpoint": "GET /event",
+      "event_types": [
+        "server.connected",
+        "session.updated",
+        "message.part.updated",
+        "tool.execute",
+        "tool.result",
+        "file.edited"
+      ],
+      "evidence_paths": [
+        "packages/opencode/src/server/server.ts"
+      ],
+      "note": "SSE confirmed via Context7 docs. WebSocket support mentioned but not detailed in evidence."
+    },
+    {
+      "id": "mcp_protocol",
+      "type": "protocol",
+      "protocol": "MCP",
+      "description": "Model Context Protocol for external tool integration",
+      "location": "packages/opencode/src/mcp/index.ts",
+      "transports": ["stdio", "sse", "streamable-http"],
+      "evidence_paths": [
+        "packages/opencode/src/mcp/index.ts"
+      ]
+    },
+    {
+      "id": "lsp_protocol",
+      "type": "protocol",
+      "protocol": "LSP",
+      "description": "Language Server Protocol for code intelligence",
+      "location": "packages/opencode/src/lsp/server.ts",
+      "evidence_paths": [
+        "packages/opencode/src/lsp/server.ts"
+      ]
+    },
+    {
+      "id": "sdk_js",
+      "type": "sdk",
+      "protocol": "HTTP/SSE",
+      "description": "JavaScript SDK for programmatic access",
+      "location": "packages/sdk/js/",
+      "evidence_paths": [
+        "packages/sdk/js/"
+      ]
+    }
+  ],
+  "flows": [
+    {
+      "id": "interactive_tui",
+      "type": "interactive",
+      "description": "TUI client attaches to server, sends messages, receives streaming responses",
+      "steps": [
+        "Client: attach command connects to server URL",
+        "Server: creates/loads session, establishes SSE connection",
+        "Client: sends user message",
+        "Server: routes to agent, executes tools, streams responses",
+        "Client: renders in TUI"
+      ],
+      "entry": "packages/opencode/src/cli/cmd/tui/attach.ts",
+      "evidence_paths": [
+        "packages/opencode/src/cli/cmd/tui/attach.ts",
+        "packages/opencode/src/server/server.ts"
+      ]
+    },
+    {
+      "id": "headless_api",
+      "type": "api",
+      "description": "Headless server accepts HTTP requests, processes via API",
+      "steps": [
+        "Client: HTTP POST to /session endpoint",
+        "Server: creates session, processes message",
+        "Server: executes agent with tools",
+        "Server: returns response (JSON or SSE stream)"
+      ],
+      "entry": "packages/opencode/src/server/server.ts",
+      "evidence_paths": [
+        "packages/opencode/src/server/server.ts"
+      ]
+    },
+    {
+      "id": "tool_execution",
+      "type": "execution",
+      "description": "Agent calls tool, tool executes, result returned to agent",
+      "steps": [
+        "Agent: decides tool call from available tools",
+        "Tool Registry: resolves tool definition",
+        "Tool: executes (file ops, bash, web, etc.)",
+        "Result: returned to agent for next step"
+      ],
+      "entry": "packages/opencode/src/tool/registry.ts",
+      "evidence_paths": [
+        "packages/opencode/src/tool/registry.ts",
+        "packages/opencode/src/tool/"
+      ]
+    },
+    {
+      "id": "mcp_tool_flow",
+      "type": "integration",
+      "description": "MCP server provides tools, OpenCode exposes them to agent",
+      "steps": [
+        "Config: MCP servers defined in opencode.jsonc",
+        "MCP: connects via stdio/SSE/HTTP transport",
+        "MCP: registers tools/resources",
+        "Tool Registry: includes MCP tools in available set",
+        "Agent: can call MCP tools like built-in tools"
+      ],
+      "entry": "packages/opencode/src/mcp/index.ts",
+      "evidence_paths": [
+        "packages/opencode/src/mcp/index.ts",
+        "packages/opencode/src/config/config.ts"
+      ]
+    }
+  ],
+  "controls": [
+    {
+      "id": "agent_permissions",
+      "type": "permission",
+      "description": "Per-agent permissions (edit, bash commands, webfetch, doom_loop, external_directory)",
+      "location": "packages/opencode/src/agent/agent.ts",
+      "values": ["allow", "deny", "ask"],
+      "default_agent": {
+        "build": "edit: allow, bash: allow (full access)",
+        "plan": "edit: deny, bash: ask (read-only, specific allow patterns)"
+      },
+      "evidence_paths": [
+        "packages/opencode/src/agent/agent.ts"
+      ]
+    },
+    {
+      "id": "tool_enable_disable",
+      "type": "config",
+      "description": "Enable/disable tools per agent via config",
+      "location": "packages/opencode/src/config/config.ts",
+      "format": "opencode.jsonc: { agent: { build: { tools: { bash: true, edit: true } } } }",
+      "evidence_paths": [
+        "packages/opencode/src/config/config.ts"
+      ]
+    },
+    {
+      "id": "agent_profiles",
+      "type": "profile",
+      "description": "Agent profiles define model, temperature, tools, permissions",
+      "location": "packages/opencode/src/agent/agent.ts",
+      "profiles": ["build", "plan", "general", "explore"],
+      "evidence_paths": [
+        "packages/opencode/src/agent/agent.ts"
+      ]
+    },
+    {
+      "id": "config_hierarchy",
+      "type": "config",
+      "description": "Config merged from: global → project .opencode/ → root opencode.jsonc → env flags",
+      "location": "packages/opencode/src/config/config.ts",
+      "merge_order": [
+        "Global config directory (~/.opencode/opencode.jsonc)",
+        "Project .opencode/opencode.jsonc (walking up from project root to worktree)",
+        "Project root opencode.jsonc (walking up from project root to worktree)",
+        "Environment variable OPENCODE_CONFIG_CONTENT",
+        "Well-known configs (/.well-known/opencode endpoints)",
+        "Flag OPENCODE_CONFIG (custom config file path)",
+        "Flag OPENCODE_CONFIG_DIR (custom config directory)"
+      ],
+      "evidence_paths": [
+        "packages/opencode/src/config/config.ts"
+      ]
+    },
+    {
+      "id": "session_compaction",
+      "type": "optimization",
+      "description": "Session message history compaction to reduce token usage",
+      "location": "packages/opencode/src/session/compaction.ts",
+      "evidence_paths": [
+        "packages/opencode/src/session/compaction.ts"
+      ]
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "session_state",
+      "type": "state",
+      "description": "Session conversation state (messages, tool calls, context)",
+      "location": "packages/opencode/src/session/",
+      "evidence_paths": [
+        "packages/opencode/src/session/"
+      ]
+    },
+    {
+      "id": "project_snapshot",
+      "type": "snapshot",
+      "description": "Project file tree snapshots for context",
+      "location": "packages/opencode/src/snapshot/",
+      "evidence_paths": [
+        "packages/opencode/src/snapshot/"
+      ]
+    },
+    {
+      "id": "tool_definitions",
+      "type": "definition",
+      "description": "Tool definitions (built-in .ts files, custom tool/*.ts, plugin tools, MCP tools)",
+      "location": "packages/opencode/src/tool/",
+      "evidence_paths": [
+        "packages/opencode/src/tool/",
+        "packages/opencode/src/tool/registry.ts"
+      ]
+    },
+    {
+      "id": "config_files",
+      "type": "config",
+      "description": "Configuration files (opencode.jsonc, .opencode/opencode.jsonc, AGENTS.md)",
+      "locations": ["opencode.jsonc", ".opencode/opencode.jsonc", "AGENTS.md", "packages/opencode/AGENTS.md"],
+      "evidence_paths": [
+        "packages/opencode/src/config/config.ts"
+      ]
+    },
+    {
+      "id": "agent_prompts",
+      "type": "prompt",
+      "description": "Agent system prompts and generation prompts",
+      "location": "packages/opencode/src/agent/prompt/",
+      "evidence_paths": [
+        "packages/opencode/src/agent/prompt/",
+        "packages/opencode/src/agent/generate.txt"
+      ]
+    }
+  ],
+  "evidence_refs": [
+    "README.md",
+    "AGENTS.md",
+    "packages/opencode/src/server/server.ts",
+    "packages/opencode/src/cli/cmd/serve.ts",
+    "packages/opencode/src/cli/cmd/tui/attach.ts",
+    "packages/opencode/src/agent/agent.ts",
+    "packages/opencode/src/tool/registry.ts",
+    "packages/opencode/src/mcp/index.ts",
+    "packages/opencode/src/config/config.ts",
+    "packages/opencode/src/project/instance.ts",
+    "packages/opencode/src/session/",
+    "packages/opencode/src/lsp/server.ts",
+    "packages/sdk/js/"
+  ]
+}

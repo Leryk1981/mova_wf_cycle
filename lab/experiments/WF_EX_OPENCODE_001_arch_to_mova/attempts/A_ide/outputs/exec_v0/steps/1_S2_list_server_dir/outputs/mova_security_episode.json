@@ -1,0 +1,19 @@
+{
+  "episode_id": "episode.security_policy_gate.v0",
+  "ts": "2025-12-16T23:18:01.429Z",
+  "action": "env.tool_run_request",
+  "decision": "allow",
+  "targets": {
+    "tool_id": "file.list",
+    "command": "ls -la -- '/work/packages/opencode/src/server/'",
+    "path": "packages/opencode/src/server/"
+  },
+  "evidence_refs": [
+    "inputs/mova_policy_profile_shell_allowlist_v0.json",
+    "inputs/request.json",
+    "logs/opencode_sse_events.log",
+    "logs/opencode_http_trace.jsonl",
+    "outputs/mova_env_tool_run_response.json",
+    "artifacts/file_list_stdout_1765927081427.txt"
+  ]
+}

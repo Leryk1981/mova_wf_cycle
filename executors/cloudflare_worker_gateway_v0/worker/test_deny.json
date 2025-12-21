@@ -1,0 +1,13 @@
+{
+  "request_id": "test_deny_001",
+  "tool_id": "http.fetch",
+  "args": {
+    "url": "https://example.com"
+  },
+  "ctx": {
+    "run_id": "test_run_deny",
+    "step_id": "test_step_deny",
+    "policy_ref": "policy.default"
+  }
+}
+

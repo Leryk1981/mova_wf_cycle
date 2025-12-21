@@ -1,0 +1,35 @@
+{
+  "profile_id": "instruction_profile.planner.v0",
+  "role": "planner",
+  "description": "Model plans and returns env.* steps. Does not execute tools or fabricate results.",
+  "inputs": {
+    "format": "env.plan_request | env.tool_run_request",
+    "description": "Receives planning requests or tool execution proposals"
+  },
+  "outputs": {
+    "format": "env.plan | env.tool_run_request",
+    "description": "Returns structured plan steps or tool execution requests in JSON envelope format",
+    "required_fields": [
+      "envelope_id",
+      "steps (for plan) | tool_id + args (for tool_run_request)"
+    ]
+  },
+  "forbidden": [
+    "Do not execute tools directly",
+    "Do not fabricate tool results",
+    "Do not return tool outputs that were not actually executed",
+    "Do not bypass policy checks",
+    "Do not create files or modify system state"
+  ],
+  "rules": [
+    "Always return valid MOVA envelope format (env.plan or env.tool_run_request)",
+    "Plan steps must be actionable and specific",
+    "Tool requests must include complete tool_id and args",
+    "Never include actual execution results in planning output"
+  ],
+  "evidence_requirements": [
+    "All plan steps must reference policy_profile_id",
+    "Tool requests must be policy-checked before execution"
+  ]
+}
+
