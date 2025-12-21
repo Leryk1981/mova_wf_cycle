@@ -38,7 +38,9 @@
     "lab:memory:import": "node tools/lab_memory.mjs import",
     "lab:memory:query": "node tools/lab_memory.mjs query",
     "flashslot:publish": "node packs/flashslot_v0/runtime/impl/publish_offer_v0.mjs",
-    "smoke:flashslot": "node tools/flashslot_smoke_ci.mjs"
+    "flashslot:experiment": "node tools/flashslot_experiment_cli.mjs",
+    "smoke:flashslot": "node tools/flashslot_smoke_ci.mjs",
+    "smoke:flashslot:experiment": "node tools/flashslot_experiment_smoke_ci.mjs"
   },
   "dependencies": {
     "sql.js": "^1.9.0"
