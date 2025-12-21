@@ -1,0 +1,20 @@
+{
+  "hypothesis_id": "flashslot_dentist_B",
+  "tenant": "bright_smiles_care",
+  "scenario": "Afternoon crown follow-up slot with discount to patients awaiting crowns",
+  "offer": {
+    "offer_id": "flashslot-20251222-B",
+    "service_type": "dentist_crown_followup",
+    "starts_at": "2025-12-22T14:00:00Z",
+    "duration_min": 60,
+    "location_id": "chair_2",
+    "price": 520,
+    "currency": "USD",
+    "channel": "email",
+    "audience_filter": "segment:pending_crown_fits",
+    "expires_at": "2025-12-22T12:00:00Z",
+    "notes": "15% off crown fit for patients already scheduled for prep"
+  },
+  "audience_hint": "Patients with crown preps in last 45 days",
+  "success_metric": "Deliveries sent to at least 5 eligible patients"
+}

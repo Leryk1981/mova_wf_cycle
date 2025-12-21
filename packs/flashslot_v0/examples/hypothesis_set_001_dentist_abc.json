@@ -1,0 +1,17 @@
+{
+  "id": "flashslot_dentist_set_001",
+  "hypotheses": [
+    {
+      "id": "A",
+      "offer_path": "packs/flashslot_v0/examples/hypotheses/hyp_A_dentist.json"
+    },
+    {
+      "id": "B",
+      "offer_path": "packs/flashslot_v0/examples/hypotheses/hyp_B_dentist.json"
+    },
+    {
+      "id": "C",
+      "offer_path": "packs/flashslot_v0/examples/hypotheses/hyp_C_dentist.json"
+    }
+  ]
+}

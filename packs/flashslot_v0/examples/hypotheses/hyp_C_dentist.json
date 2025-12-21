@@ -1,0 +1,20 @@
+{
+  "hypothesis_id": "flashslot_dentist_C",
+  "tenant": "bright_smiles_care",
+  "scenario": "After-work whitening slot using push notification to app users",
+  "offer": {
+    "offer_id": "flashslot-20251222-C",
+    "service_type": "dentist_whitening",
+    "starts_at": "2025-12-22T23:00:00Z",
+    "duration_min": 50,
+    "location_id": "chair_3",
+    "price": 260,
+    "currency": "USD",
+    "channel": "app_push",
+    "audience_filter": "segment:app_users_whitening_interest",
+    "expires_at": "2025-12-22T18:00:00Z",
+    "notes": "After-work whitening with enamel care kit included"
+  },
+  "audience_hint": "Active app users who clicked whitening offers in past 90 days",
+  "success_metric": "Push CTR above 8% before expiration"
+}

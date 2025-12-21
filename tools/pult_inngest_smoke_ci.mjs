@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 import { setTimeout as sleep } from "node:timers/promises";
 
 import flashslotPublish from "../pults/inngest_wf_cycle_v0/src/inngest/flashslot_publish.mjs";
+import flashslotExperiment from "../pults/inngest_wf_cycle_v0/src/inngest/flashslot_experiment.mjs";
 import wfCycleExperiment from "../pults/inngest_wf_cycle_v0/src/inngest/wf_cycle_experiment.mjs";
 import wfCycleFull from "../pults/inngest_wf_cycle_v0/src/inngest/wf_cycle_full.mjs";
 import wfCycleSmoke from "../pults/inngest_wf_cycle_v0/src/inngest/wf_cycle_smoke.mjs";
@@ -18,8 +19,12 @@ const healthUrl = "http://localhost:3000/health";
 const eventUrl = "http://localhost:8288/e/dev";
 
 const requiredDeps = ["express", "inngest"];
-const missingDeps = requiredDeps.filter((dep) =>
-  !fs.existsSync(path.join(repoRoot, "node_modules", dep))
+const depLocations = [
+  path.join(repoRoot, "node_modules"),
+  path.join(pultDir, "node_modules")
+];
+const missingDeps = requiredDeps.filter(
+  (dep) => !depLocations.some((dir) => fs.existsSync(path.join(dir, dep)))
 );
 if (missingDeps.length > 0) {
   console.log(
@@ -238,6 +243,52 @@ async function waitForArtifacts(runId, options = {}) {
   return baseDir;
 }
 
+async function waitForDirNotEmpty(dirPath, label, timeoutMs) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    if (fs.existsSync(dirPath)) {
+      const entries = fs.readdirSync(dirPath);
+      if (entries.length > 0) {
+        return;
+      }
+    }
+    await sleep(1000);
+  }
+  throw new Error(`timeout waiting for ${label}: ${dirPath}`);
+}
+
+async function waitForFlashslotPublishArtifacts(runId, timeoutMs = 300000) {
+  const baseDir = path.join(labRunsDir, runId);
+  const publishDir = path.join(baseDir, "flashslot_publish");
+  await waitForFile(path.join(baseDir, "result.json"), `result for ${runId}`, timeoutMs);
+  await waitForFile(
+    path.join(publishDir, "result.json"),
+    `flashslot_publish result for ${runId}`,
+    timeoutMs
+  );
+  await waitForFile(
+    path.join(publishDir, "request.json"),
+    `flashslot_publish request for ${runId}`,
+    timeoutMs
+  );
+  return publishDir;
+}
+
+async function waitForFlashslotExperimentArtifacts(runId, timeoutMs = 300000) {
+  const experimentDir = path.join(labRunsDir, runId, "flashslot_experiment");
+  await waitForFile(
+    path.join(experimentDir, "experiment_summary.json"),
+    `flashslot_experiment summary for ${runId}`,
+    timeoutMs
+  );
+  await waitForDirNotEmpty(
+    path.join(experimentDir, "winner_pack"),
+    `flashslot_experiment winner_pack for ${runId}`,
+    timeoutMs
+  );
+  return experimentDir;
+}
+
 async function main() {
   fs.mkdirSync(labRunsDir, { recursive: true });
   const originalCwd = process.cwd();
@@ -248,15 +299,19 @@ async function main() {
     const full = await runHandler(wfCycleFull, "lab/wf_cycle.full");
     const experiment = await runHandler(wfCycleExperiment, "lab/wf_cycle.experiment");
     const flashslot = await runHandler(flashslotPublish, "lab/flashslot.publish");
+    const flashslotExp = await runHandler(flashslotExperiment, "flashslot.experiment");
 
     const fullOut = full.result?.outDir ?? full.runDir;
     const experimentSummary = experiment.result?.experiment_summary
       ? path.join(experiment.runDir, experiment.result.experiment_summary)
       : experiment.runDir;
     const flashslotOut = flashslot.result?.outDir ?? flashslot.runDir;
+    const flashslotExperimentSummary = flashslotExp.result?.experiment_summary
+      ? path.join(flashslotExp.runDir, flashslotExp.result.experiment_summary)
+      : flashslotExp.runDir;
 
     console.log(
-      `[pult_inngest_smoke_ci] PASS: smoke=${smoke.runDir}, full=${fullOut}, experiment=${experimentSummary}, flashslot=${flashslotOut}`
+      `[pult_inngest_smoke_ci] PASS: smoke=${smoke.runDir}, full=${fullOut}, experiment=${experimentSummary}, flashslot=${flashslotOut}, flashslot_experiment=${flashslotExperimentSummary}`
     );
   } finally {
     process.chdir(originalCwd);
@@ -282,8 +337,14 @@ async function main() {
     timeoutMs: 900000
   });
 
+  const flashslotPublishEventId = await triggerEvent("lab/flashslot.publish");
+  const flashslotPublishDir = await waitForFlashslotPublishArtifacts(flashslotPublishEventId, 300000);
+
+  const flashslotExperimentEventId = await triggerEvent("flashslot.experiment");
+  const flashslotExperimentDir = await waitForFlashslotExperimentArtifacts(flashslotExperimentEventId, 300000);
+
   console.log(
-    `[pult_inngest_smoke_ci] PASS: smoke=${smokeDir}, full=${fullDir}, experiment=${experimentDir}`
+    `[pult_inngest_smoke_ci] PASS: smoke=${smokeDir}, full=${fullDir}, experiment=${experimentDir}, flashslot_publish=${flashslotPublishDir}, flashslot_experiment=${flashslotExperimentDir}`
   );
 }
 
