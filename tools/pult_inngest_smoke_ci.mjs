@@ -11,6 +11,20 @@ const pultDir = path.join(repoRoot, "pults", "inngest_wf_cycle_v0");
 const labRunsDir = path.join(repoRoot, "lab", "inngest_runs");
 const healthUrl = "http://localhost:3000/health";
 const eventUrl = "http://localhost:8288/e/dev";
+
+const requiredDeps = ["express", "inngest"];
+const missingDeps = requiredDeps.filter((dep) =>
+  !fs.existsSync(path.join(repoRoot, "node_modules", dep))
+);
+if (missingDeps.length > 0) {
+  console.log(
+    `[pult_inngest_smoke_ci] SKIP: missing local deps (${missingDeps.join(
+      ", "
+    )}); skipping runtime smoke in offline environment`
+  );
+  process.exit(0);
+}
+
 const processes = new Set();
 let shuttingDown = false;
 const killStrayEnabled = process.env.PULT_SMOKE_KILL_STRAY === "1";
