@@ -69,7 +69,21 @@ async function killStrayInngestProcesses() {
   if (process.platform === "win32") {
     await runDetached("taskkill", ["/IM", "inngest.exe", "/F"]);
   } else {
-    await runDetached("pkill", ["-f", "inngest"]);
+    await new Promise((resolve) => {
+      const child = spawn("pkill", ["-x", "inngest"], { stdio: "ignore", shell: false });
+      child.on("exit", (code) => {
+        if (code === 1) {
+          console.log("[pult_inngest_smoke_ci] no running inngest processes to kill");
+        } else if (code && code !== 0) {
+          console.warn(`[pult_inngest_smoke_ci] pkill exited with code=${code}`);
+        }
+        resolve();
+      });
+      child.on("error", (err) => {
+        console.warn(`[pult_inngest_smoke_ci] pkill failed: ${err.message}`);
+        resolve();
+      });
+    });
   }
 }
 
