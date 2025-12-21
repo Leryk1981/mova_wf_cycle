@@ -56,6 +56,34 @@ function startShellCommand(command, options = {}) {
   return child;
 }
 
+async function killStrayInngestProcesses() {
+  if (process.platform === "win32") {
+    await runDetachedCommand("taskkill", ["/IM", "inngest.exe", "/F"], true);
+  } else {
+    await runDetachedCommand("pkill", ["-f", "inngest"], true);
+  }
+}
+
+function runDetachedCommand(command, args, ignoreErrors = false) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(command, args, { stdio: "ignore", shell: false });
+    child.on("exit", (code) => {
+      if (!ignoreErrors && code !== 0) {
+        reject(new Error(`${command} exited with code ${code}`));
+      } else {
+        resolve();
+      }
+    });
+    child.on("error", (err) => {
+      if (ignoreErrors) {
+        resolve();
+      } else {
+        reject(err);
+      }
+    });
+  });
+}
+
 async function cleanup() {
   shuttingDown = true;
   for (const child of processes) {
@@ -68,6 +96,7 @@ async function cleanup() {
     }
   }
   await sleep(1000);
+  await killStrayInngestProcesses().catch(() => {});
 }
 
 process.on("SIGINT", async () => {
