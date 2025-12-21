@@ -21,6 +21,7 @@ jobs:
       - run: npm run validate
       - run: npm test
       - run: npm run smoke:wf_cycle
+      - run: npm run smoke:flashslot:experiment
 
   pult-smoke:
     runs-on: ubuntu-latest
