@@ -36,3 +36,6 @@ executors/cloudflare_worker_gateway_v0/worker/wrangler.dev.jsonc
 /pults/**/.server_pid_*
 lab/flashslot_runs/
 
+
+# local test tmp
+skills/skill_ingest_run_with_skillseeker_basic/tests/tmp*/
