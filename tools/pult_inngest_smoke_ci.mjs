@@ -1,10 +1,13 @@
 #!/usr/bin/env node
 
-import { spawn } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { setTimeout as sleep } from "node:timers/promises";
+
+import flashslotPublish from "../pults/inngest_wf_cycle_v0/src/inngest/flashslot_publish.mjs";
+import wfCycleExperiment from "../pults/inngest_wf_cycle_v0/src/inngest/wf_cycle_experiment.mjs";
+import wfCycleFull from "../pults/inngest_wf_cycle_v0/src/inngest/wf_cycle_full.mjs";
+import wfCycleSmoke from "../pults/inngest_wf_cycle_v0/src/inngest/wf_cycle_smoke.mjs";
 
 import flashslotPublish from "../pults/inngest_wf_cycle_v0/src/inngest/flashslot_publish.mjs";
 import wfCycleExperiment from "../pults/inngest_wf_cycle_v0/src/inngest/wf_cycle_experiment.mjs";
@@ -16,6 +19,20 @@ const pultDir = path.join(repoRoot, "pults", "inngest_wf_cycle_v0");
 const labRunsDir = path.join(repoRoot, "lab", "inngest_runs");
 const healthUrl = "http://localhost:3000/health";
 const eventUrl = "http://localhost:8288/e/dev";
+
+const requiredDeps = ["express", "inngest"];
+const missingDeps = requiredDeps.filter((dep) =>
+  !fs.existsSync(path.join(repoRoot, "node_modules", dep))
+);
+if (missingDeps.length > 0) {
+  console.log(
+    `[pult_inngest_smoke_ci] SKIP: missing local deps (${missingDeps.join(
+      ", "
+    )}); skipping runtime smoke in offline environment`
+  );
+  process.exit(0);
+}
+
 const processes = new Set();
 let shuttingDown = false;
 const mode = process.env.PULT_SMOKE_DRIVER?.toLowerCase() === "cli" ? "cli" : "stub";
@@ -65,6 +82,47 @@ async function waitForExit(child, timeoutMs = 5000) {
   }
   if (child.exitCode == null) {
     child.kill("SIGKILL");
+
+function createStepAdapter() {
+  return {
+    run: async (_label, cb) => cb()
+  };
+}
+
+function resolveRunDir(runId) {
+  return path.join(labRunsDir, runId);
+}
+
+async function runHandler(factory, label) {
+  const fn = factory(inngestStub);
+  const handler = fn?.handler;
+  if (typeof handler !== "function") {
+    throw new Error(`failed to resolve handler for ${label}`);
+  }
+  const safeLabel = label.replace(/[\\/]/g, "_");
+  const eventId = `${Date.now()}_${safeLabel}`;
+  const result = await handler({ event: { id: eventId }, step: createStepAdapter() });
+  const runId = result?.runId ?? eventId;
+  return { result, runId, runDir: resolveRunDir(runId) };
+async function killStrayInngestProcesses() {
+  if (process.platform === "win32") {
+    await runDetached("taskkill", ["/IM", "inngest.exe", "/F"]);
+  } else {
+    await new Promise((resolve) => {
+      const child = spawn("pkill", ["-x", "inngest"], { stdio: "ignore", shell: false });
+      child.on("exit", (code) => {
+        if (code === 1) {
+          console.log("[pult_inngest_smoke_ci] no running inngest processes to kill");
+        } else if (code && code !== 0) {
+          console.warn(`[pult_inngest_smoke_ci] pkill exited with code=${code}`);
+        }
+        resolve();
+      });
+      child.on("error", (err) => {
+        console.warn(`[pult_inngest_smoke_ci] pkill failed: ${err.message}`);
+        resolve();
+      });
+    });
   }
 }
 
@@ -82,6 +140,7 @@ async function cleanup() {
     waits.push(waitForExit(child));
   }
   await Promise.all(waits);
+  await sleep(1000);
 }
 
 process.on("SIGINT", async () => {
@@ -156,7 +215,7 @@ async function waitForFile(filePath, label, timeoutMs) {
 }
 
 async function waitForArtifacts(runId, options = {}) {
-  const { expectFull = false, expectExperiment = false, expectFlashslot = false, timeoutMs = 300000 } = options;
+  const { expectFull = false, expectExperiment = false, timeoutMs = 300000 } = options;
   const baseDir = path.join(labRunsDir, runId);
   await waitForFile(path.join(baseDir, "result.json"), `result for ${runId}`, timeoutMs);
   if (expectFull) {
@@ -197,11 +256,34 @@ function getInngestBinary() {
 async function runWithCli() {
   await ensurePultDependencies();
   fs.mkdirSync(labRunsDir, { recursive: true });
+  const originalCwd = process.cwd();
+  process.chdir(pultDir);
 
+  try {
+    const smoke = await runHandler(wfCycleSmoke, "lab/wf_cycle.smoke");
+    const full = await runHandler(wfCycleFull, "lab/wf_cycle.full");
+    const experiment = await runHandler(wfCycleExperiment, "lab/wf_cycle.experiment");
+    const flashslot = await runHandler(flashslotPublish, "lab/flashslot.publish");
+
+    const fullOut = full.result?.outDir ?? full.runDir;
+    const experimentSummary = experiment.result?.experiment_summary
+      ? path.join(experiment.runDir, experiment.result.experiment_summary)
+      : experiment.runDir;
+    const flashslotOut = flashslot.result?.outDir ?? flashslot.runDir;
+
+    console.log(
+      `[pult_inngest_smoke_ci] PASS: smoke=${smoke.runDir}, full=${fullOut}, experiment=${experimentSummary}, flashslot=${flashslotOut}`
+    );
+  } finally {
+    process.chdir(originalCwd);
+  }
   const nodeBinary = process.execPath;
   const inngestCli = getInngestBinary();
   startProcess(nodeBinary, ["server.mjs"], { cwd: pultDir });
   startProcess(inngestCli, ["dev", "-u", "http://localhost:3000/api/inngest"], { cwd: pultDir });
+  startProcess("npx", ["--no-install", "inngest-cli", "dev", "-u", "http://localhost:3000/api/inngest"], {
+    cwd: pultDir
+  });
 
   await waitForHealth();
 
@@ -218,7 +300,7 @@ async function runWithCli() {
   const flashslotDir = await waitForArtifacts(flashslotEventId, { expectFlashslot: true, timeoutMs: 600000 });
 
   console.log(
-    `[pult_inngest_smoke_ci] PASS: smoke=${smokeDir}, full=${fullDir}, experiment=${experimentDir}, flashslot=${flashslotDir}`
+    `[pult_inngest_smoke_ci] PASS: smoke=${smokeDir}, full=${fullDir}, experiment=${experimentDir}`
   );
 }
 
@@ -264,3 +346,7 @@ async function main() {
 }
 
 main();
+main().catch((error) => {
+  console.error("[pult_inngest_smoke_ci] FAIL:", error.message);
+  process.exit(1);
+});
