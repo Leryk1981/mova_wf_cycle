@@ -2,6 +2,7 @@ import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
+import { performance } from "node:perf_hooks";
 
 const repoRoot = process.cwd();
 const artifactsRoot = path.join(repoRoot, "artifacts", "run_gates");
@@ -26,6 +27,16 @@ const report = {
   steps: [],
 };
 
+const spawnOptions = { cwd: repoRoot, encoding: "utf8", shell: false };
+
+function runNpm(args) {
+  let child = spawnSync(npmCmd, args, spawnOptions);
+  if (child.error) {
+    child = spawnSync(npmCmd, args, { ...spawnOptions, shell: true });
+  }
+  return child;
+}
+
 let failed = false;
 
 for (const step of steps) {
@@ -33,7 +44,8 @@ for (const step of steps) {
   const relLog = path.relative(repoRoot, logPath).replace(/\\/g, "/");
 
   if (failed) {
-    fs.writeFileSync(logPath, "skipped due to previous failure\n", "utf8");
+    const msg = `skipped because ${report.failure_step} failed\n`;
+    fs.writeFileSync(logPath, msg, "utf8");
     report.steps.push({
       name: step.name,
       command: step.label,
@@ -45,15 +57,16 @@ for (const step of steps) {
     continue;
   }
 
-  const started = Date.now();
-  const child = spawnSync(npmCmd, step.args, {
-    cwd: repoRoot,
-    encoding: "utf8",
-  });
-  const duration = Date.now() - started;
-  const output = `${child.stdout ?? ""}${child.stderr ?? ""}`;
+  const started = performance.now();
+  const child = runNpm(step.args);
+  const duration = Math.round(performance.now() - started);
+  const chunks = [];
+  if (child.stdout) chunks.push(child.stdout);
+  if (child.stderr) chunks.push(child.stderr);
+  if (child.error) chunks.push(`[spawn error] ${child.error.message}\n`);
+  const output = chunks.join("") || "no output captured\n";
   fs.writeFileSync(logPath, output, "utf8");
-  const exitCode = child.status ?? 1;
+  const exitCode = typeof child.status === "number" ? child.status : (child.error ? 1 : 0);
   const status = exitCode === 0 ? "pass" : "fail";
 
   report.steps.push({

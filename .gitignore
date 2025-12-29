@@ -39,3 +39,5 @@ lab/flashslot_runs/
 
 # local test tmp
 skills/skill_ingest_run_with_skillseeker_basic/tests/tmp*/
+/artifacts/run_gates/*
+!/artifacts/run_gates/.gitkeep
