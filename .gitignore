@@ -41,3 +41,5 @@ lab/flashslot_runs/
 skills/skill_ingest_run_with_skillseeker_basic/tests/tmp*/
 /artifacts/run_gates/*
 !/artifacts/run_gates/.gitkeep
+/artifacts/station_cycle/**
+tmp_station_cycle_request.json

@@ -1,0 +1,54 @@
+{
+  "skill": "station_cycle_v1",
+  "run_id": "2025-12-29T19-39-27-995Z",
+  "status": "pass",
+  "artifacts_dir": "artifacts/station_cycle/2025-12-29T19-39-27-995Z",
+  "steps": [
+    {
+      "name": "snapshot",
+      "enabled": true,
+      "status": "pass",
+      "exit_code": 0,
+      "log": "artifacts/station_cycle/2025-12-29T19-39-27-995Z/snapshot.log",
+      "output": null,
+      "reason": null
+    },
+    {
+      "name": "gates",
+      "enabled": false,
+      "status": "skipped",
+      "exit_code": null,
+      "log": "artifacts/station_cycle/2025-12-29T19-39-27-995Z/gates.log",
+      "output": null,
+      "reason": "manual review"
+    },
+    {
+      "name": "wf_scaffold",
+      "enabled": false,
+      "status": "skipped",
+      "exit_code": null,
+      "log": "artifacts/station_cycle/2025-12-29T19-39-27-995Z/wf_scaffold.log",
+      "output": null,
+      "reason": "wf scaffold disabled by default policy"
+    },
+    {
+      "name": "wf_compare",
+      "enabled": false,
+      "status": "skipped",
+      "exit_code": null,
+      "log": "artifacts/station_cycle/2025-12-29T19-39-27-995Z/wf_compare.log",
+      "output": null,
+      "reason": "wf compare disabled by default policy"
+    },
+    {
+      "name": "wf_winner_pack",
+      "enabled": false,
+      "status": "skipped",
+      "exit_code": null,
+      "log": "artifacts/station_cycle/2025-12-29T19-39-27-995Z/wf_winner_pack.log",
+      "output": null,
+      "reason": "wf winner pack disabled by default policy"
+    }
+  ],
+  "notes": "sample station cycle"
+}

@@ -8,20 +8,54 @@ function getArg(name) {
   return process.argv[idx + 1] ?? null;
 }
 
-const requestArg = getArg("--request");
-if (!requestArg) {
-  console.error("Missing --request <path>");
-  process.exit(1);
+const defaultPolicy = {
+  snapshot: { enabled: false, reason: "disabled by default policy (snapshot handled separately)" },
+  gates: { enabled: false, reason: "disabled by default policy (gates opt-in)" },
+  wf_cycle: {
+    scaffold: { enabled: false, reason: "wf scaffold disabled by default policy" },
+    compare: { enabled: false, reason: "wf compare disabled by default policy" },
+    winner_pack: { enabled: false, reason: "wf winner pack disabled by default policy" },
+  },
+};
+
+function mergeStep(cfg, fallback) {
+  if (!cfg) return { enabled: fallback.enabled, request: fallback.request || {}, reason: fallback.reason };
+  return {
+    enabled: typeof cfg.enabled === "boolean" ? cfg.enabled : (fallback.enabled ?? false),
+    request: cfg.request ?? fallback.request ?? {},
+    reason: cfg.reason ?? fallback.reason ?? (cfg.enabled ? "" : "disabled in request"),
+  };
 }
 
-const requestAbs = path.resolve(process.cwd(), requestArg);
-let request = {};
-try {
-  request = JSON.parse(fs.readFileSync(requestAbs, "utf8"));
-} catch (err) {
-  console.error("Failed to read request JSON:", err.message);
-  process.exit(1);
+const requestArg = getArg("--request");
+let requestAbs = null;
+let requestRaw = {};
+
+if (requestArg) {
+  requestAbs = path.resolve(process.cwd(), requestArg);
+  try {
+    requestRaw = JSON.parse(fs.readFileSync(requestAbs, "utf8"));
+  } catch (err) {
+    console.error("Failed to read request JSON:", err.message);
+    process.exit(1);
+  }
 }
+
+const stepsReq = requestRaw.steps || {};
+const wfReq = stepsReq.wf_cycle || {};
+
+const normalizedRequest = {
+  notes: requestRaw.notes || "",
+  steps: {
+    snapshot: mergeStep(stepsReq.snapshot, defaultPolicy.snapshot),
+    gates: mergeStep(stepsReq.gates, defaultPolicy.gates),
+    wf_cycle: {
+      scaffold: mergeStep(wfReq.scaffold, defaultPolicy.wf_cycle.scaffold),
+      compare: mergeStep(wfReq.compare, defaultPolicy.wf_cycle.compare),
+      winner_pack: mergeStep(wfReq.winner_pack, defaultPolicy.wf_cycle.winner_pack),
+    },
+  },
+};
 
 const repoRoot = path.resolve(__dirname, "../../../..");
 const artifactsRoot = path.join(repoRoot, "artifacts", "station_cycle");
@@ -30,8 +64,6 @@ fs.mkdirSync(artifactsRoot, { recursive: true });
 const runId = new Date().toISOString().replace(/[:.]/g, "-");
 const runDir = path.join(artifactsRoot, runId);
 fs.mkdirSync(runDir, { recursive: true });
-
-const stepResults = [];
 
 const wrappers = {
   snapshot: {
@@ -56,16 +88,20 @@ const wrappers = {
   },
 };
 
+const startedAt = new Date();
+const stepResults = [];
+
 function relRepo(p) {
   return path.relative(repoRoot, p).replace(/\\/g, "/");
 }
 
 function runWrapper(name, config, wrapper) {
-  const enabled = !!(config && config.enabled);
+  const enabled = !!config.enabled;
   const logPath = path.join(runDir, `${name}.log`);
 
   if (!enabled) {
-    fs.writeFileSync(logPath, "skipped\n", "utf8");
+    const reason = config.reason || "disabled by request";
+    fs.writeFileSync(logPath, `skipped: ${reason}\n`, "utf8");
     stepResults.push({
       name,
       enabled: false,
@@ -73,16 +109,15 @@ function runWrapper(name, config, wrapper) {
       exit_code: null,
       log: relRepo(logPath),
       output: null,
+      reason,
     });
     return;
   }
 
   const args = [path.resolve(repoRoot, wrapper.script)];
-  let tempRequestPath = null;
-
   if (wrapper.needsRequest) {
     const payload = config.request ?? {};
-    tempRequestPath = path.join(runDir, `${name}_request.json`);
+    const tempRequestPath = path.join(runDir, `${name}_request.json`);
     fs.writeFileSync(tempRequestPath, JSON.stringify(payload, null, 2));
     args.push("--request", tempRequestPath);
   }
@@ -92,12 +127,12 @@ function runWrapper(name, config, wrapper) {
     encoding: "utf8",
   });
 
-  const combined = `${child.stdout ?? ""}${child.stderr ?? ""}`;
+  const combined = `${child.stdout ?? ""}${child.stderr ?? ""}` || "no output\n";
   fs.writeFileSync(logPath, combined, "utf8");
 
   let outputPath = null;
   try {
-    const parsed = JSON.parse(child.stdout);
+    const parsed = JSON.parse(child.stdout || "");
     outputPath = path.join(runDir, `${name}_result.json`);
     fs.writeFileSync(outputPath, JSON.stringify(parsed, null, 2));
   } catch {
@@ -111,11 +146,12 @@ function runWrapper(name, config, wrapper) {
     exit_code: child.status ?? 1,
     log: relRepo(logPath),
     output: outputPath ? relRepo(outputPath) : null,
+    reason: null,
   });
 }
 
-const steps = request.steps || {};
-const wfCycle = steps.wf_cycle || {};
+const steps = normalizedRequest.steps;
+const wfCycle = steps.wf_cycle;
 
 runWrapper("snapshot", steps.snapshot, wrappers.snapshot);
 runWrapper("gates", steps.gates, wrappers.gates);
@@ -124,21 +160,23 @@ runWrapper("wf_compare", wfCycle.compare, wrappers.wf_compare);
 runWrapper("wf_winner_pack", wfCycle.winner_pack, wrappers.wf_winner_pack);
 
 const overallStatus = stepResults.some((s) => s.status === "fail") ? "fail" : "pass";
+const finishedAt = new Date();
+
 const result = {
   skill: "station_cycle_v1",
   run_id: runId,
   status: overallStatus,
   artifacts_dir: relRepo(runDir),
   steps: stepResults,
-  notes: request.notes || "",
+  notes: normalizedRequest.notes,
 };
 
 const env = {
   run_id: runId,
-  started_at: new Date().toISOString(),
-  finished_at: new Date().toISOString(),
+  started_at: startedAt.toISOString(),
+  finished_at: finishedAt.toISOString(),
   artifacts_dir: relRepo(runDir),
-  request_path: relRepo(requestAbs),
+  request_path: requestAbs ? relRepo(requestAbs) : "(default)",
 };
 
 const resultPath = path.join(runDir, "station_cycle_result.json");
