@@ -3,7 +3,8 @@
   "default": "deny",
   "allow_steps": [
     "gates",
-    "wf_compare"
+    "wf_compare",
+    "episode_store"
   ],
   "deny_steps": [],
   "allow_overrides": true,

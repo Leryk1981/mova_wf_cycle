@@ -1,6 +1,7 @@
 {
   "notes": "station cycle with gates enabled",
   "steps": {
-    "gates": { "enabled": true }
+    "gates": { "enabled": true },
+    "episode_store": { "enabled": true, "strict": true }
   }
 }

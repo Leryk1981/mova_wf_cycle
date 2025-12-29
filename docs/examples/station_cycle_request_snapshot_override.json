@@ -6,6 +6,10 @@
       "request": {
         "mode": "policy override test"
       }
+    },
+    "episode_store": {
+      "enabled": true,
+      "strict": false
     }
   },
   "policy_override": {

@@ -12,6 +12,7 @@
       "properties": {
         "snapshot": { "$ref": "#/definitions/step_with_request" },
         "gates": { "$ref": "#/definitions/step_toggle" },
+        "episode_store": { "$ref": "#/definitions/episode_store_step" },
         "wf_cycle": {
           "type": "object",
           "properties": {
@@ -43,6 +44,14 @@
           "type": "object",
           "description": "Payload forwarded to the nested MOVA skill."
         }
+      },
+      "additionalProperties": false
+    },
+    "episode_store_step": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean", "default": true },
+        "strict": { "type": "boolean", "default": false }
       },
       "additionalProperties": false
     }
