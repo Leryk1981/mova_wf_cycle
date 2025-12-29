@@ -1,0 +1,10 @@
+{
+  "skill_id": "skill_scaffolder_basic",
+  "wrapper_id": "mova_skill_scaffolder_basic",
+  "runnable": false,
+  "entrypoint": null,
+  "request_schema": "skills/skill_scaffolder_basic/mova/ds/ds.skill_scaffold_request_v1.schema.json",
+  "result_schema": "skills/skill_scaffolder_basic/mova/ds/ds.skill_scaffold_result_v1.schema.json",
+  "env_schema": "skills/skill_scaffolder_basic/mova/env/env.skill_scaffold_run_v1.schema.json",
+  "generated_at": "2025-12-29T18:25:02.977Z"
+}

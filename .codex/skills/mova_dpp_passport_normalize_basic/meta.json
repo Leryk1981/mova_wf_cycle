@@ -1,0 +1,10 @@
+{
+  "skill_id": "dpp_passport_normalize_basic",
+  "wrapper_id": "mova_dpp_passport_normalize_basic",
+  "runnable": false,
+  "entrypoint": null,
+  "request_schema": null,
+  "result_schema": null,
+  "env_schema": null,
+  "generated_at": "2025-12-29T18:25:02.887Z"
+}

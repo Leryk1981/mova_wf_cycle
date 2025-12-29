@@ -1,0 +1,9 @@
+{
+  "skill_id": "context7_docs",
+  "wrapper_id": "mova_context7_docs",
+  "runnable": false,
+  "entrypoint": null,
+  "request_schema": "skills/context7_docs/mova/ds/ds.context7_docs_request_v1.schema.json",
+  "env_schema": "skills/context7_docs/mova/env/env.context7_docs_fetch_v1.schema.json",
+  "generated_at": "2025-12-29T18:25:02.884Z"
+}

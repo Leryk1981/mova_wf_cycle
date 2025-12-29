@@ -1,0 +1,10 @@
+{
+  "skill_id": "wf_cycle_compute_compare_basic",
+  "wrapper_id": "mova_wf_cycle_compute_compare_basic",
+  "runnable": true,
+  "entrypoint": "skills/wf_cycle_compute_compare_basic/impl/bindings/node/compute_compare.mjs",
+  "request_schema": "skills/wf_cycle_compute_compare_basic/mova/ds/ds.wf_cycle_compare_request_v1.schema.json",
+  "result_schema": "skills/wf_cycle_compute_compare_basic/mova/ds/ds.wf_cycle_compare_result_v1.schema.json",
+  "env_schema": null,
+  "generated_at": "2025-12-29T18:25:02.982Z"
+}
