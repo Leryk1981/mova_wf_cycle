@@ -599,10 +599,33 @@ function runFinishBranchStep(config) {
     parsed = null;
   }
 
-  const reportMd = parsed?.report_md || null;
-  const reportJson = parsed?.report_json || null;
+  const reportMdSource = parsed?.report_md || null;
+  const reportJsonSource = parsed?.report_json || null;
   const finishLogReason =
     policyDecision === "allow_override" ? policyReason : null;
+
+  let vendoredMd = null;
+  if (reportMdSource) {
+    try {
+      const source = path.resolve(repoRoot, reportMdSource);
+      vendoredMd = path.join(runDir, "finish_branch_report.md");
+      fs.copyFileSync(source, vendoredMd);
+    } catch (err) {
+      vendoredMd = null;
+      fs.appendFileSync(logPath, `\n[vendor] failed to copy report.md: ${err.message}\n`);
+    }
+  }
+  let vendoredJson = null;
+  if (reportJsonSource) {
+    try {
+      const source = path.resolve(repoRoot, reportJsonSource);
+      vendoredJson = path.join(runDir, "finish_branch_report.json");
+      fs.copyFileSync(source, vendoredJson);
+    } catch (err) {
+      vendoredJson = null;
+      fs.appendFileSync(logPath, `\n[vendor] failed to copy report.json: ${err.message}\n`);
+    }
+  }
 
   stepResults.push({
     name,
@@ -610,11 +633,15 @@ function runFinishBranchStep(config) {
     status: child.status === 0 ? "pass" : "fail",
     exit_code: child.status ?? 1,
     log: relRepo(logPath),
-    output: reportMd || (resultCopyPath ? relRepo(resultCopyPath) : null),
-    report_md: reportMd,
-    report_json: reportJson,
+    output: vendoredMd
+      ? relRepo(vendoredMd)
+      : reportMdSource || (resultCopyPath ? relRepo(resultCopyPath) : null),
+    report_md: vendoredMd ? relRepo(vendoredMd) : reportMdSource,
+    report_json: vendoredJson ? relRepo(vendoredJson) : reportJsonSource,
     result_json: resultCopyPath ? relRepo(resultCopyPath) : null,
     request: relRepo(requestPath),
+    report_origin_md: reportMdSource || null,
+    report_origin_json: reportJsonSource || null,
     reason: finishLogReason,
     policy: { decision: policyDecision, policy_ref: policyRef },
   });
