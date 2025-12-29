@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "finish_branch_result_v1",
+  "type": "object",
+  "properties": {
+    "skill": { "type": "string" },
+    "run_id": { "type": "string" },
+    "status": {
+      "type": "string",
+      "enum": ["ready", "needs_rebase", "dirty_workspace"]
+    },
+    "artifacts_dir": { "type": "string" },
+    "report_json": { "type": "string" },
+    "report_md": { "type": "string" },
+    "commands_log": { "type": "string" },
+    "branch": {
+      "type": "object",
+      "properties": {
+        "base": { "type": "string" },
+        "target": { "type": "string" },
+        "ahead_commits": { "type": "integer", "minimum": 0 },
+        "behind_commits": { "type": "integer", "minimum": 0 },
+        "workspace_clean": { "type": "boolean" }
+      },
+      "required": ["base", "target", "ahead_commits", "behind_commits", "workspace_clean"],
+      "additionalProperties": false
+    },
+    "git_status": { "type": "string" },
+    "git_log": { "type": "string" },
+    "diffstat": { "type": "string" },
+    "notes": { "type": "string" }
+  },
+  "required": [
+    "skill",
+    "run_id",
+    "status",
+    "artifacts_dir",
+    "report_json",
+    "report_md",
+    "commands_log",
+    "branch"
+  ],
+  "additionalProperties": false
+}

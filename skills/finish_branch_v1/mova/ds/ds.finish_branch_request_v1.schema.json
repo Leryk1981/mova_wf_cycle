@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "finish_branch_request_v1",
+  "type": "object",
+  "properties": {
+    "base_branch": {
+      "type": "string",
+      "description": "Branch or ref used as the baseline (default origin/main)",
+      "default": "origin/main"
+    },
+    "target_branch": {
+      "type": "string",
+      "description": "Branch under test; defaults to current checkout"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Operator notes included in the report"
+    },
+    "include_git_log": {
+      "type": "boolean",
+      "default": true,
+      "description": "Collect git log base..target"
+    },
+    "include_diffstat": {
+      "type": "boolean",
+      "default": true,
+      "description": "Collect git diff --stat base..target"
+    },
+    "max_commits": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 200,
+      "default": 10,
+      "description": "Maximum commits to list in log"
+    }
+  },
+  "additionalProperties": false
+}
