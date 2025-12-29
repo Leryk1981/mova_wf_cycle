@@ -80,7 +80,7 @@ the filesystem manually.
 
   up-to-date library documentation before working on a project.
 
-- `skill.mova_lab_operator` – meta-скіл, який описує, як IDE-агенти працюють з лабораторією.
+- `skill.mova_lab_operator` – meta-skill that explains how IDE agents work with the lab.
 
 - `skill.repo_snapshot_basic` – LLM-only skill that creates standardized repository snapshots. Accepts a repository structure dump, README content, and user notes, then returns:
   - `project_snapshot_md` – comprehensive markdown snapshot with fixed section structure
@@ -234,4 +234,3 @@ the filesystem manually.
   **Runtime**: `llm_profile` – executed by an LLM following the prompt profile at `impl/prompts/file_cleanup_profile.md`. No external HTTP requests, MCP calls, or local scripts. The skill never accesses the real filesystem.
   
   **Note**: This skill serves as a test case for the scaffolder workflow and demonstrates MOVA skill structure, but is not intended for regular use.
-

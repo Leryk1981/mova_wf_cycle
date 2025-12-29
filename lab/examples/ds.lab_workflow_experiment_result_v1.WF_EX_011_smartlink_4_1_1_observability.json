@@ -1,6 +1,6 @@
 {
   "experiment_id": "WF_EX_011_smartlink_4_1_1_observability",
-  "summary": "Codex-варіант observability (redirect event) дає чіткіший поділ core/debug і компактний payload; рекомендовано як best-so-far для smartlink.redirected.",
+  "summary": "The Codex observability variant (redirect event) provides clearer core/debug separation and a compact payload; recommended as best-so-far for smartlink.redirected.",
   "variants": [
     {
       "procedure_id": "baseline_chatgpt_observability_v1",
@@ -14,11 +14,11 @@
         { "metric_id": "scope_isolation", "value": 0.9, "unit": "score_0_1" }
       ],
       "pros": [
-        "Повний payload із багатим контекстом.",
-        "Явні службові поля і debug блок."
+        "Full payload with rich context.",
+        "Explicit service fields and debug block."
       ],
       "cons": [
-        "Трохи важкувата структура; debug/raw_context менш чітко відокремлені."
+        "Slightly heavy structure; debug/raw_context are less clearly separated."
       ]
     },
     {
@@ -33,18 +33,18 @@
         { "metric_id": "scope_isolation", "value": 0.95, "unit": "score_0_1" }
       ],
       "pros": [
-        "Компактний core (link/decision/routing/context/traffic) з відокремленим debug.",
-        "Однозначна прив'язка до text channel/event_type у global.",
-        "Чітко керований debug_mode в envelope."
+        "Compact core (link/decision/routing/context/traffic) with separated debug.",
+        "Unambiguous link to text channel/event_type in global.",
+        "Clearly controlled debug_mode in the envelope."
       ],
       "cons": [
-        "Менше деталізації browser/os версій (може знадобитись пізніше)."
+        "Less detail on browser/OS versions (may be needed later)."
       ]
     }
   ],
   "recommended_procedure_id": "candidate_codex_observability_v1",
   "notes": [
-    "Scope: лише observability (redirect event); worker/infra поза експериментом."
+    "Scope: observability only (redirect event); worker/infra are out of scope."
   ],
   "meta": {
     "labels": [

@@ -1,124 +1,76 @@
-# Дорожня карта модернізації лабораторії воркфлоу
+# Workflow lab modernization roadmap
 
-**Проєкт:** MOVA Skills Lab  
-**Фокус:** підтримка експериментів з воркфлоу та конкуренції моделей  
-**Горизонт:** 2–4 ітерації роботи в IDE
-
----
-
-## Фаза 0 — Фіксація концепції (цей архів)
-
-✅ Результат фази:
-
-- текстовий опис лабораторії воркфлоу (overview);
-- ТЗ на схеми та конверти (schemas_tz);
-- опис першого тестового патерну (first_pattern);
-- дорожня карта (цей документ).
-
-Це артефакти **для старту нового чату / гілки** в конкретному репозиторії.
+**Project:** MOVA Skills Lab  
+**Focus:** workflow experiments and model competition  
+**Horizon:** 2–4 IDE iterations
 
 ---
 
-## Фаза 1 — Реалізація схем та конвертів
+## Phase 0 — Concept freeze (this archive)
+Outcome:
+- text overview of the workflow lab
+- schema + envelope requirements
+- description of the first test pattern
+- this roadmap
 
-**Ціль:** додати в репозиторій MOVA Skills Lab мінімальний набір lab-схем і конвертів.
-
-### Кроки
-
-1. Створити нову гілку, наприклад:  
-   - `feature/lab-workflow-experiments-v1`.
-
-2. Додати JSON Schema файли:
-   - `schemas/lab/ds.lab_workflow_procedure_v1.schema.json`
-   - `schemas/lab/ds.lab_workflow_experiment_config_v1.schema.json`
-   - `schemas/lab/ds.lab_workflow_experiment_result_v1.schema.json`
-   - `schemas/lab/ds.lab_workflow_episode_data_v1.schema.json`
-
-3. Додати schema-тести (перевірка валідності через існуючий mova-check / інші інструменти).
-
-4. Додати envelope-схеми:
-   - `envelopes/lab/env.lab_workflow_experiment_plan_request_v1.schema.json`
-   - `envelopes/lab/env.lab_workflow_variant_generate_request_v1.schema.json`
-   - `envelopes/lab/env.lab_workflow_variant_run_request_v1.schema.json`
-   - `envelopes/lab/env.lab_workflow_experiment_aggregate_request_v1.schema.json`
-
-5. Оновити каталоги / index-файли (якщо використовуються):
-   - додати нові схеми в реєстр;
-   - додати приклади порожніх payload-ів.
-
-**Критерій завершення:** усі нові схеми й конверти проходять валідацію, є хоча б по одному мінімальному JSON-прикладу.
+Use these artifacts to start a fresh chat/branch in a concrete repository.
 
 ---
 
-## Фаза 2 — Жовті скіли для воркфлоу-експериментів
+## Phase 1 — Schemas and envelopes
+**Goal:** add the minimal lab schemas and envelopes to MOVA Skills Lab.
 
-**Ціль:** додати базові скіли для роботи з новими схемами.
+Steps:
+1. Create a branch, e.g. `feature/lab-workflow-experiments-v1`.
+2. Add JSON Schemas: `ds.lab_workflow_procedure_v1`, `ds.lab_workflow_experiment_config_v1`, `ds.lab_workflow_experiment_result_v1`, `ds.lab_workflow_episode_data_v1`.
+3. Add schema tests (validate via mova-check or existing tools).
+4. Add envelope schemas: `env.lab_workflow_experiment_plan_request_v1`, `env.lab_workflow_variant_generate_request_v1`, `env.lab_workflow_variant_run_request_v1`, `env.lab_workflow_experiment_aggregate_request_v1`.
+5. Update catalogs/indexes and include minimal payload examples.
 
-### Необхідні скіли
-
-1. `skill.workflow_experiment_plan_basic`
-   - Вхід: опис домену, початковий as-is воркфлоу.  
-   - Вихід: `ds.lab_workflow_experiment_config_v1`.
-
-2. `skill.workflow_variant_generate_basic`
-   - Вхід: baseline_procedure + experiment_config + agent_profile.  
-   - Вихід: новий `ds.lab_workflow_procedure_v1` (candidate).
-
-3. `skill.workflow_variant_run_basic`
-   - Вхід: procedure_id + test_data_ref + context.  
-   - Вихід: набір епізодів з `lab_workflow_episode_data_v1`.
-
-4. `skill.workflow_experiment_aggregate_basic`
-   - Вхід: experiment_id.  
-   - Вихід: `ds.lab_workflow_experiment_result_v1` + людський звіт (markdown).
-
-### Кроки
-
-1. Створити каталоги skill-описів (як у поточних skills).  
-2. Для кожного skill:
-   - описати contract (input/output) через MOVA-схеми;
-   - додати мінімальні приклади env-запусків;
-   - додати тести (якщо в Skills Lab є загальний runner для skills).
-
-**Критерій завершення:** усі чотири скіли мають опис, приклади та можуть бути викликані вручну через env-файли.
+**Exit:** all new schemas/envelopes validate and have at least one minimal JSON example.
 
 ---
 
-## Фаза 3 — Перший експеримент WF-EX-001
+## Phase 2 — Yellow skills for workflow experiments
+**Goal:** add baseline skills for the new schemas.
 
-**Ціль:** виконати перший повний цикл експерименту `WF-EX-001`.
+Required skills:
+1. `skill.workflow_experiment_plan_basic` — input: domain + as-is workflow; output: `ds.lab_workflow_experiment_config_v1`.
+2. `skill.workflow_variant_generate_basic` — input: baseline procedure + config + agent_profile; output: candidate `ds.lab_workflow_procedure_v1`.
+3. `skill.workflow_variant_run_basic` — input: procedure_id + test_data_ref + context; output: episodes with `lab_workflow_episode_data_v1`.
+4. `skill.workflow_experiment_aggregate_basic` — input: experiment_id; output: `ds.lab_workflow_experiment_result_v1` + human-readable markdown report.
 
-### Кроки
+Steps:
+1. Create skill folders like existing skills.
+2. For each skill: define contracts via MOVA schemas, add minimal env run examples, and add tests if a common runner exists.
 
-1. Оформити as-is воркфлоу `wf_repo_change_plan_baseline_v1` у форматі `lab_workflow_procedure`.  
-2. Створити `lab_workflow_experiment_config` для `WF-EX-001` згідно з документом first_pattern.  
-3. Для кожного `agent_profile`:
-   - викликати `env.lab_workflow_variant_generate_request_v1`;  
-   - отримати й зафіксувати candidate-процедури.
-4. Визначити 3–5 реальних задач на зміну коду в одному з репозиторіїв (DPP-lab / Skills Lab).  
-5. Для кожного варіанту процедури й кожної задачі:
-   - реально пройти воркфлоу (людина + агент);
-   - зафіксувати епізоди (час, ітерації, помилки, суб’єктивну складність).
-6. Викликати `env.lab_workflow_experiment_aggregate_request_v1` для `experiment_id = "WF-EX-001"`.  
-7. Зберегти результат як JSON + markdown-звіт у каталозі `lab/examples/`.
-
-**Критерій завершення:**  
-- Є повний набір артефактів (config, procedures, episodes, result).  
-- Є людський звіт з висновками й рекомендаціями щодо покращеного воркфлоу.
+**Exit:** all four skills have descriptions, examples, and can be invoked manually with env files.
 
 ---
 
-## Фаза 4 — Полірування та генералізація
+## Phase 3 — First experiment WF-EX-001
+**Goal:** run the first full workflow experiment.
 
-**Ціль:** перетворити перший експеримент на стабільний патерн для інших доменів.
+Steps:
+1. Capture the as-is workflow `wf_repo_change_plan_baseline_v1` as `lab_workflow_procedure`.
+2. Create `lab_workflow_experiment_config` for `WF-EX-001` per the first pattern document.
+3. For each `agent_profile`: call `env.lab_workflow_variant_generate_request_v1` and record candidate procedures.
+4. Pick 3–5 real code-change tasks (DPP-lab / Skills Lab).
+5. For every procedure variant and task: run the workflow (human + agent), capture episodes (time, iterations, errors, subjective load).
+6. Call `env.lab_workflow_experiment_aggregate_request_v1` with `experiment_id = "WF-EX-001"`.
+7. Store output JSON + markdown report under `lab/examples/`.
 
-Можливі кроки:
+**Exit:** full artifact set (config, procedures, episodes, result) plus a human report with conclusions and a recommended improved workflow.
 
-1. Витягнути спільні частини експерименту в універсальний патерн (template) для інших воркфлоу.  
-2. Додати базові UI-/IDE-дії (наприклад, команди у Workbench / Skills Lab) для запуску експериментів з воркфлоу.  
-3. Зафіксувати best practices у окремому guide-документі (як правильно описувати воркфлоу, метрики, constraints).  
-4. Опціонально — винести частину схем/патернів у більш стабільний шар (жовтий / окремий пакет), якщо експерименти покажуть їхню універсальність.
+---
 
-**Критерій завершення:**  
-- WF-EX-001 пройдено, висновки інтегровані в код і документи;  
-- є зрозуміла інструкція, як запустити WF-EX-00X для іншого домену (наприклад, Smartlink, file_cleanup, social_pack).
+## Phase 4 — Polish and generalize
+**Goal:** turn the first experiment into a stable pattern for other domains.
+
+Possible steps:
+1. Extract the common parts into a reusable pattern/template.
+2. Add basic UI/IDE helpers (Workbench / Skills Lab commands) for launching workflow experiments.
+3. Capture best practices in a guide on how to describe workflows, metrics, and constraints.
+4. Optionally move stable pieces into a higher-stability layer (yellow/own package) if experiments show they are reusable.
+
+**Exit:** WF-EX-001 is completed, lessons are merged into code/docs, and there is a clear recipe to run WF-EX-00X for another domain (SmartLink, file_cleanup, social_pack, etc.).

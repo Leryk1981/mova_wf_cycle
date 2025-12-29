@@ -2,8 +2,8 @@
 
 /**
  * Skill Seeker ingest episode storage.
- * Вход: env.skill_ingest_run_store_episode_v1
- * Выход: { ok, episode_id, path }
+ * Input: env.skill_ingest_run_store_episode_v1
+ * Output: { ok, episode_id, path }
  */
 const fs = require("fs");
 const path = require("path");

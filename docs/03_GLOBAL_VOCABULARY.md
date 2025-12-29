@@ -58,11 +58,10 @@ The red core defines the following shared vocabularies under `core/mova/global/`
 
     `scan` (reserved for future file-related skills),
 
-    `run` – керує запуском скіла через контрольну площину (control plane).
+    `run` – controls skill execution through the control plane.
 
 Skills in this lab are expected to reuse these vocabularies where possible.
 
 If a skill introduces new roles, resources, states or verbs, it should
 
 document them clearly and keep them consistent with the global ones.
-

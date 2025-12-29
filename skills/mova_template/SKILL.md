@@ -1,42 +1,32 @@
-# skill.mova_template – базовий приклад навика MOVA
+# skill.mova_template – baseline MOVA skill example
 
-Цей навик не прив'язаний до конкретного домену (файли, Obsidian тощо).
+This skill is not tied to a specific domain (files, Obsidian, etc.).
 
-Він показує структуру MOVA-навика на простому прикладі:
+It demonstrates the structure of a MOVA skill with a simple example:
 
-> Взяти текстовий опис процедури і перетворити його на структурований список кроків.
+> Take a short procedure description and convert it into a structured list of steps.
 
-## Що робить навик
+## What the skill does
 
-- Вхід: короткий опис процесу в один-декілька абзаців.
+- Input: a brief process description (one or a few paragraphs).
+- Output: a structured list of steps with titles and descriptions.
 
-- Вихід: структурований список кроків з назвами та описами.
+Example:
 
-Приклад:
+> “Brew a morning coffee in a cezve”
 
-> «Зварити ранкову каву в турці»
+is converted into a list like:
 
-перетворюється на список типу:
+1. Prepare the cezve and coffee.
+2. Pour water.
+3. Add coffee.
+4. Heat until foam rises.
+5. Remove from heat and serve.
 
-1. Підготувати турку та каву.
+This skill serves as a template for:
 
-2. Налити воду.
-
-3. Додати каву.
-
-4. Підігрівати до підняття піни.
-
-5. Зняти з вогню і подати.
-
-Надалі цей навик виступає шаблоном:
-
-- як організовано папку `skills/<id>/`,
-
-- де лежить маніфест,
-
-- де будуть локальні `ds.` / `env.`-схеми,
-
-- де приклади (`cases/`) і епізоди (`episodes/`),
-
-- де реалізація (`impl/`).
-
+- how a `skills/<id>/` folder is organized,
+- where the manifest lives,
+- where local `ds.` / `env.` schemas are,
+- where examples (`cases/`) and episodes (`episodes/`) go,
+- where implementation (`impl/`) resides.

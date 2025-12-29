@@ -3,78 +3,77 @@
 ## 1. Context
 
 - External repo: **MOVA SmartLink Factory** (React/Vite + Cloudflare Worker, MOVA 3.6.0).
-- MOVA Skills Lab: embedded as a subfolder `mova_skills_lab/` inside SmartLink repo.
-- IDE agent: **Codex** (VS Code), общение с пользователем на русском/украинском.
-- Session goal: проверить, как IDE-агент может использовать Skills Lab как фабрику навыков и коннекторов, без длинных промптов.
+- MOVA Skills Lab lives as a subfolder `mova_skills_lab/` inside the SmartLink repo.
+- IDE agent: **Codex** (VS Code), conversing with the user in Russian/Ukrainian.
+- Session goal: confirm how an IDE agent can use Skills Lab as a factory for skills and connectors without long prompts.
 
 ## 2. Session goals
 
-- Пройти полный цикл: репозиторий → снапшот → план → небольшой шаг изменений.
-- Проверить инфраструктурные навыки:
+- Walk the full cycle: repository → snapshot → plan → small change.
+- Check infrastructure skills:
   - `skill.repo_snapshot_basic`
   - `skill.repo_code_change_plan_basic`
   - `skill.code_exec_task_basic`
-- Проверить фабрику навыков:
+- Check the skill factory:
   - `skill.skill_scaffolder_basic`
-  - запуск нового скилла на реальных данных.
-- Проверить фабрику коннекторов:
+  - run a new skill on real data.
+- Check the connector factory:
   - `skill.connector_scaffolder_basic`
-  - `skill.runtime_binding_code_scaffolder_basic` для скилла и для коннектора.
-- Оценить скорость, точность и токен-затраты для реальной работы в IDE.
+  - `skill.runtime_binding_code_scaffolder_basic` for both skill and connector.
+- Measure speed, accuracy, and token cost for real IDE work.
 
 ## 3. Skills used in this episode
 
 - `skill.repo_snapshot_basic`  
-  – дал структурированный снапшот репозитория SmartLink Factory и был сохранён как PROJECT_SNAPSHOT в самом проекте.
+  – produced a structured snapshot of the SmartLink Factory repo and was stored as PROJECT_SNAPSHOT inside the project.
 
 - `skill.repo_code_change_plan_basic`  
-  – предложил план разделения контрактов и исполнения (contracts/mova3.6/*), подготовку к schema-first и будущей миграции к MOVA 4.0.0.
+  – suggested separating contracts vs execution (contracts/mova3.6/*), preparing for schema-first and migration to MOVA 4.0.0.
 
 - `skill.code_exec_task_basic`  
-  – выполнил ограниченный шаг: ввёл слой `contracts/mova3.6/*`, обновил пути в конфиге/коде, проверил `npm run build`.
+  – executed a scoped change: introduced `contracts/mova3.6/*`, updated paths in config/code, verified `npm run build`.
 
 - `skill.skill_scaffolder_basic`  
-  – создал новый скилл `skill.smartlink_contracts_snapshot_basic` со схемами ds/env, профилем, binding и примером кейса.
+  – created a new skill `skill.smartlink_contracts_snapshot_basic` with ds/env schemas, profile, binding, and a sample case.
 
 - `skill.smartlink_contracts_snapshot_basic` (run)  
-  – построил структурированный snapshot слоя контрактов MOVA 3.6.0 и список `open_questions` (отсутствующая infra-схема, возможные дополнительные envelopes и т.п.).
+  – built a structured snapshot of the MOVA 3.6.0 contracts layer and an `open_questions` list (missing infra schema, possible additional envelopes, etc.).
 
-- `skill.runtime_binding_code_scaffolder_basic` (для skill)  
-  – сгенерировал TypeScript-клиент `smartlinkContractsSnapshotClient.ts` с функцией `runSmartlinkContractsSnapshot(...)`.
+- `skill.runtime_binding_code_scaffolder_basic` (for the skill)  
+  – generated TypeScript client `smartlinkContractsSnapshotClient.ts` with `runSmartlinkContractsSnapshot(...)`.
 
 - `skill.connector_scaffolder_basic`  
-  – создал коннектор `connector.smartlink_worker_status_basic` (manifest, ds/env, HTTP binding, case).
+  – created connector `connector.smartlink_worker_status_basic` (manifest, ds/env, HTTP binding, case).
 
-- `skill.runtime_binding_code_scaffolder_basic` (для connector)  
-  – сгенерировал TypeScript-клиент `smartlinkWorkerStatusClient.ts` с функцией `getSmartlinkWorkerStatus(...)` на основе `fetch`.
+- `skill.runtime_binding_code_scaffolder_basic` (for the connector)  
+  – generated TypeScript client `smartlinkWorkerStatusClient.ts` with `getSmartlinkWorkerStatus(...)` using `fetch`.
 
 ## 4. Key outcomes
 
-- Полный вертикальный цикл Skills Lab отработал на живом проекте:
-  - репо → снапшот → план → ограниченный шаг → новый скилл → новый коннектор → runtime-клиенты.
-- Все операции выполнялись в отдельной ветке экспериментального репозитория, без риска для канонического `mova_skills_lab`.
-- Codex корректно читал `skills_registry_v1.json`, manifest'ы и ds/env-схемы и воспринимал их как контракты, а не просто текст.
-- Генерация клиентского кода (TypeScript) для скила и коннектора показала, что Skills Lab можно использовать как фабрику прикладных API-клиентов.
-- Общий расход токенов на сессию ≈ 65k, что для такого объёма структуры и кода приемлемо.
+- End-to-end Skills Lab loop worked on a live project:
+  - repo → snapshot → plan → scoped change → new skill → new connector → runtime clients.
+- All operations ran in a separate experimental branch of the SmartLink repo, keeping the canonical `mova_skills_lab` safe.
+- Codex correctly read `skills_registry_v1.json`, manifests, and ds/env schemas as contracts rather than plain text.
+- Client code generation (TypeScript) for the skill and connector showed Skills Lab can act as an applied API-client factory.
+- Total token spend ≈ 65k, acceptable for the amount of structure and code touched.
 
 ## 5. Observations about agent behaviour
 
-- Агент стабильно следовал шагам: «сначала план → потом небольшой шаг → потом код/скилл», вместо хаотичных массовых правок.
-- Хорошо выдерживал языковой режим: объяснения и команды пользователю на русском/украинском, при этом идентификаторы/файлы в английской нотации.
-- Уровень «понимания» Skills Lab можно считать достаточным для регулярной работы: агент уверенно опирался на registry и manifest'ы без лишних переспрашиваний.
-- Точки напряжения (git-права, опасные команды) были минимизированы за счёт явного запрета на git-операции до явного разрешения.
+- The agent consistently followed the order “plan → small step → code/skill” instead of chaotic edits.
+- Language handling was solid: user explanations/commands in Russian/Ukrainian while identifiers/files stayed in English notation.
+- The agent’s grasp of Skills Lab was sufficient for regular work: it leaned on the registry and manifests confidently.
+- Risky spots (git permissions, dangerous commands) were minimized by explicitly blocking git operations until allowed.
 
 ## 6. Risks and limitations
 
-- Все артефакты этого эпизода (новые skills/connectors/TS-клиенты) живут в стороннем репозитории SmartLink, не в каноническом `mova_skills_lab`.
-- Не настроен единый формат хранения эпизодов в machine-readable виде (здесь только Markdown-отчёт).
-- Не протестирована глубинная интеграция с реальным рантаймом (MCP/HTTP host) — клиенты пока работают как фасады/заглушки.
-- Не проверена работа с другими агентами (Gemini/Qwen) по тому же протоколу.
+- All artifacts from this episode (new skills/connectors/TS clients) live in the external SmartLink repo, not in canonical `mova_skills_lab`.
+- There is no unified machine-readable episode storage yet (only this markdown report).
+- Deep runtime integration (MCP/HTTP host) was not tested — clients currently act as facades/stubs.
+- Other agents (Gemini/Qwen) were not validated against the same protocol.
 
 ## 7. Next steps suggested
 
-- Оформить стабильный протокол IDE-агента (Profile + Protocol v1) для работы с MOVA Skills Lab в любом репозитории.
-- Добавить пользовательский гайд: «Как использовать MOVA Skills Lab в своём проекте» с готовыми фразами/шаблонами для запуска ключевых skills.
-- Использовать этот эпизод как эталон при интеграции внешних инструментов (например, Skill Seeker) в генетический слой MOVA.
-- В будущем — перевести подобные эпизоды в формат `ds.episode_*` и хранить их в machine-readable виде для анализа и эволюции.
-
+- Formalize a stable IDE-agent protocol (Profile + Protocol v1) for using MOVA Skills Lab in any repo.
+- Add a user guide: “How to use MOVA Skills Lab in your project” with ready-made phrases/templates for launching key skills.
+- Use this episode as a reference when integrating external tools (e.g., Skill Seeker) into the MOVA genetic layer.
+- In the future, convert similar episodes to `ds.episode_*` and store them in machine-readable form for analysis and evolution.

@@ -33,9 +33,8 @@ This repository explores how to organize "skills" for LLMs using the MOVA 4.0.0 
 - `PROJECT_SNAPSHOT_2025-12-03_mova_skills_lab.md` — comprehensive snapshot of the repository state (2025-12-03).
 - `PROJECT_SNAPSHOT_2025-12-04_mova_skills_lab.md` — comprehensive snapshot of the repository state (2025-12-04).
 - `GLOBAL_MEMORY_2025-12-04_mova_skills_lab.md` — condensed global memory summary (2025-12-04).
-- `EPISODE_2025-12-04_codex_smartlink_factory.md` — первый генетический эпизод (Codex + SmartLink Factory + MOVA Skills Lab).
+- `EPISODE_2025-12-04_codex_smartlink_factory.md` — the first genetic episode (Codex + SmartLink Factory + MOVA Skills Lab).
 
 - `core/mova/specs/` – imported MOVA 4.0.0 core catalog schemas and examples.
 
 - `lab/skills_registry_v1.json` – current registry of skills and bindings in the lab.
-

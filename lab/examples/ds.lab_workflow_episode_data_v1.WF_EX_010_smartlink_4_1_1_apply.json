@@ -26,22 +26,22 @@
     },
     "changes_summary": {
       "ds.smartlink.rules.v1": [
-        "Додано підтримку referrer, debug-флага та $comment з mova_spec_version 4.1.1.",
-        "Уточнено meta.spec_alignment для вимог security/text."
+        "Added referrer support, debug flag, and $comment with mova_spec_version 4.1.1.",
+        "Clarified meta.spec_alignment for security/text requirements."
       ],
       "env.smartlink.default.v1": [
-        "Оновлено mova_version до 4.1.1, додано decision/debug виходи.",
-        "Явні посилання на rules/global/meta і text channel smartlink.redirected."
+        "Updated mova_version to 4.1.1, added decision/debug outputs.",
+        "Explicit references to rules/global/meta and text channel smartlink.redirected."
       ],
       "global.smartlink.v1": [
-        "Скорочено до ролей/resources/text_channels, що реально потрібні rules/env.",
-        "Додано text_channels smartlink.redirected із ключовими полями."
+        "Reduced to roles/resources/text_channels actually required by rules/env.",
+        "Added text_channels smartlink.redirected with key fields."
       ],
       "meta.smartlink.v1": [
-        "Опис пакета під MOVA 4.1.1, посилання на артефакти candidate.",
-        "Явно зафіксовано scope (4 JSON) та out-of-scope (worker/infra)."
+        "Package description aligned to MOVA 4.1.1 with references to candidate artifacts.",
+        "Explicitly fixed scope (four JSON files) and out-of-scope items (worker/infra)."
       ]
     },
-    "notes_from_operator": "План WF_EX_010 застосовано до 4 JSON-артефактів кандидата. Будь-які кроки про worker/деплой були поза scope і не виконувались."
+    "notes_from_operator": "WF_EX_010 plan applied to the four candidate JSON artifacts. Any worker/deploy steps were out of scope and were not executed."
   }
 }

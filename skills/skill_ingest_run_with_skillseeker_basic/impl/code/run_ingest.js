@@ -2,8 +2,8 @@
 
 /**
  * Skill Seeker ingest runner.
- * Вход: env.skill_ingest_run_request_v1
- * Выход: ds.skill_ingest_run_result_v1
+ * Input: env.skill_ingest_run_request_v1
+ * Output: ds.skill_ingest_run_result_v1
  */
 const fs = require("fs");
 const path = require("path");
@@ -167,7 +167,7 @@ async function runSkillIngestWithSkillSeekerBasic(envelope, opts = {}) {
     throw new Error("run_config.mode and run_config.run_id are required");
   }
 
-  // Собираем временный конфиг Skill Seeker
+  // Build a temporary Skill Seeker config
   const tempConfigObj = {
     name: sourceConfig.name,
     description: sourceConfig.description,

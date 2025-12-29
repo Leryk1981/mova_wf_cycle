@@ -1,24 +1,23 @@
 # skill.context7_docs
 
-Навик для роботи з Context7 MCP-сервером.
+Skill for working with the Context7 MCP server.
 
-Призначення:
+Purpose:
 
-- Перед тим, як починати роботу з проєктом або бібліотекою,
+- Before starting work on a project or library,
 
-  навик викликає Context7 і витягує актуальну документацію
+  the skill calls Context7 and fetches up-to-date documentation
 
-  та приклади коду.
+  and code samples.
 
-- Результат можна покласти в нотатку, лог або просто показати
+- The result can be placed into a note or log, or shown
 
-  людині/агенту як «пакет контексту перед роботою».
+  to a human/agent as a “context pack before work.”
 
-Цей навик:
+This skill:
 
-- описаний через `manifest.skill.json` (ds.skill_descriptor_v1),
+- is described via `manifest.skill.json` (ds.skill_descriptor_v1),
 
-- має MCP-binding до офіційного Context7 сервера,
+- has an MCP binding to the official Context7 server,
 
-- надалі отримає власні ds./env. схеми для запиту та відповіді.
-
+- will later receive dedicated ds./env. schemas for request and response.

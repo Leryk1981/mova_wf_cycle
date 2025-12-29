@@ -43,6 +43,6 @@
       "global.smartlink.v1": "equal but normalized to spec",
       "meta.smartlink.v1": "strictly better"
     },
-    "notes_from_operator": "WF_EX_010 run завершено: candidate SmartLink 4.1.1 зберігає функціональну логіку baseline та узгоджений зі spec 4.1.1. Worker/infra залишаються out-of-scope."
+    "notes_from_operator": "WF_EX_010 run completed: the SmartLink 4.1.1 candidate preserves baseline functional logic and aligns with spec 4.1.1. Worker/infra remain out of scope."
   }
 }

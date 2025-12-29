@@ -1,7 +1,7 @@
 {
   "experiment_id": "WF_EX_011_smartlink_4_1_1_observability",
   "title": "WF-EX-011: SmartLink 4.1.1 observability (redirect event)",
-  "description": "Порівняти ChatGPT baseline vs Codex-candidate для спостережуваності SmartLink (redirect event ds/env + мінімальні доповнення до global/meta).",
+  "description": "Compare the ChatGPT baseline vs Codex candidate for SmartLink observability (redirect event ds/env plus minimal additions to global/meta).",
   "baseline_procedure_id": "WF_EX_011_baseline_chatgpt_v1",
   "domain": "smartlink_observability",
   "agent_profiles": [
@@ -20,33 +20,33 @@
     {
       "metric_id": "readability",
       "name": "Payload readability",
-      "description": "Наскільки зрозуміла структура події/енвелопу для людини-оператора.",
+      "description": "How clear the event/envelope structure is for a human operator.",
       "direction": "maximize"
     },
     {
       "metric_id": "spec_alignment",
       "name": "Spec alignment",
-      "description": "Відповідність MOVA 4.1.1 (ds/env/global/meta, text channel).",
+      "description": "Alignment with MOVA 4.1.1 (ds/env/global/meta, text channel).",
       "direction": "maximize"
     },
     {
       "metric_id": "analytics_sufficiency",
       "name": "Analytics sufficiency",
-      "description": "Достатність даних для аналітики без PII-звалища; чітке відділення core та debug.",
+      "description": "Sufficient analytics data without PII sprawl; clear separation of core and debug.",
       "direction": "maximize"
     },
     {
       "metric_id": "scope_isolation",
       "name": "Scope isolation",
-      "description": "Чітке обмеження на observability-шар без втручання в worker/infra.",
+      "description": "Clear limitation to the observability layer without touching worker/infra.",
       "direction": "maximize"
     }
   ],
   "constraints": [
-    "Не змінювати rules/env.default/global/meta ядро WF_EX_010, окрім мінімальних доповнень для observability.",
-    "Не додавати worker/infra деталі в ds/env/global/meta.",
-    "Нові ds/env мають бути валідними щодо MOVA 4.1.1 і core schemas.",
-    "Scope: лише redirect event (ds/env) та відповідні доповнення до global/meta."
+    "Do not change the WF_EX_010 rules/env.default/global/meta core except minimal observability additions.",
+    "Do not add worker/infra details into ds/env/global/meta.",
+    "New ds/env must validate against MOVA 4.1.1 and core schemas.",
+    "Scope: only the redirect event (ds/env) and corresponding global/meta additions."
   ],
   "meta": {
     "labels": [
@@ -85,16 +85,16 @@
     },
     "plan_scope": {
       "scenarios": [
-        "Формування події redirect з рішення SmartLink.",
-        "Запис у text channel smartlink.redirected.",
-        "Debug/score details у опціональному блоці без PII."
+        "Create the redirect event from the SmartLink decision.",
+        "Log to the text channel smartlink.redirected.",
+        "Provide debug/score details in an optional block without PII."
       ],
       "outputs_expected": [
-        "Чіткий payload ds.smartlink.redirect_event.v1 (core + debug).",
-        "Envelope для формування/відправки події.",
-        "Мінімальні доповнення global/meta під observability шар."
+        "Clear payload ds.smartlink.redirect_event.v1 (core + debug).",
+        "Envelope for forming/sending the event.",
+        "Minimal global/meta additions for the observability layer."
       ]
     },
-    "notes_from_operator": "ChatGPT baseline уже в candidate_ex010; Codex-candidate реалізовано в candidate_ex011_codex. Scope лише redirect event; worker/infra поза експериментом."
+    "notes_from_operator": "ChatGPT baseline already lives in candidate_ex010; Codex candidate is implemented in candidate_ex011_codex. Scope is the redirect event only; worker/infra are out of the experiment."
   }
 }
