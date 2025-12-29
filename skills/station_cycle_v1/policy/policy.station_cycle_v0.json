@@ -1,0 +1,13 @@
+{
+  "version": "v0",
+  "default": "deny",
+  "allow_steps": [
+    "snapshot",
+    "gates",
+    "wf_scaffold",
+    "wf_compare",
+    "wf_winner_pack"
+  ],
+  "deny_steps": [],
+  "notes": "Local policy gate for station cycle skill. Default deny unless explicit allow."
+}

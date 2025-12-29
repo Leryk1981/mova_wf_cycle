@@ -1,12 +1,6 @@
 {
-  "notes": "sample station cycle",
+  "notes": "station cycle with gates enabled",
   "steps": {
-    "snapshot": { "enabled": true, "request": { "mode": "quick" } },
-    "gates": { "enabled": false, "reason": "manual review" },
-    "wf_cycle": {
-      "scaffold": { "enabled": false },
-      "compare": { "enabled": false },
-      "winner_pack": { "enabled": false }
-    }
+    "gates": { "enabled": true }
   }
 }

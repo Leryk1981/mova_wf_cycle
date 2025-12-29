@@ -65,6 +65,36 @@ const runId = new Date().toISOString().replace(/[:.]/g, "-");
 const runDir = path.join(artifactsRoot, runId);
 fs.mkdirSync(runDir, { recursive: true });
 
+const policyPath = path.join(
+  repoRoot,
+  "skills",
+  "station_cycle_v1",
+  "policy",
+  "policy.station_cycle_v0.json"
+);
+let policy = {
+  version: "v0",
+  default: "deny",
+  allow_steps: [],
+  deny_steps: [],
+};
+try {
+  policy = JSON.parse(fs.readFileSync(policyPath, "utf8"));
+} catch (err) {
+  console.warn("station_cycle policy missing or invalid, fallback to default deny:", err.message);
+}
+
+function evaluatePolicy(stepName) {
+  if (policy.deny_steps && policy.deny_steps.includes(stepName)) {
+    return { decision: "deny", reason: `policy deny for ${stepName}` };
+  }
+  if (policy.allow_steps && policy.allow_steps.includes(stepName)) {
+    return { decision: "allow", reason: null };
+  }
+  const fallback = policy.default === "allow" ? "allow" : "deny";
+  return { decision: fallback, reason: fallback === "deny" ? "policy default deny" : null };
+}
+
 const wrappers = {
   snapshot: {
     script: ".codex/skills/mova_repo_snapshot_basic/scripts/run.mjs",
@@ -98,6 +128,8 @@ function relRepo(p) {
 function runWrapper(name, config, wrapper) {
   const enabled = !!config.enabled;
   const logPath = path.join(runDir, `${name}.log`);
+  const policyEval = evaluatePolicy(name);
+  const policyRef = relRepo(policyPath);
 
   if (!enabled) {
     const reason = config.reason || "disabled by request";
@@ -110,6 +142,23 @@ function runWrapper(name, config, wrapper) {
       log: relRepo(logPath),
       output: null,
       reason,
+      policy: { decision: "not_requested", policy_ref: policyRef },
+    });
+    return;
+  }
+
+  if (policyEval.decision !== "allow") {
+    const reason = policyEval.reason || `policy ${policy.version} denies step`;
+    fs.writeFileSync(logPath, `skipped: ${reason}\n`, "utf8");
+    stepResults.push({
+      name,
+      enabled: true,
+      status: "skipped",
+      exit_code: null,
+      log: relRepo(logPath),
+      output: null,
+      reason,
+      policy: { decision: "deny", policy_ref: policyRef },
     });
     return;
   }
@@ -147,6 +196,7 @@ function runWrapper(name, config, wrapper) {
     log: relRepo(logPath),
     output: outputPath ? relRepo(outputPath) : null,
     reason: null,
+    policy: { decision: "allow", policy_ref: policyRef },
   });
 }
 
