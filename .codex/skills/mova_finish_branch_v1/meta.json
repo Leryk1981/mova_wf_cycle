@@ -1,0 +1,10 @@
+{
+  "skill_id": "finish_branch_v1",
+  "wrapper_id": "mova_finish_branch_v1",
+  "runnable": true,
+  "entrypoint": "skills/finish_branch_v1/impl/bindings/run_finish_branch.js",
+  "request_schema": "skills/finish_branch_v1/mova/ds/ds.finish_branch_request_v1.schema.json",
+  "result_schema": "skills/finish_branch_v1/mova/ds/ds.finish_branch_result_v1.schema.json",
+  "env_schema": "skills/finish_branch_v1/mova/env/env.finish_branch_run_v1.schema.json",
+  "generator": "tools/generate_codex_wrappers.mjs"
+}

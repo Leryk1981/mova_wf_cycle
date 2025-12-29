@@ -30,6 +30,12 @@
     "entrypoint": null
   },
   {
+    "skill_id": "finish_branch_v1",
+    "wrapper_id": "mova_finish_branch_v1",
+    "runnable": true,
+    "entrypoint": "skills/finish_branch_v1/impl/bindings/run_finish_branch.js"
+  },
+  {
     "skill_id": "mova_check_basic",
     "wrapper_id": "mova_mova_check_basic",
     "runnable": false,

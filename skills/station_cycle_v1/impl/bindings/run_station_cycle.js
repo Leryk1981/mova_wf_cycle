@@ -12,6 +12,12 @@ const defaultPolicy = {
   snapshot: { enabled: false, reason: "disabled by default policy (snapshot handled separately)" },
   gates: { enabled: false, reason: "disabled by default policy (gates opt-in)" },
   episode_store: { enabled: true, reason: "episode store enabled by default policy" },
+  finish_branch: {
+    enabled: true,
+    mode: "preflight",
+    base: "origin/main",
+    reason: "finish branch enabled by default policy",
+  },
   wf_cycle: {
     scaffold: { enabled: false, reason: "wf scaffold disabled by default policy" },
     compare: { enabled: false, reason: "wf compare disabled by default policy" },
@@ -32,6 +38,15 @@ function mergeEpisodeStoreStep(cfg, fallback) {
   return {
     enabled: typeof cfg?.enabled === "boolean" ? cfg.enabled : (fallback?.enabled ?? true),
     strict: typeof cfg?.strict === "boolean" ? cfg.strict : false,
+    reason: cfg?.reason ?? fallback?.reason ?? (cfg?.enabled === false ? "disabled in request" : ""),
+  };
+}
+
+function mergeFinishBranchStep(cfg, fallback) {
+  return {
+    enabled: typeof cfg?.enabled === "boolean" ? cfg.enabled : (fallback?.enabled ?? true),
+    mode: typeof cfg?.mode === "string" ? cfg.mode : fallback?.mode || "preflight",
+    base: typeof cfg?.base === "string" ? cfg.base : fallback?.base || "origin/main",
     reason: cfg?.reason ?? fallback?.reason ?? (cfg?.enabled === false ? "disabled in request" : ""),
   };
 }
@@ -65,6 +80,7 @@ const normalizedRequest = {
     snapshot: mergeStep(stepsReq.snapshot, defaultPolicy.snapshot),
     gates: mergeStep(stepsReq.gates, defaultPolicy.gates),
     episode_store: mergeEpisodeStoreStep(stepsReq.episode_store, defaultPolicy.episode_store),
+    finish_branch: mergeFinishBranchStep(stepsReq.finish_branch, defaultPolicy.finish_branch),
     wf_cycle: {
       scaffold: mergeStep(wfReq.scaffold, defaultPolicy.wf_cycle.scaffold),
       compare: mergeStep(wfReq.compare, defaultPolicy.wf_cycle.compare),
@@ -134,6 +150,14 @@ const wrappers = {
     needsRequest: true,
   },
 };
+const finishBranchWrapperScript = path.resolve(
+  repoRoot,
+  ".codex",
+  "skills",
+  "mova_finish_branch_v1",
+  "scripts",
+  "run.mjs"
+);
 const storeWrapperScript = path.resolve(
   repoRoot,
   ".codex",
@@ -161,6 +185,8 @@ function collectEvidencePaths(extra = []) {
   for (const step of stepResults) {
     if (step.log) set.add(step.log);
     if (step.output) set.add(step.output);
+    if (step.report_json) set.add(step.report_json);
+    if (step.result_json) set.add(step.result_json);
   }
   for (const item of extra) if (item) set.add(relRepo(item));
   return Array.from(set);
@@ -472,6 +498,163 @@ function runEpisodeStoreStep(config, baselineStatus) {
   });
 }
 
+function runFinishBranchStep(config) {
+  const name = "finish_branch";
+  const logPath = path.join(runDir, `${name}.log`);
+  const policyEval = evaluatePolicy(name);
+  const policyRef = relRepo(policyPath);
+
+  if (!config.enabled) {
+    const reason = config.reason || "finish_branch disabled";
+    fs.writeFileSync(logPath, `skipped: ${reason}\n`, "utf8");
+    appendPolicyEvent({
+      step: name,
+      enabled: false,
+      decision: "not_requested",
+      reason,
+      policy_ref: policyRef,
+    });
+    stepResults.push({
+      name,
+      enabled: false,
+      status: "skipped",
+      exit_code: null,
+      log: relRepo(logPath),
+      output: null,
+      reason,
+      policy: { decision: "not_requested", policy_ref: policyRef },
+    });
+    return;
+  }
+
+  let policyDecision = policyEval.decision;
+  let policyReason = policyEval.reason || `policy ${policy.version} denies step`;
+  if (policyDecision !== "allow") {
+    const canOverride =
+      policy.allow_overrides && policyOverride.allow_steps.includes(name);
+    if (canOverride) {
+      if (!overrideSaved && Object.keys(policyOverrideRaw).length) {
+        fs.writeFileSync(
+          path.join(runDir, "policy_override.json"),
+          JSON.stringify(policyOverride, null, 2)
+        );
+        overrideSaved = true;
+      }
+      policyDecision = "allow_override";
+      policyReason = policyOverride.reason || "manual override";
+      appendPolicyEvent({
+        step: name,
+        enabled: true,
+        decision: "allow_override",
+        reason: policyReason,
+        policy_ref: policyRef,
+      });
+    } else {
+      fs.writeFileSync(logPath, `skipped: ${policyReason}\n`, "utf8");
+      appendPolicyEvent({
+        step: name,
+        enabled: true,
+        decision: "deny",
+        reason: policyReason,
+        policy_ref: policyRef,
+      });
+      stepResults.push({
+        name,
+        enabled: true,
+        status: "skipped",
+        exit_code: null,
+        log: relRepo(logPath),
+        output: null,
+        reason: policyReason,
+        policy: { decision: "deny", policy_ref: policyRef },
+      });
+      return;
+    }
+  }
+
+  const finishRequest = {
+    base_branch: config.base || "origin/main",
+    mode: config.mode || "preflight",
+  };
+  if (normalizedRequest.notes) finishRequest.notes = normalizedRequest.notes;
+  const requestPath = path.join(runDir, "finish_branch_request.json");
+  fs.writeFileSync(requestPath, JSON.stringify(finishRequest, null, 2));
+
+  const child = spawnSync(
+    process.execPath,
+    [finishBranchWrapperScript, "--request", requestPath],
+    { cwd: repoRoot, encoding: "utf8" }
+  );
+
+  const combined = `${child.stdout ?? ""}${child.stderr ?? ""}` || "no output\n";
+  fs.writeFileSync(logPath, combined, "utf8");
+
+  let parsed = null;
+  let resultCopyPath = null;
+  try {
+    parsed = JSON.parse(child.stdout || "");
+    resultCopyPath = path.join(runDir, "finish_branch_result.json");
+    fs.writeFileSync(resultCopyPath, JSON.stringify(parsed, null, 2));
+  } catch {
+    parsed = null;
+  }
+
+  const reportMdSource = parsed?.report_md || null;
+  const reportJsonSource = parsed?.report_json || null;
+  const finishLogReason =
+    policyDecision === "allow_override" ? policyReason : null;
+
+  let vendoredMd = null;
+  if (reportMdSource) {
+    try {
+      const source = path.resolve(repoRoot, reportMdSource);
+      vendoredMd = path.join(runDir, "finish_branch_report.md");
+      fs.copyFileSync(source, vendoredMd);
+    } catch (err) {
+      vendoredMd = null;
+      fs.appendFileSync(logPath, `\n[vendor] failed to copy report.md: ${err.message}\n`);
+    }
+  }
+  let vendoredJson = null;
+  if (reportJsonSource) {
+    try {
+      const source = path.resolve(repoRoot, reportJsonSource);
+      vendoredJson = path.join(runDir, "finish_branch_report.json");
+      fs.copyFileSync(source, vendoredJson);
+    } catch (err) {
+      vendoredJson = null;
+      fs.appendFileSync(logPath, `\n[vendor] failed to copy report.json: ${err.message}\n`);
+    }
+  }
+
+  stepResults.push({
+    name,
+    enabled: true,
+    status: child.status === 0 ? "pass" : "fail",
+    exit_code: child.status ?? 1,
+    log: relRepo(logPath),
+    output: vendoredMd
+      ? relRepo(vendoredMd)
+      : reportMdSource || (resultCopyPath ? relRepo(resultCopyPath) : null),
+    report_md: vendoredMd ? relRepo(vendoredMd) : reportMdSource,
+    report_json: vendoredJson ? relRepo(vendoredJson) : reportJsonSource,
+    result_json: resultCopyPath ? relRepo(resultCopyPath) : null,
+    request: relRepo(requestPath),
+    report_origin_md: reportMdSource || null,
+    report_origin_json: reportJsonSource || null,
+    reason: finishLogReason,
+    policy: { decision: policyDecision, policy_ref: policyRef },
+  });
+  appendPolicyEvent({
+    step: name,
+    enabled: true,
+    decision: policyDecision,
+    reason: finishLogReason,
+    policy_ref: policyRef,
+    exit_code: child.status ?? 1,
+  });
+}
+
 const steps = normalizedRequest.steps;
 const wfCycle = steps.wf_cycle;
 
@@ -481,6 +664,7 @@ runWrapper("wf_scaffold", wfCycle.scaffold, wrappers.wf_scaffold);
 runWrapper("wf_compare", wfCycle.compare, wrappers.wf_compare);
 runWrapper("wf_winner_pack", wfCycle.winner_pack, wrappers.wf_winner_pack);
 runEpisodeStoreStep(steps.episode_store, hasFatalFailures(stepResults) ? "failed" : "success");
+runFinishBranchStep(steps.finish_branch);
 
 const overallStatus = hasFatalFailures() ? "fail" : "pass";
 const finishedAt = new Date();

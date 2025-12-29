@@ -13,6 +13,7 @@
         "snapshot": { "$ref": "#/definitions/step_with_request" },
         "gates": { "$ref": "#/definitions/step_toggle" },
         "episode_store": { "$ref": "#/definitions/episode_store_step" },
+        "finish_branch": { "$ref": "#/definitions/finish_branch_step" },
         "wf_cycle": {
           "type": "object",
           "properties": {
@@ -52,6 +53,23 @@
       "properties": {
         "enabled": { "type": "boolean", "default": true },
         "strict": { "type": "boolean", "default": false }
+      },
+      "additionalProperties": false
+    },
+    "finish_branch_step": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean", "default": true },
+        "mode": {
+          "type": "string",
+          "enum": ["preflight", "report"],
+          "default": "preflight"
+        },
+        "base": {
+          "type": "string",
+          "default": "origin/main",
+          "description": "Base branch reference used for finish_branch."
+        }
       },
       "additionalProperties": false
     }
