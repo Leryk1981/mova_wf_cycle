@@ -28,9 +28,9 @@
         "meta.smartlink.v1": ["meta.package.describe"]
       },
       "out_of_scope": [
-        "worker/src/config/tests/deploy (ігноруємо, якщо згадано)"
+        "worker/src/config/tests/deploy (ignored if mentioned)"
       ]
     },
-    "notes_from_operator": "Планувальник побудував план WF_EX_010 лише для 4 JSON-артефактів SmartLink (ds/env/global/meta). Будь-які кроки про worker/деплой вважаються out-of-scope і не виконуватимуться."
+    "notes_from_operator": "Planner built WF_EX_010 for only four SmartLink JSON artifacts (ds/env/global/meta). Any worker/deploy steps are treated as out-of-scope and will not be executed."
   }
 }

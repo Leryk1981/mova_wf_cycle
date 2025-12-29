@@ -1,18 +1,11 @@
 # skill.mova_lab_operator
 
-Скіл **оператора лабораторії**. Його роль — допомогти ІІ-агенту:
+Laboratory operator skill. Its role is to help an AI agent:
 
-- знайти всі скіли через реєстр (`lab/skills_registry_v1.json`);
+- discover all skills via the registry (`lab/skills_registry_v1.json`);
+- understand each skill’s structure (manifest, ds/env, cases, episodes);
+- plan skill runs through `ds.skill_run_request_v1` and `tools/run_skill_plan.js`;
+- create episodes when needed via `tools/record_episode.js`;
+- respect each skill’s `episode_policy`.
 
-- зрозуміти структуру кожного скіла (manifest, ds/env, cases, episodes);
-
-- планувати запуск скілів через `ds.skill_run_request_v1` та `tools/run_skill_plan.js`;
-
-- за потреби створювати епізоди через `tools/record_episode.js`;
-
-- поважати `episode_policy` кожного скіла.
-
-Цей скіл не виконує доменну роботу (файли, нотатки тощо) — він описує,
-
-як правильно користуватися лабораторією.
-
+This skill does not perform domain work (files, notes, etc.); it explains how to use the lab correctly.

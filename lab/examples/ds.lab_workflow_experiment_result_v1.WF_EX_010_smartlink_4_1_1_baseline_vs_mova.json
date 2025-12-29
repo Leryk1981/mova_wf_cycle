@@ -1,6 +1,6 @@
 {
   "experiment_id": "WF_EX_010_smartlink_4_1_1_baseline_vs_mova",
-  "summary": "Candidate SmartLink 4.1.1 (rules/env/global/meta) узгоджено зі spec 4.1.1 та зберігає логіку baseline; рекомендовано як best-so-far у межах 4 JSON.",
+  "summary": "Candidate SmartLink 4.1.1 (rules/env/global/meta) is aligned with spec 4.1.1 and preserves baseline logic; recommended as best-so-far within the four JSON files.",
   "variants": [
     {
       "procedure_id": "baseline_smartlink_v1",
@@ -20,11 +20,11 @@
         }
       ],
       "pros": [
-        "Стабільна логіка правил і envelope.",
-        "Перевірені каталоги/ресурси."
+        "Stable rules and envelope logic.",
+        "Verified catalogs/resources."
       ],
       "cons": [
-        "MOVA 4.0.x формати; відсутні 4.1.1 text-channel узгодження."
+        "MOVA 4.0.x formats; lacks 4.1.1 text-channel alignment."
       ]
     },
     {
@@ -45,17 +45,17 @@
         }
       ],
       "pros": [
-        "Вирівняно під MOVA 4.1.1 (mova_version, text channel smartlink.redirected, spec_alignment).",
-        "Збережено логіку rules/env baseline; явні references на global/meta."
+        "Aligned to MOVA 4.1.1 (mova_version, text channel smartlink.redirected, spec alignment).",
+        "Preserves baseline rules/env logic; explicit references to global/meta."
       ],
       "cons": [
-        "Потрібна подальша деталізація payload/validation для smartlink.redirected (TODO)."
+        "Needs additional payload/validation detail for smartlink.redirected (TODO)."
       ]
     }
   ],
   "recommended_procedure_id": "candidate_smartlink_4_1_1_v1",
   "notes": [
-    "Scope обмежений rules/env/global/meta; worker/src/config/tests/deploy поза експериментом."
+    "Scope is limited to rules/env/global/meta; worker/src/config/tests/deploy are outside the experiment."
   ],
   "meta": {
     "labels": [

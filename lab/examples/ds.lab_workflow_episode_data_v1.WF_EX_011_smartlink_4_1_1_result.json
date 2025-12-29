@@ -37,6 +37,6 @@
       "global.smartlink.v1": "codex minimal and focused",
       "meta.smartlink.v1": "codex scoped observability package"
     },
-    "notes_from_operator": "WF_EX_011 run: Codex-candidate observability рекомендовано як best-so-far; ChatGPT baseline лишається референсом. Worker/infra поза scope."
+    "notes_from_operator": "WF_EX_011 run: Codex observability candidate recommended as best-so-far; ChatGPT baseline remains a reference. Worker/infra are out of scope."
   }
 }

@@ -18,7 +18,15 @@ const labRunsDir = path.join(repoRoot, "lab", "inngest_runs");
 const healthUrl = "http://localhost:3000/health";
 const eventUrl = "http://localhost:8288/e/dev";
 
-const requiredDeps = ["express", "inngest"];
+const enablePultSmoke = process.env.PULT_SMOKE_ENABLE === "1";
+if (!enablePultSmoke) {
+  console.log(
+    "[pult_inngest_smoke_ci] SKIP: set PULT_SMOKE_ENABLE=1 to run; requires express, inngest, and inngest-cli installed locally (see README). Default skip avoids network-heavy setup in CI/offline runs."
+  );
+  process.exit(0);
+}
+
+const requiredDeps = ["express", "inngest", "inngest-cli"];
 const depLocations = [
   path.join(repoRoot, "node_modules"),
   path.join(pultDir, "node_modules")
@@ -30,7 +38,7 @@ if (missingDeps.length > 0) {
   console.log(
     `[pult_inngest_smoke_ci] SKIP: missing local deps (${missingDeps.join(
       ", "
-    )}); skipping runtime smoke in offline environment`
+    )}); install dev deps (e.g., npm install --include=dev express@5.2.1 inngest@3.48.1 inngest-cli@1.15.1) and re-run with PULT_SMOKE_ENABLE=1`
   );
   process.exit(0);
 }

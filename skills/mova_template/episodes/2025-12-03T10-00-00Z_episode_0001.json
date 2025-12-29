@@ -11,37 +11,37 @@
   "started_at": "2025-12-03T10:00:00Z",
   "finished_at": "2025-12-03T10:00:05Z",
   "input": {
-    "description": "Зварити ранкову каву в турці."
+    "description": "Brew morning coffee in a cezve."
   },
   "output": {
     "procedure": {
       "procedure_id": "mova_template_coffee_001",
-      "title": "Зварити ранкову каву в турці",
+      "title": "Brew morning coffee in a cezve",
       "steps": [
         {
           "step_id": "step_1",
-          "label": "Підготувати турку та каву",
-          "description": "Переконатися, що турка чиста, і підготувати потрібну кількість меленої кави."
+          "label": "Prepare the cezve and coffee",
+          "description": "Ensure the cezve is clean and prepare the required amount of ground coffee."
         },
         {
           "step_id": "step_2",
-          "label": "Налити воду",
-          "description": "Налити в турку холодну воду потрібного об'єму."
+          "label": "Pour water",
+          "description": "Add cold water to the cezve at the needed volume."
         },
         {
           "step_id": "step_3",
-          "label": "Додати каву",
-          "description": "Додати мелену каву у воду та злегка перемішати."
+          "label": "Add coffee",
+          "description": "Add ground coffee to the water and mix gently."
         },
         {
           "step_id": "step_4",
-          "label": "Підігрівати до підняття піни",
-          "description": "Поставити турку на невеликий вогонь і підігрівати, поки піна не почне підніматися."
+          "label": "Heat until foam rises",
+          "description": "Place the cezve on low heat and warm until the foam starts to rise."
         },
         {
           "step_id": "step_5",
-          "label": "Зняти з вогню і подати",
-          "description": "Зняти турку з вогню до закипання, дати каві трохи відстоятись і налити в чашку."
+          "label": "Remove from heat and serve",
+          "description": "Remove the cezve before boiling, let the coffee settle briefly, and pour into a cup."
         }
       ]
     }
@@ -51,4 +51,3 @@
     "note": "First example episode for skill.mova_template using the coffee procedure."
   }
 }
-

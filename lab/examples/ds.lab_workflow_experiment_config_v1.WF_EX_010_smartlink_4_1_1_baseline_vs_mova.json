@@ -97,11 +97,11 @@
       }
     ],
     "metrics_plan": [
-      "Узгодженість ds.smartlink.rules.v1 з env.smartlink.default.v1 (які поля правил реально використовує envelope).",
-      "Узгодженість із global.smartlink.v1 (словники/каталоги, що згадуються у rules/env).",
-      "Ясність і повнота meta.smartlink.v1 (версія пакета, контекст, policy/constraints).",
-      "Відповідність MOVA 4.1.1 (security/text channels/global catalogs) у межах цих 4 файлів.",
-      "Готовність до еволюції: чи можна додати A/B/feature flags без перелому схем."
+      "Alignment of ds.smartlink.rules.v1 with env.smartlink.default.v1 (which rule fields the envelope actually consumes).",
+      "Alignment with global.smartlink.v1 (vocab/catalogs referenced in rules/env).",
+      "Clarity and completeness of meta.smartlink.v1 (package version, context, policy/constraints).",
+      "Compliance with MOVA 4.1.1 (security/text channels/global catalogs) across these four files.",
+      "Evolution readiness: ability to add A/B or feature flags without breaking schemas."
     ],
     "plan_scope": {
       "baseline_artifacts": [
@@ -124,11 +124,11 @@
         "Observability/catalog alignment via global/meta references."
       ],
       "outputs_expected": [
-        "Plan steps з прив'язкою до конкретних файлів з четвірки.",
-        "Список полів/секцій для зміни у candidate-файлах.",
-        "Gap-аналіз проти MOVA 4.1.1 security/text/global каталогів."
+        "Plan steps tied to specific files from the set.",
+        "List of fields or sections to change in the candidate files.",
+        "Gap analysis against MOVA 4.1.1 security/text/global catalogs."
       ]
     ],
-    "notes_from_operator": "Експеримент WF_EX_010 стосується виключно 4 JSON-артефактів SmartLink (ds.smartlink.rules.v1, env.smartlink.default.v1, global.smartlink.v1, meta.smartlink.v1). Worker/конфіги/деплой — поза scope; завдання — узгодити ці файли з MOVA 4.1.1, зберігаючи читабельність і розширюваність."
+    "notes_from_operator": "Experiment WF_EX_010 focuses only on four SmartLink JSON artifacts (ds.smartlink.rules.v1, env.smartlink.default.v1, global.smartlink.v1, meta.smartlink.v1). Worker/config/deploy are out of scope; the task is to align these files with MOVA 4.1.1 while preserving readability and extensibility."
   }
 }

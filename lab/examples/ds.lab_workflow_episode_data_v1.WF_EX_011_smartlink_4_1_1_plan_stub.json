@@ -19,6 +19,6 @@
       "candidate": "codex (candidate_ex011_codex)"
     },
     "plan_result_ref": "lab/examples/env.lab_workflow_experiment_plan_result_v1.WF_EX_011_smartlink_4_1_1_observability.json",
-    "notes_from_operator": "Закриваємо борг smartlink.redirected: подія + envelope + мінімальні доповнення global/meta. Дві гіпотези: ChatGPT baseline (ex010) і Codex candidate (ex011_codex). Plan_result сформовано вручну на основі двох варіантів."
+    "notes_from_operator": "Closing the smartlink.redirected gap: event + envelope + minimal additions to global/meta. Two hypotheses: ChatGPT baseline (ex010) and Codex candidate (ex011_codex). Plan_result was formed manually from both variants."
   }
 }

@@ -1,8 +1,8 @@
 # skill.skill_ingest_store_episode_basic
 
-Хранение эпизодов Skill Seeker:
-- вход: `env.skill_ingest_run_store_episode_v1` (внутри `ds.episode_skill_ingest_run_v1`);
-- действие: пишет эпизод в файловое хранилище лаборатории (`lab/episodes/skill_ingest/`);
-- выход: подтверждение `{ ok, episode_id, path }`.
+Skill Seeker episode storage:
+- input: `env.skill_ingest_run_store_episode_v1` (contains `ds.episode_skill_ingest_run_v1`);
+- action: writes the episode to the lab’s file store (`lab/episodes/skill_ingest/`);
+- output: confirmation `{ ok, episode_id, path }`.
 
-Используется совместно со `skill.skill_ingest_run_with_skillseeker_basic`.
+Used together with `skill.skill_ingest_run_with_skillseeker_basic`.
