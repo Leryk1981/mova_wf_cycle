@@ -12,6 +12,7 @@ const skillsRel = getArg("--skills", "skills");
 const outRel = getArg("--out", ".codex/skills");
 const reportRel = getArg("--report", "docs/skills/CODEX_WRAPPERS_GENERATED.json");
 const overwrite = process.argv.includes("--overwrite");
+const checkOnly = process.argv.includes("--check");
 
 const repoRoot = process.cwd();
 const skillsRoot = path.join(repoRoot, skillsRel);
@@ -23,6 +24,7 @@ function exists(p) {
 }
 
 function ensureDir(p) {
+  if (checkOnly) return;
   fs.mkdirSync(p, { recursive: true });
 }
 
@@ -143,34 +145,28 @@ function writeFile(filePath, content) {
 }
 
 function maybeWrite(filePath, content) {
-  if (exists(filePath) && !overwrite) return false;
+  if (checkOnly) return;
+  if (exists(filePath) && !overwrite) return;
   const current = exists(filePath) ? fs.readFileSync(filePath, "utf8") : null;
-  if (!overwrite && current === content) return false;
+  if (!overwrite && current === content) return;
   writeFile(filePath, content);
-  return true;
 }
 
-function ensureRunScript(info) {
-  if (!info.runnable) return false;
-  const scriptPath = path.join(outRoot, info.wrapper_id, "scripts", "run.mjs");
-  if (exists(scriptPath) && !overwrite) return false;
-  const content = `import { spawnSync } from "node:child_process";
+function buildRunScript(entrypoint) {
+  if (!entrypoint) return null;
+  return `import { spawnSync } from "node:child_process";
 import path from "node:path";
 import process from "node:process";
 
 const repoRoot = process.cwd();
-const entrypoint = path.resolve(repoRoot, "${info.entrypoint}");
+const entrypoint = path.resolve(repoRoot, "${entrypoint}");
 const args = process.argv.slice(2);
 const child = spawnSync(process.execPath, [entrypoint, ...args], { stdio: "inherit" });
 process.exit(child.status ?? 1);
 `;
-  writeFile(scriptPath, content);
-  return true;
 }
 
-function writeMeta(info) {
-  const metaPath = path.join(outRoot, info.wrapper_id, "meta.json");
-  if (exists(metaPath) && !overwrite) return false;
+function buildMeta(info) {
   const meta = {
     skill_id: info.skill_id,
     wrapper_id: info.wrapper_id,
@@ -179,10 +175,9 @@ function writeMeta(info) {
     request_schema: info.schemas.request,
     result_schema: info.schemas.result,
     env_schema: info.schemas.env,
-    generated_at: new Date().toISOString(),
+    generator: "tools/generate_codex_wrappers.mjs",
   };
-  writeFile(metaPath, JSON.stringify(meta, null, 2));
-  return true;
+  return JSON.stringify(meta, null, 2);
 }
 
 function processSkill(skillId) {
@@ -203,9 +198,27 @@ function processSkill(skillId) {
   };
 
   const skillMdContent = renderSkillMd(info);
-  maybeWrite(path.join(outRoot, wrapperId, "SKILL.md"), skillMdContent);
-  ensureRunScript(info);
-  writeMeta(info);
+  const runScriptContent = buildRunScript(info.entrypoint);
+  const metaContent = buildMeta(info);
+
+  const skillMdPath = path.join(outRoot, wrapperId, "SKILL.md");
+  const runScriptPath = path.join(outRoot, wrapperId, "scripts", "run.mjs");
+  const metaPath = path.join(outRoot, wrapperId, "meta.json");
+
+  if (checkOnly) {
+    checkFile(skillMdPath, skillMdContent, true);
+    checkFile(metaPath, metaContent, true);
+    if (info.runnable) checkFile(runScriptPath, runScriptContent, true);
+  } else {
+    ensureDir(path.join(outRoot, wrapperId));
+    maybeWrite(skillMdPath, skillMdContent);
+    if (info.runnable) {
+      ensureDir(path.join(outRoot, wrapperId, "scripts"));
+      maybeWrite(runScriptPath, runScriptContent);
+    }
+    maybeWrite(metaPath, metaContent);
+  }
+
   return {
     skill_id: skillId,
     wrapper_id: wrapperId,
@@ -214,16 +227,43 @@ function processSkill(skillId) {
   };
 }
 
+const checkDiffs = [];
+
+function checkFile(filePath, expectedContent, shouldExist) {
+  const existsOnDisk = exists(filePath);
+  if (!existsOnDisk && shouldExist) {
+    checkDiffs.push(rel(filePath));
+    return;
+  }
+  if (existsOnDisk && shouldExist) {
+    const current = fs.readFileSync(filePath, "utf8");
+    if (current !== expectedContent) checkDiffs.push(rel(filePath));
+  }
+}
+
 function main() {
   if (!exists(skillsRoot)) {
     console.error("Skills directory not found:", skillsRoot);
     process.exit(1);
   }
-  ensureDir(outRoot);
-  ensureDir(path.dirname(reportPath));
+  if (!checkOnly) {
+    ensureDir(outRoot);
+    ensureDir(path.dirname(reportPath));
+  }
 
   const skillIds = listSkills();
   const report = skillIds.map(processSkill);
+
+  if (checkOnly) {
+    if (checkDiffs.length) {
+      console.error("[generate_codex_wrappers] check failed for:");
+      for (const diff of checkDiffs) console.error(`- ${diff}`);
+      process.exit(1);
+    }
+    console.log(`[generate_codex_wrappers] check passed (${report.length} skills)`);
+    return;
+  }
+
   fs.writeFileSync(reportPath, JSON.stringify(report, null, 2));
   console.log(`[generate_codex_wrappers] processed ${report.length} skills (overwrite=${overwrite})`);
 }
