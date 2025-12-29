@@ -1,0 +1,15 @@
+{
+  "notes": "snapshot override",
+  "steps": {
+    "snapshot": {
+      "enabled": true,
+      "request": {
+        "mode": "policy override test"
+      }
+    }
+  },
+  "policy_override": {
+    "allow_steps": ["snapshot"],
+    "reason": "manual approval to run repo snapshot"
+  }
+}

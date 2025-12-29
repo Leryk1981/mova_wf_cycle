@@ -44,6 +44,12 @@ if (requestArg) {
 const stepsReq = requestRaw.steps || {};
 const wfReq = stepsReq.wf_cycle || {};
 
+const policyOverrideRaw = requestRaw.policy_override || {};
+const policyOverride = {
+  allow_steps: Array.isArray(policyOverrideRaw.allow_steps) ? policyOverrideRaw.allow_steps : [],
+  reason: policyOverrideRaw.reason || "",
+};
+
 const normalizedRequest = {
   notes: requestRaw.notes || "",
   steps: {
@@ -120,6 +126,12 @@ const wrappers = {
 
 const startedAt = new Date();
 const stepResults = [];
+let overrideSaved = false;
+const overridePath = path.join(runDir, "policy_override.json");
+if (Object.keys(policyOverrideRaw).length) {
+  fs.writeFileSync(overridePath, JSON.stringify(policyOverride, null, 2));
+  overrideSaved = true;
+}
 
 function relRepo(p) {
   return path.relative(repoRoot, p).replace(/\\/g, "/");
@@ -147,20 +159,35 @@ function runWrapper(name, config, wrapper) {
     return;
   }
 
-  if (policyEval.decision !== "allow") {
-    const reason = policyEval.reason || `policy ${policy.version} denies step`;
-    fs.writeFileSync(logPath, `skipped: ${reason}\n`, "utf8");
-    stepResults.push({
-      name,
-      enabled: true,
-      status: "skipped",
-      exit_code: null,
-      log: relRepo(logPath),
-      output: null,
-      reason,
-      policy: { decision: "deny", policy_ref: policyRef },
-    });
-    return;
+  let policyDecision = policyEval.decision;
+  let policyReason = policyEval.reason || `policy ${policy.version} denies step`;
+  if (policyDecision !== "allow") {
+    const canOverride =
+      policy.allow_overrides && policyOverride.allow_steps.includes(name);
+    if (canOverride) {
+      if (!overrideSaved && Object.keys(policyOverrideRaw).length) {
+        fs.writeFileSync(
+          path.join(runDir, "policy_override.json"),
+          JSON.stringify(policyOverride, null, 2)
+        );
+        overrideSaved = true;
+      }
+      policyDecision = "allow_override";
+      policyReason = policyOverride.reason || "manual override";
+    } else {
+      fs.writeFileSync(logPath, `skipped: ${policyReason}\n`, "utf8");
+      stepResults.push({
+        name,
+        enabled: true,
+        status: "skipped",
+        exit_code: null,
+        log: relRepo(logPath),
+        output: null,
+        reason: policyReason,
+        policy: { decision: "deny", policy_ref: policyRef },
+      });
+      return;
+    }
   }
 
   const args = [path.resolve(repoRoot, wrapper.script)];
@@ -195,8 +222,8 @@ function runWrapper(name, config, wrapper) {
     exit_code: child.status ?? 1,
     log: relRepo(logPath),
     output: outputPath ? relRepo(outputPath) : null,
-    reason: null,
-    policy: { decision: "allow", policy_ref: policyRef },
+    reason: policyDecision === "allow_override" ? policyReason : null,
+    policy: { decision: policyDecision, policy_ref: policyRef },
   });
 }
 
