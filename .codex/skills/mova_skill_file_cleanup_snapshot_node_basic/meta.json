@@ -1,0 +1,10 @@
+{
+  "skill_id": "skill_file_cleanup_snapshot_node_basic",
+  "wrapper_id": "mova_skill_file_cleanup_snapshot_node_basic",
+  "runnable": true,
+  "entrypoint": "skills/skill_file_cleanup_snapshot_node_basic/impl/code/run_snapshot.js",
+  "request_schema": null,
+  "result_schema": null,
+  "env_schema": null,
+  "generator": "tools/generate_codex_wrappers.mjs"
+}

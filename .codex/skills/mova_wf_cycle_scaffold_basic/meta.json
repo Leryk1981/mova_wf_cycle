@@ -1,0 +1,10 @@
+{
+  "skill_id": "wf_cycle_scaffold_basic",
+  "wrapper_id": "mova_wf_cycle_scaffold_basic",
+  "runnable": true,
+  "entrypoint": "skills/wf_cycle_scaffold_basic/impl/bindings/node/scaffold_experiment.mjs",
+  "request_schema": "skills/wf_cycle_scaffold_basic/mova/ds/ds.wf_cycle_scaffold_request_v1.schema.json",
+  "result_schema": "skills/wf_cycle_scaffold_basic/mova/ds/ds.wf_cycle_scaffold_result_v1.schema.json",
+  "env_schema": null,
+  "generator": "tools/generate_codex_wrappers.mjs"
+}

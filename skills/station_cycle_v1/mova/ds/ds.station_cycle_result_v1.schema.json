@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "station_cycle_result_v1",
+  "type": "object",
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": ["pass", "fail"]
+    },
+    "artifacts_dir": {
+      "type": "string"
+    },
+    "steps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "enabled": { "type": "boolean" },
+          "status": { "type": "string", "enum": ["pass", "fail", "skipped"] },
+          "exit_code": { "type": ["integer", "null"] },
+          "log": { "type": "string" },
+          "output": { "type": ["string", "null"] },
+          "notes": { "type": "string" }
+        },
+        "required": ["name", "enabled", "status"]
+      }
+    }
+  },
+  "required": ["status", "steps"],
+  "additionalProperties": false
+}

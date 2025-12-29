@@ -1,0 +1,10 @@
+{
+  "skill_id": "mova_lab_operator",
+  "wrapper_id": "mova_mova_lab_operator",
+  "runnable": false,
+  "entrypoint": null,
+  "request_schema": null,
+  "result_schema": null,
+  "env_schema": null,
+  "generator": "tools/generate_codex_wrappers.mjs"
+}

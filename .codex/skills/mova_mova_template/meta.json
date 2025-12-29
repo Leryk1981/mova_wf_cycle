@@ -1,0 +1,8 @@
+{
+  "skill_id": "mova_template",
+  "wrapper_id": "mova_mova_template",
+  "runnable": false,
+  "entrypoint": null,
+  "env_schema": "skills/mova_template/mova/env/env.mova_template_run_v1.schema.json",
+  "generator": "tools/generate_codex_wrappers.mjs"
+}

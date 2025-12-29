@@ -1,0 +1,128 @@
+[
+  {
+    "skill_id": "code_exec_task_basic",
+    "wrapper_id": "mova_code_exec_task_basic",
+    "runnable": false,
+    "entrypoint": null
+  },
+  {
+    "skill_id": "connector_scaffolder_basic",
+    "wrapper_id": "mova_connector_scaffolder_basic",
+    "runnable": false,
+    "entrypoint": null
+  },
+  {
+    "skill_id": "context7_docs",
+    "wrapper_id": "mova_context7_docs",
+    "runnable": false,
+    "entrypoint": null
+  },
+  {
+    "skill_id": "dpp_passport_normalize_basic",
+    "wrapper_id": "mova_dpp_passport_normalize_basic",
+    "runnable": true,
+    "entrypoint": "skills/dpp_passport_normalize_basic/impl/code/run_normalize.js"
+  },
+  {
+    "skill_id": "file_cleanup_basic",
+    "wrapper_id": "mova_file_cleanup_basic",
+    "runnable": false,
+    "entrypoint": null
+  },
+  {
+    "skill_id": "mova_check_basic",
+    "wrapper_id": "mova_mova_check_basic",
+    "runnable": false,
+    "entrypoint": null
+  },
+  {
+    "skill_id": "mova_lab_operator",
+    "wrapper_id": "mova_mova_lab_operator",
+    "runnable": false,
+    "entrypoint": null
+  },
+  {
+    "skill_id": "mova_template",
+    "wrapper_id": "mova_mova_template",
+    "runnable": false,
+    "entrypoint": null
+  },
+  {
+    "skill_id": "repo_code_change_plan_basic",
+    "wrapper_id": "mova_repo_code_change_plan_basic",
+    "runnable": false,
+    "entrypoint": null
+  },
+  {
+    "skill_id": "repo_snapshot_basic",
+    "wrapper_id": "mova_repo_snapshot_basic",
+    "runnable": true,
+    "entrypoint": "skills/repo_snapshot_basic/impl/bindings/node/cli.mjs"
+  },
+  {
+    "skill_id": "runtime_binding_code_scaffolder_basic",
+    "wrapper_id": "mova_runtime_binding_code_scaffolder_basic",
+    "runnable": false,
+    "entrypoint": null
+  },
+  {
+    "skill_id": "skill_file_cleanup_plan_node_basic",
+    "wrapper_id": "mova_skill_file_cleanup_plan_node_basic",
+    "runnable": false,
+    "entrypoint": null
+  },
+  {
+    "skill_id": "skill_file_cleanup_snapshot_node_basic",
+    "wrapper_id": "mova_skill_file_cleanup_snapshot_node_basic",
+    "runnable": true,
+    "entrypoint": "skills/skill_file_cleanup_snapshot_node_basic/impl/code/run_snapshot.js"
+  },
+  {
+    "skill_id": "skill_ingest_run_with_skillseeker_basic",
+    "wrapper_id": "mova_skill_ingest_run_with_skillseeker_basic",
+    "runnable": true,
+    "entrypoint": "skills/skill_ingest_run_with_skillseeker_basic/impl/code/run_ingest.js"
+  },
+  {
+    "skill_id": "skill_ingest_store_episode_basic",
+    "wrapper_id": "mova_skill_ingest_store_episode_basic",
+    "runnable": true,
+    "entrypoint": "skills/skill_ingest_store_episode_basic/impl/code/store_episode.js"
+  },
+  {
+    "skill_id": "skill_mova_ai_bootstrap_generate_basic",
+    "wrapper_id": "mova_skill_mova_ai_bootstrap_generate_basic",
+    "runnable": true,
+    "entrypoint": "skills/skill_mova_ai_bootstrap_generate_basic/impl/code/generate_bootstrap.js"
+  },
+  {
+    "skill_id": "skill_scaffolder_basic",
+    "wrapper_id": "mova_skill_scaffolder_basic",
+    "runnable": false,
+    "entrypoint": null
+  },
+  {
+    "skill_id": "station_cycle_v1",
+    "wrapper_id": "mova_station_cycle_v1",
+    "runnable": true,
+    "entrypoint": "skills/station_cycle_v1/impl/bindings/run_station_cycle.js"
+  },
+  {
+    "skill_id": "wf_cycle_compute_compare_basic",
+    "wrapper_id": "mova_wf_cycle_compute_compare_basic",
+    "runnable": true,
+    "entrypoint": "skills/wf_cycle_compute_compare_basic/impl/bindings/node/compute_compare.mjs"
+  },
+  {
+    "skill_id": "wf_cycle_scaffold_basic",
+    "wrapper_id": "mova_wf_cycle_scaffold_basic",
+    "runnable": true,
+    "entrypoint": "skills/wf_cycle_scaffold_basic/impl/bindings/node/scaffold_experiment.mjs"
+  },
+  {
+    "skill_id": "wf_cycle_winner_pack_basic",
+    "wrapper_id": "mova_wf_cycle_winner_pack_basic",
+    "runnable": true,
+    "entrypoint": "skills/wf_cycle_winner_pack_basic/impl/bindings/node/build_winner_pack.mjs"
+  }
+]

@@ -1,0 +1,6 @@
+{
+  "notes": "station cycle with gates enabled",
+  "steps": {
+    "gates": { "enabled": true }
+  }
+}

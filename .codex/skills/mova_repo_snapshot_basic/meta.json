@@ -1,0 +1,10 @@
+{
+  "skill_id": "repo_snapshot_basic",
+  "wrapper_id": "mova_repo_snapshot_basic",
+  "runnable": true,
+  "entrypoint": "skills/repo_snapshot_basic/impl/bindings/node/cli.mjs",
+  "request_schema": "skills/repo_snapshot_basic/mova/ds/ds.repo_snapshot_request_v1.schema.json",
+  "result_schema": "skills/repo_snapshot_basic/mova/ds/ds.repo_snapshot_result_v1.schema.json",
+  "env_schema": "skills/repo_snapshot_basic/mova/env/env.repo_snapshot_run_v1.schema.json",
+  "generator": "tools/generate_codex_wrappers.mjs"
+}

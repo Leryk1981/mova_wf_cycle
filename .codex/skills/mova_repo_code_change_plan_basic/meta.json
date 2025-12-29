@@ -1,0 +1,10 @@
+{
+  "skill_id": "repo_code_change_plan_basic",
+  "wrapper_id": "mova_repo_code_change_plan_basic",
+  "runnable": false,
+  "entrypoint": null,
+  "request_schema": "skills/repo_code_change_plan_basic/mova/ds/ds.repo_change_plan_request_v1.schema.json",
+  "result_schema": "skills/repo_code_change_plan_basic/mova/ds/ds.repo_change_plan_result_v1.schema.json",
+  "env_schema": "skills/repo_code_change_plan_basic/mova/env/env.repo_change_plan_run_v1.schema.json",
+  "generator": "tools/generate_codex_wrappers.mjs"
+}

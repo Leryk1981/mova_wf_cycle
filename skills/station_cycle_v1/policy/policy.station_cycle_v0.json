@@ -1,0 +1,12 @@
+{
+  "version": "v0",
+  "default": "deny",
+  "allow_steps": [
+    "gates",
+    "wf_compare",
+    "episode_store"
+  ],
+  "deny_steps": [],
+  "allow_overrides": true,
+  "notes": "Baseline station cycle policy: only gates and wf_compare run by default, other steps require explicit override."
+}

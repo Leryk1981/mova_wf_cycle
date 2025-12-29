@@ -1,0 +1,10 @@
+{
+  "skill_id": "wf_cycle_winner_pack_basic",
+  "wrapper_id": "mova_wf_cycle_winner_pack_basic",
+  "runnable": true,
+  "entrypoint": "skills/wf_cycle_winner_pack_basic/impl/bindings/node/build_winner_pack.mjs",
+  "request_schema": "skills/wf_cycle_winner_pack_basic/mova/ds/ds.wf_cycle_winner_pack_request_v1.schema.json",
+  "result_schema": "skills/wf_cycle_winner_pack_basic/mova/ds/ds.wf_cycle_winner_pack_result_v1.schema.json",
+  "env_schema": null,
+  "generator": "tools/generate_codex_wrappers.mjs"
+}
