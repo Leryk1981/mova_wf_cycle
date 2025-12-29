@@ -8,7 +8,8 @@ const defaultRequest = {
   base_branch: "origin/main",
   include_git_log: true,
   include_diffstat: true,
-  max_commits: 10
+  max_commits: 10,
+  mode: "preflight"
 };
 
 const commandEntries = [];
@@ -54,6 +55,13 @@ function ensureNumber(value, fallback) {
   return Number.isFinite(value) ? value : fallback;
 }
 
+function normalizeMode(value) {
+  const mode = typeof value === "string" ? value.toLowerCase() : "";
+  if (mode === "preflight") return "preflight";
+  if (mode === "report") return "report";
+  return "preflight";
+}
+
 const requestArg = getArgValue("--request");
 const requestPayload = requestArg ? parseJsonFile(path.resolve(repoRoot, requestArg)) : {};
 const request = { ...defaultRequest, ...requestPayload };
@@ -64,6 +72,7 @@ if (!request.base_branch || !request.base_branch.trim()) {
   request.base_branch = defaultRequest.base_branch;
 }
 request.max_commits = ensureNumber(request.max_commits, defaultRequest.max_commits);
+request.mode = normalizeMode(request.mode || defaultRequest.mode);
 
 const runId = new Date().toISOString().replace(/:/g, "-");
 const artifactsDir = path.join(repoRoot, "artifacts", "finish_branch", runId);
@@ -75,8 +84,16 @@ const statusLines = statusOutput.split(/\r?\n/).filter(Boolean);
 const workspaceLines = statusLines.filter((line, idx) => idx === 0 ? false : true);
 const workspaceClean = workspaceLines.length === 0;
 
-const ahead = parseCount(runCommand("git", ["rev-list", "--count", `${request.base_branch}..${request.target_branch}`]).stdout);
-const behind = parseCount(runCommand("git", ["rev-list", "--count", `${request.target_branch}..${request.base_branch}`]).stdout);
+let ahead = 0;
+let behind = 0;
+const lrOutput = runCommand("git", ["rev-list", "--left-right", "--count", `${request.base_branch}...${request.target_branch}`]).stdout.trim();
+if (lrOutput) {
+  const parts = lrOutput.split(/\s+/);
+  if (parts.length >= 2) {
+    behind = parseCount(parts[0]);
+    ahead = parseCount(parts[1]);
+  }
+}
 
 let gitLog = "";
 if (request.include_git_log !== false) {
@@ -101,6 +118,16 @@ if (!workspaceClean) {
   reasons.push("Working tree has pending changes");
 }
 const summary = reasons.length ? reasons.join("; ") : "Branch is ready for PR.";
+const recommendedActions = [];
+if (request.mode === "preflight" && !workspaceClean) {
+  recommendedActions.push("Working tree is dirty; stash or commit pending changes before PR.");
+  if (behind > 0) {
+    recommendedActions.push(`Update branch with ${request.base_branch} to drop ${behind} pending commits.`);
+  }
+  if (ahead === 0) {
+    recommendedActions.push("No commits ahead of base; push actual changes before requesting review.");
+  }
+}
 
 const reportJsonPath = path.join(artifactsDir, "finish_branch_report.json");
 const reportMdPath = path.join(artifactsDir, "finish_branch_report.md");
@@ -130,6 +157,7 @@ const report = {
   git_log: gitLog,
   diffstat,
   notes: request.notes || summary,
+  recommended_actions: recommendedActions,
   request
 };
 
@@ -150,6 +178,11 @@ mdLines.push(`- Behind commits: ${behind}`);
 mdLines.push(`- Workspace clean: ${workspaceClean ? "yes" : "no"}`);
 mdLines.push(`- Summary: ${summary}`);
 if (request.notes) mdLines.push(`- Operator notes: ${request.notes}`);
+if (recommendedActions.length) {
+  mdLines.push("");
+  mdLines.push("## Recommended actions");
+  for (const action of recommendedActions) mdLines.push(`- ${action}`);
+}
 mdLines.push("");
 mdLines.push("## Git status");
 mdLines.push("```");
@@ -194,7 +227,8 @@ const consoleOutput = {
   report_md: report.report_md,
   commands_log: report.commands_log,
   branch: report.branch,
-  summary
+  summary,
+  recommended_actions: recommendedActions
 };
 
 console.log(JSON.stringify(consoleOutput, null, 2));

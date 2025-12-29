@@ -32,6 +32,12 @@
       "maximum": 200,
       "default": 10,
       "description": "Maximum commits to list in log"
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["report", "preflight"],
+      "default": "preflight",
+      "description": "Preflight surfaces recommended actions when the workspace is dirty"
     }
   },
   "additionalProperties": false
