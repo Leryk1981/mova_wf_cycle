@@ -20,8 +20,8 @@
   {
     "skill_id": "dpp_passport_normalize_basic",
     "wrapper_id": "mova_dpp_passport_normalize_basic",
-    "runnable": false,
-    "entrypoint": null
+    "runnable": true,
+    "entrypoint": "skills/dpp_passport_normalize_basic/impl/code/run_normalize.js"
   },
   {
     "skill_id": "file_cleanup_basic",
@@ -74,26 +74,26 @@
   {
     "skill_id": "skill_file_cleanup_snapshot_node_basic",
     "wrapper_id": "mova_skill_file_cleanup_snapshot_node_basic",
-    "runnable": false,
-    "entrypoint": null
+    "runnable": true,
+    "entrypoint": "skills/skill_file_cleanup_snapshot_node_basic/impl/code/run_snapshot.js"
   },
   {
     "skill_id": "skill_ingest_run_with_skillseeker_basic",
     "wrapper_id": "mova_skill_ingest_run_with_skillseeker_basic",
-    "runnable": false,
-    "entrypoint": null
+    "runnable": true,
+    "entrypoint": "skills/skill_ingest_run_with_skillseeker_basic/impl/code/run_ingest.js"
   },
   {
     "skill_id": "skill_ingest_store_episode_basic",
     "wrapper_id": "mova_skill_ingest_store_episode_basic",
-    "runnable": false,
-    "entrypoint": null
+    "runnable": true,
+    "entrypoint": "skills/skill_ingest_store_episode_basic/impl/code/store_episode.js"
   },
   {
     "skill_id": "skill_mova_ai_bootstrap_generate_basic",
     "wrapper_id": "mova_skill_mova_ai_bootstrap_generate_basic",
-    "runnable": false,
-    "entrypoint": null
+    "runnable": true,
+    "entrypoint": "skills/skill_mova_ai_bootstrap_generate_basic/impl/code/generate_bootstrap.js"
   },
   {
     "skill_id": "skill_scaffolder_basic",

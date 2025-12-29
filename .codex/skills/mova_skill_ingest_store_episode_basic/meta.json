@@ -1,8 +1,8 @@
 {
   "skill_id": "skill_ingest_store_episode_basic",
   "wrapper_id": "mova_skill_ingest_store_episode_basic",
-  "runnable": false,
-  "entrypoint": null,
+  "runnable": true,
+  "entrypoint": "skills/skill_ingest_store_episode_basic/impl/code/store_episode.js",
   "request_schema": null,
   "result_schema": null,
   "env_schema": null,

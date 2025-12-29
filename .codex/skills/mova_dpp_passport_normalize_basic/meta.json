@@ -1,8 +1,8 @@
 {
   "skill_id": "dpp_passport_normalize_basic",
   "wrapper_id": "mova_dpp_passport_normalize_basic",
-  "runnable": false,
-  "entrypoint": null,
+  "runnable": true,
+  "entrypoint": "skills/dpp_passport_normalize_basic/impl/code/run_normalize.js",
   "request_schema": null,
   "result_schema": null,
   "env_schema": null,

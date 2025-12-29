@@ -64,7 +64,7 @@ function collectSchemas(skillDir) {
   return info;
 }
 
-function pickEntry(skillDir) {
+function pickNodeScript(skillDir) {
   const nodeDir = path.join(skillDir, "impl", "bindings", "node");
   if (!exists(nodeDir)) return null;
   const files = fs.readdirSync(nodeDir, { withFileTypes: true })
@@ -77,6 +77,35 @@ function pickEntry(skillDir) {
     if (candidate) return rel(path.join(nodeDir, candidate));
   }
   return rel(path.join(nodeDir, files[0]));
+}
+
+function extractEntrypointFromBinding(bindingPath) {
+  const json = readJson(bindingPath);
+  if (!json) return null;
+  let candidate = null;
+  if (typeof json.entrypoint === "string") candidate = json.entrypoint;
+  else if (json.entrypoint && typeof json.entrypoint === "object") {
+    candidate = json.entrypoint.path || json.entrypoint.script || json.entrypoint.file || null;
+  }
+  if (!candidate) return null;
+  if (typeof candidate !== "string") return null;
+  if (!/\.mjs$|\.js$/i.test(candidate)) return null;
+  const abs = path.resolve(repoRoot, candidate);
+  if (!exists(abs)) return null;
+  return rel(abs);
+}
+
+function pickEntryFromBindings(skillDir) {
+  const bindingsDir = path.join(skillDir, "impl", "bindings");
+  if (!exists(bindingsDir)) return null;
+  const files = fs.readdirSync(bindingsDir, { withFileTypes: true })
+    .filter(e => e.isFile() && e.name.endsWith(".json"))
+    .map(e => path.join(bindingsDir, e.name));
+  for (const bindingPath of files) {
+    const entry = extractEntrypointFromBinding(bindingPath);
+    if (entry) return entry;
+  }
+  return null;
 }
 
 function yamlEscape(value) {
@@ -184,7 +213,7 @@ function processSkill(skillId) {
   const skillDir = path.join(skillsRoot, skillId);
   const manifest = readJson(path.join(skillDir, "manifest.skill.json"));
   const schemas = collectSchemas(skillDir);
-  const entrypoint = pickEntry(skillDir);
+  const entrypoint = pickNodeScript(skillDir) ?? pickEntryFromBindings(skillDir);
   const wrapperId = `mova_${skillId}`;
   ensureDir(path.join(outRoot, wrapperId));
 
