@@ -81,6 +81,22 @@
         "decision": "allow",
         "policy_ref": "skills/station_cycle_v1/policy/policy.station_cycle_v0.json"
       }
+    },
+    {
+      "name": "finish_branch",
+      "enabled": true,
+      "status": "pass",
+      "exit_code": 0,
+      "log": "artifacts/station_cycle/2025-12-29T20-15-04-348Z/finish_branch.log",
+      "output": "artifacts/finish_branch/2025-12-29T20-15-04-100Z/finish_branch_report.md",
+      "report_md": "artifacts/finish_branch/2025-12-29T20-15-04-100Z/finish_branch_report.md",
+      "report_json": "artifacts/finish_branch/2025-12-29T20-15-04-100Z/finish_branch_report.json",
+      "result_json": "artifacts/station_cycle/2025-12-29T20-15-04-348Z/finish_branch_result.json",
+      "reason": null,
+      "policy": {
+        "decision": "allow",
+        "policy_ref": "skills/station_cycle_v1/policy/policy.station_cycle_v0.json"
+      }
     }
   ],
   "notes": "station cycle with gates enabled",

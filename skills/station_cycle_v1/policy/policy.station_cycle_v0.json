@@ -4,7 +4,8 @@
   "allow_steps": [
     "gates",
     "wf_compare",
-    "episode_store"
+    "episode_store",
+    "finish_branch"
   ],
   "deny_steps": [],
   "allow_overrides": true,

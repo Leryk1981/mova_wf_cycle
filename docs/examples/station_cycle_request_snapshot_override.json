@@ -10,6 +10,11 @@
     "episode_store": {
       "enabled": true,
       "strict": false
+    },
+    "finish_branch": {
+      "enabled": true,
+      "mode": "preflight",
+      "base": "origin/main"
     }
   },
   "policy_override": {
