@@ -132,6 +132,10 @@ if (Object.keys(policyOverrideRaw).length) {
   fs.writeFileSync(overridePath, JSON.stringify(policyOverride, null, 2));
   overrideSaved = true;
 }
+const policyEventsPath = path.join(runDir, "policy_events.jsonl");
+function appendPolicyEvent(event) {
+  fs.appendFileSync(policyEventsPath, JSON.stringify(event) + "\n");
+}
 
 function relRepo(p) {
   return path.relative(repoRoot, p).replace(/\\/g, "/");
@@ -146,6 +150,13 @@ function runWrapper(name, config, wrapper) {
   if (!enabled) {
     const reason = config.reason || "disabled by request";
     fs.writeFileSync(logPath, `skipped: ${reason}\n`, "utf8");
+    appendPolicyEvent({
+      step: name,
+      enabled: false,
+      decision: "not_requested",
+      reason,
+      policy_ref: policyRef,
+    });
     stepResults.push({
       name,
       enabled: false,
@@ -174,8 +185,22 @@ function runWrapper(name, config, wrapper) {
       }
       policyDecision = "allow_override";
       policyReason = policyOverride.reason || "manual override";
+      appendPolicyEvent({
+        step: name,
+        enabled: true,
+        decision: "allow_override",
+        reason: policyReason,
+        policy_ref: policyRef,
+      });
     } else {
       fs.writeFileSync(logPath, `skipped: ${policyReason}\n`, "utf8");
+      appendPolicyEvent({
+        step: name,
+        enabled: true,
+        decision: "deny",
+        reason: policyReason,
+        policy_ref: policyRef,
+      });
       stepResults.push({
         name,
         enabled: true,
@@ -225,6 +250,14 @@ function runWrapper(name, config, wrapper) {
     reason: policyDecision === "allow_override" ? policyReason : null,
     policy: { decision: policyDecision, policy_ref: policyRef },
   });
+  appendPolicyEvent({
+    step: name,
+    enabled: true,
+    decision: policyDecision,
+    reason: policyDecision === "allow_override" ? policyReason : null,
+    policy_ref: policyRef,
+    exit_code: child.status ?? 1,
+  });
 }
 
 const steps = normalizedRequest.steps;
@@ -246,6 +279,7 @@ const result = {
   artifacts_dir: relRepo(runDir),
   steps: stepResults,
   notes: normalizedRequest.notes,
+  policy_events_log: relRepo(policyEventsPath),
 };
 
 const env = {
