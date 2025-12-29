@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "station_cycle_request_v1",
+  "type": "object",
+  "properties": {
+    "notes": {
+      "type": "string",
+      "description": "Free-form operator notes for this station cycle."
+    },
+    "steps": {
+      "type": "object",
+      "properties": {
+        "snapshot": { "$ref": "#/definitions/step_with_request" },
+        "gates": { "$ref": "#/definitions/step_toggle" },
+        "wf_cycle": {
+          "type": "object",
+          "properties": {
+            "scaffold": { "$ref": "#/definitions/step_with_request" },
+            "compare": { "$ref": "#/definitions/step_with_request" },
+            "winner_pack": { "$ref": "#/definitions/step_with_request" }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": ["steps"],
+  "additionalProperties": false,
+  "definitions": {
+    "step_toggle": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean", "default": false }
+      },
+      "additionalProperties": false
+    },
+    "step_with_request": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean", "default": false },
+        "request": {
+          "type": "object",
+          "description": "Payload forwarded to the nested MOVA skill."
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

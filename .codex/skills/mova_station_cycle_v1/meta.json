@@ -1,0 +1,10 @@
+{
+  "skill_id": "station_cycle_v1",
+  "wrapper_id": "mova_station_cycle_v1",
+  "runnable": true,
+  "entrypoint": "skills/station_cycle_v1/impl/bindings/run_station_cycle.js",
+  "request_schema": "skills/station_cycle_v1/mova/ds/ds.station_cycle_request_v1.schema.json",
+  "result_schema": "skills/station_cycle_v1/mova/ds/ds.station_cycle_result_v1.schema.json",
+  "env_schema": "skills/station_cycle_v1/mova/env/env.station_cycle_run_v1.schema.json",
+  "generator": "tools/generate_codex_wrappers.mjs"
+}
