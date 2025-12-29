@@ -1,11 +1,21 @@
-# MOVA run gates (wrapper)
-1. Trigger this when codex changes must clear validation, unit, and smoke gates before merge.
-2. From repo root run: `npm run validate`, `npm test`, `npm run smoke:wf_cycle` in that order; the wrapper just orchestrates and aggregates their logs.
-3. Until an env schema lands, record results in `env.run_gates_report_v1` with three fixed sections: `validate`, `test`, `smoke`.
-4. Each section must specify PASS/FAIL, duration, log path, and blocking issues.
-5. If a command exits non-zero, stop the sequence, mark downstream gates as `skipped`, and capture the failing stdout/stderr path.
-6. Use this wrapper whenever Ops requests “fresh gates” evidence or before opening a release PR.
-7. Attach summarized timings plus the env report to docs/PROJECT_MEMORY as proof.
-8. Rerun only after addressing the failure cause; note the remediation commit in the report.
-9. This skill is prompt-first, so provide shell traces inline if automation is unavailable on the current host.
-10. Keep reports under source control when the gates guard production deploys.
+---
+name: "MOVA: run gates (wrapper)"
+description: "Runs npm validate/test/smoke gates and emits a JSON gate report with log paths."
+when_to_use:
+  - "Need fresh validation/test/smoke evidence before merging or handing off to Ops"
+inputs:
+  - kind: none
+    schema: "n/a (drives repo npm scripts directly)"
+outputs:
+  - kind: json
+    schema: "artifacts/run_gates/<timestamp>/run_gates_report.json"
+deterministic: true
+---
+
+## Command
+`node .codex/skills/mova_run_gates/scripts/run.mjs`
+
+## Notes
+- Wrapper runs `npm run validate`, `npm test`, and `npm run smoke:wf_cycle`, storing logs under `artifacts/run_gates/<timestamp>/`.
+- The JSON report contains status/duration/log path per gate and is also saved next to the logs for evidence uploads.
+- If a step fails the remaining gates are marked `skipped`; fix the failure before relaunching for a clean PASS sweep.

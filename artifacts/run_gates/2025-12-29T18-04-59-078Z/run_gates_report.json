@@ -1,0 +1,35 @@
+{
+  "skill": "mova_run_gates",
+  "started_at": "2025-12-29T18:04:59.080Z",
+  "artifacts_dir": "artifacts/run_gates/2025-12-29T18-04-59-078Z",
+  "steps": [
+    {
+      "name": "validate",
+      "command": "npm run validate",
+      "status": "fail",
+      "exit_code": 1,
+      "duration_ms": 8,
+      "log": "artifacts/run_gates/2025-12-29T18-04-59-078Z/validate.log"
+    },
+    {
+      "name": "test",
+      "command": "npm test",
+      "status": "skipped",
+      "exit_code": null,
+      "duration_ms": 0,
+      "log": "artifacts/run_gates/2025-12-29T18-04-59-078Z/test.log"
+    },
+    {
+      "name": "smoke",
+      "command": "npm run smoke:wf_cycle",
+      "status": "skipped",
+      "exit_code": null,
+      "duration_ms": 0,
+      "log": "artifacts/run_gates/2025-12-29T18-04-59-078Z/smoke.log"
+    }
+  ],
+  "failure_step": "validate",
+  "finished_at": "2025-12-29T18:04:59.091Z",
+  "status": "fail",
+  "report_path": "artifacts/run_gates/2025-12-29T18-04-59-078Z/run_gates_report.json"
+}
