@@ -64,8 +64,8 @@ async function storeSkillIngestEpisodeBasic(envelope, options = {}) {
   if (!episode) {
     throw new Error("Missing episode payload");
   }
-  if (episode.mova_version !== "4.0.0") {
-    throw new Error("episode.mova_version must be 4.0.0");
+  if (episode.mova_version !== "4.1.1") {
+    throw new Error("episode.mova_version must be 4.1.1");
   }
   if (!episode.episode_id || !episode.envelope_id) {
     throw new Error("episode_id and envelope_id are required");

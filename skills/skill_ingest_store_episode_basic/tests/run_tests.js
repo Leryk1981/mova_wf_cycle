@@ -10,12 +10,12 @@ async function testStoreEpisode() {
   const envelope = {
     envelope_type: "env.skill_ingest_run_store_episode_v1",
     envelope_id: "env-abc",
-    mova_version: "4.0.0",
+    mova_version: "4.1.1",
     episode: {
-      mova_version: "4.0.0",
+      mova_version: "4.1.1",
       episode_id: "ep-123",
       envelope_id: "env.skill_ingest_run_request_v1",
-      run_result: { run_id: "run-1", status: "success", mova_version: "4.0.0" }
+      run_result: { run_id: "run-1", status: "success", mova_version: "4.1.1" }
     }
   };
 

@@ -73,6 +73,14 @@ All four commands must pass on every branch before asking Codex to continue.
 3. The runtime writes `request.json`, `result.json`, and `evidence/totals.json`.
 4. Store and search the run through the Cloudflare worker using `mova_skill_ingest_store_episode_basic` and `/episode/search` exactly as described above (reuse PROD env vars).
 
+## Attempt protocol (single-branch)
+- IDE vs CLI comparisons stay on one branch; every run drops evidence under `artifacts/attempts/<label>/<run_id>/`.
+- Run Attempt A for invoice intake (IDE path):  
+  ```bash
+  npm run attempt:invoice:a
+  ```
+- The helper (`tools/attempt_run.mjs`) captures stdout/stderr, normalized request/result/totals, and the config snapshot so both IDE/CLI attempts can be diffed without juggling branches.
+
 ## Reference docs
 - FlashSlot operator guides: `docs/flashslot/OPERATOR_CHECKLIST_v0.md`, `docs/flashslot/OPERATOR_DEMO_v0.md`.
 - WF cycle artifacts: `docs/WF_CYCLE_ARTIFACTS_GUIDE_v1.md`.

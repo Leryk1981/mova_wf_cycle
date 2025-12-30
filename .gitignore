@@ -50,5 +50,6 @@ skills/skill_ingest_run_with_skillseeker_basic/tests/tmp*/
 /artifacts/cloudflare_memory_prod/**
 /artifacts/invoice_ap/**
 /artifacts/invoice_ap_**/
+/artifacts/attempts/**
 docs/examples/flashslot_publish_offer_request_real.json
 tmp_station_cycle_request.json

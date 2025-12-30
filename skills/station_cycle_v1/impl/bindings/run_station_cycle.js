@@ -437,17 +437,17 @@ function runEpisodeStoreStep(config, baselineStatus) {
   const now = new Date();
   const envelopeId = `station_cycle_store__${runId}`;
   const envelope = {
-    mova_version: "4.0.0",
+    mova_version: "4.1.1",
     envelope_type: "env.skill_ingest_run_store_episode_v1",
     envelope_id: envelopeId,
     requested_by: "station_cycle_v1",
     requested_at: now.toISOString(),
     episode: {
-      mova_version: "4.0.0",
+      mova_version: "4.1.1",
       episode_id: episodeId,
       envelope_id: envelopeId,
       run_result: {
-        mova_version: "4.0.0",
+        mova_version: "4.1.1",
         run_id: runId,
         status: baselineStatus === "failed" ? "failed" : "success",
         timing: {
