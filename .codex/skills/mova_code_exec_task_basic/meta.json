@@ -1,8 +1,8 @@
 {
   "skill_id": "code_exec_task_basic",
   "wrapper_id": "mova_code_exec_task_basic",
-  "runnable": false,
-  "entrypoint": null,
+  "runnable": true,
+  "entrypoint": "tools/run_code_exec.js",
   "request_schema": "skills/code_exec_task_basic/mova/ds/ds.code_exec_request_v1.schema.json",
   "result_schema": "skills/code_exec_task_basic/mova/ds/ds.code_exec_result_v1.schema.json",
   "env_schema": "skills/code_exec_task_basic/mova/env/env.code_exec_run_v1.schema.json",
