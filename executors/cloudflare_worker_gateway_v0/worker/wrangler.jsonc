@@ -25,9 +25,9 @@
   "d1_databases": [
     {
       "binding": "EPISODES_DB",
-      "database_name": "mova_gateway_episodes_dev",
-      "database_id": "REPLACE_ME",
-      "preview_database_id": "REPLACE_ME",
+      "database_name": "mova_gateway_episodes_prod",
+      "database_id": "1051d92a-6ad7-4506-a2e4-e0564c04ee9e",
+      "preview_database_id": "1ebe1d5f-cca7-4405-b680-37735061277c",
       "migrations_dir": "sql"
     }
   ],
