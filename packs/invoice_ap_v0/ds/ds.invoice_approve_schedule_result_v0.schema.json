@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mova.dev/packs/invoice_ap_v0/ds.invoice_approve_schedule_result_v0.schema.json",
+  "title": "Invoice Approve & Schedule Result v0",
+  "description": "Deterministic approval decision for an invoice with payment scheduling data.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "invoice_number",
+    "currency",
+    "decision",
+    "reasons",
+    "scheduled_payment_date",
+    "pay_amount",
+    "checklist"
+  ],
+  "properties": {
+    "invoice_number": { "type": "string" },
+    "currency": { "type": "string" },
+    "decision": {
+      "type": "string",
+      "enum": [ "approved", "needs_review", "rejected" ]
+    },
+    "reasons": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": []
+    },
+    "scheduled_payment_date": {
+      "type": "string",
+      "description": "YYYY-MM-DD formatted date."
+    },
+    "pay_amount": { "type": "number" },
+    "match_summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "status": { "type": "string" },
+        "total_amount_variance": { "type": "number" }
+      }
+    },
+    "checklist": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  }
+}

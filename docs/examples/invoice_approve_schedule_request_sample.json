@@ -1,0 +1,29 @@
+{
+  "invoice": {
+    "invoice_number": "INV-2026-0001",
+    "invoice_date": "2025-12-15",
+    "currency": "EUR",
+    "totals": {
+      "grand_total": 1963.5
+    },
+    "vendor": {
+      "name": "Acme Parts GmbH",
+      "vat_id": "DE123456789"
+    }
+  },
+  "match_summary": {
+    "status": "matched",
+    "total_amount_variance": 0,
+    "matched_lines": 3,
+    "partial_lines": 0,
+    "unmatched_lines": 0
+  },
+  "policy": {
+    "variance_threshold": 10,
+    "required_status": "matched"
+  },
+  "payment_terms_days": 14,
+  "metadata": {
+    "batch_id": "invoice_approve_demo_a"
+  }
+}

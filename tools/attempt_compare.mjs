@@ -18,13 +18,16 @@ function parseArgs(argv) {
     else if (arg === "--label-b") parsed.labelB = argv[++i];
     else if (arg === "--files") parsed.files = argv[++i].split(",").map((s) => s.trim()).filter(Boolean);
     else if (arg === "--out") parsed.out = argv[++i];
+    else if (arg === "--skill") parsed.skill = argv[++i];
     else if (arg === "--help" || arg === "-h") parsed.help = true;
   }
   return parsed;
 }
 
 function printHelp() {
-  console.log("Usage: node tools/attempt_compare.mjs [--label-a ide --label-b cli --files file1,file2 --out path]");
+  console.log(
+    "Usage: node tools/attempt_compare.mjs [--label-a ide --label-b cli --files file1,file2 --out path --skill <name>]"
+  );
 }
 
 function findLatestAttempt(label) {
@@ -92,6 +95,7 @@ async function main() {
   const comparisons = args.files.map((file) => compareFiles(attemptA, attemptB, file));
   const mismatches = comparisons.filter((c) => !c.equal).map((c) => c.file);
   const report = {
+    ...(args.skill ? { skill: args.skill } : {}),
     labels: { a: args.labelA, b: args.labelB },
     attempt_a: attemptA,
     attempt_b: attemptB,
@@ -107,11 +111,12 @@ async function main() {
   fs.mkdirSync(path.dirname(outPath), { recursive: true });
   fs.writeFileSync(outPath, JSON.stringify(report, null, 2));
 
+  const banner = args.skill ? `[attempt_compare:${args.skill}]` : "[attempt_compare]";
   if (report.summary.identical) {
-    console.log(`[attempt_compare] OK – files identical (${args.files.join(", ")})`);
+    console.log(`${banner} OK – files identical (${args.files.join(", ")})`);
   } else {
     console.log(
-      `[attempt_compare] DIFF – mismatched files: ${report.summary.mismatched_files.join(", ") || "(none)"}`
+      `${banner} DIFF – mismatched files: ${report.summary.mismatched_files.join(", ") || "(none)"}`
     );
   }
   console.log(`- wrote ${path.relative(repoRoot, outPath).replace(/\\/g, "/")}`);
