@@ -2,6 +2,9 @@ const { spawnSync } = require("node:child_process");
 const fs = require("node:fs");
 const path = require("node:path");
 
+const npmCmd = process.platform === "win32" ? "npm.cmd" : "npm";
+const npmCliPath = process.env.npm_execpath ? path.normalize(process.env.npm_execpath) : null;
+
 function getArg(name) {
   const idx = process.argv.indexOf(name);
   if (idx === -1) return null;
@@ -11,6 +14,12 @@ function getArg(name) {
 const defaultPolicy = {
   snapshot: { enabled: false, reason: "disabled by default policy (snapshot handled separately)" },
   gates: { enabled: false, reason: "disabled by default policy (gates opt-in)" },
+  quality_invoice_ap: {
+    enabled: false,
+    run_negative: false,
+    strict: false,
+    reason: "quality invoice_ap disabled by default policy",
+  },
   episode_store: { enabled: true, reason: "episode store enabled by default policy" },
   finish_branch: {
     enabled: true,
@@ -51,6 +60,18 @@ function mergeFinishBranchStep(cfg, fallback) {
   };
 }
 
+function mergeQualityStep(cfg, fallback) {
+  return {
+    enabled: typeof cfg?.enabled === "boolean" ? cfg.enabled : (fallback?.enabled ?? false),
+    run_negative:
+      typeof cfg?.run_negative === "boolean"
+        ? cfg.run_negative
+        : fallback?.run_negative ?? false,
+    strict: typeof cfg?.strict === "boolean" ? cfg.strict : fallback?.strict ?? false,
+    reason: cfg?.reason ?? fallback?.reason ?? (cfg?.enabled === false ? "disabled in request" : ""),
+  };
+}
+
 const requestArg = getArg("--request");
 let requestAbs = null;
 let requestRaw = {};
@@ -79,6 +100,10 @@ const normalizedRequest = {
   steps: {
     snapshot: mergeStep(stepsReq.snapshot, defaultPolicy.snapshot),
     gates: mergeStep(stepsReq.gates, defaultPolicy.gates),
+    quality_invoice_ap: mergeQualityStep(
+      stepsReq.quality_invoice_ap,
+      defaultPolicy.quality_invoice_ap
+    ),
     episode_store: mergeEpisodeStoreStep(stepsReq.episode_store, defaultPolicy.episode_store),
     finish_branch: mergeFinishBranchStep(stepsReq.finish_branch, defaultPolicy.finish_branch),
     wf_cycle: {
@@ -90,6 +115,7 @@ const normalizedRequest = {
 };
 
 const repoRoot = path.resolve(__dirname, "../../../..");
+const qualityRoot = path.join(repoRoot, "artifacts", "quality");
 const artifactsRoot = path.join(repoRoot, "artifacts", "station_cycle");
 fs.mkdirSync(artifactsRoot, { recursive: true });
 
@@ -150,6 +176,73 @@ const wrappers = {
     needsRequest: true,
   },
 };
+
+function runNpmCommand(args) {
+  if (npmCliPath && fs.existsSync(npmCliPath)) {
+    return spawnSync(process.execPath, [npmCliPath, ...args], {
+      cwd: repoRoot,
+      encoding: "utf8",
+    });
+  }
+  return spawnSync(npmCmd, args, { cwd: repoRoot, encoding: "utf8", shell: true });
+}
+
+function captureQualityDirs() {
+  if (!fs.existsSync(qualityRoot)) return [];
+  return fs
+    .readdirSync(qualityRoot, { withFileTypes: true })
+    .filter((d) => d.isDirectory())
+    .map((d) => {
+      const full = path.join(qualityRoot, d.name);
+      const stat = fs.statSync(full);
+      return { name: d.name, path: full, mtimeMs: stat.mtimeMs };
+    })
+    .sort((a, b) => a.mtimeMs - b.mtimeMs);
+}
+
+function findNewQualityDir(before, after, sinceMs) {
+  const beforeNames = new Set(before.map((d) => d.name));
+  const threshold = typeof sinceMs === "number" ? sinceMs - 2000 : 0;
+  const candidates = after.filter(
+    (info) =>
+      info.mtimeMs >= threshold &&
+      (!beforeNames.has(info.name) || info.mtimeMs > threshold || before.length === 0)
+  );
+  if (candidates.length) return candidates[candidates.length - 1];
+  return null;
+}
+
+function vendorQualityReports(label, info) {
+  if (!info) return null;
+  const record = {
+    label,
+    run_id: info.name,
+    origin_dir: relRepo(info.path),
+  };
+  function copyIfExists(sourceName, targetKey, originKey) {
+    const sourcePath = path.join(info.path, sourceName);
+    if (!fs.existsSync(sourcePath)) return;
+    const safeName = `${label}_${info.name}_${sourceName}`;
+    const destPath = path.join(runDir, safeName);
+    try {
+      fs.copyFileSync(sourcePath, destPath);
+      record[targetKey] = relRepo(destPath);
+      record[originKey] = relRepo(sourcePath);
+    } catch (err) {
+      record.errors = record.errors || [];
+      record.errors.push(`copy ${sourceName}: ${err.message}`);
+    }
+  }
+  copyIfExists("quality_report.json", "report_json", "report_origin_json");
+  copyIfExists("quality_report.md", "report_md", "report_origin_md");
+  copyIfExists(
+    "quality_report_negative.json",
+    "report_negative_json",
+    "report_negative_origin_json"
+  );
+  return record;
+}
+
 const finishBranchWrapperScript = path.resolve(
   repoRoot,
   ".codex",
@@ -186,7 +279,15 @@ function collectEvidencePaths(extra = []) {
     if (step.log) set.add(step.log);
     if (step.output) set.add(step.output);
     if (step.report_json) set.add(step.report_json);
+     if (step.report_negative_json) set.add(step.report_negative_json);
     if (step.result_json) set.add(step.result_json);
+     if (Array.isArray(step.vendor_reports)) {
+       for (const record of step.vendor_reports) {
+         if (record.report_json) set.add(record.report_json);
+         if (record.report_md) set.add(record.report_md);
+         if (record.report_negative_json) set.add(record.report_negative_json);
+       }
+     }
   }
   for (const item of extra) if (item) set.add(relRepo(item));
   return Array.from(set);
@@ -315,6 +416,180 @@ function runWrapper(name, config, wrapper) {
     reason: policyDecision === "allow_override" ? policyReason : null,
     policy_ref: policyRef,
     exit_code: child.status ?? 1,
+  });
+}
+
+function runQualityInvoiceApStep(config) {
+  const name = "quality_invoice_ap";
+  const logPath = path.join(runDir, `${name}.log`);
+  const policyEval = evaluatePolicy(name);
+  const policyRef = relRepo(policyPath);
+
+  if (!config.enabled) {
+    const reason = config.reason || "quality_invoice_ap disabled";
+    fs.writeFileSync(logPath, `skipped: ${reason}\n`, "utf8");
+    appendPolicyEvent({
+      step: name,
+      enabled: false,
+      decision: "not_requested",
+      reason,
+      policy_ref: policyRef,
+    });
+    stepResults.push({
+      name,
+      enabled: false,
+      status: "skipped",
+      exit_code: null,
+      log: relRepo(logPath),
+      output: null,
+      reason,
+      policy: { decision: "not_requested", policy_ref: policyRef },
+    });
+    return;
+  }
+
+  let policyDecision = policyEval.decision;
+  let policyReason = policyEval.reason || `policy ${policy.version} denies step`;
+  if (policyDecision !== "allow") {
+    const canOverride =
+      policy.allow_overrides && policyOverride.allow_steps.includes(name);
+    if (canOverride) {
+      if (!overrideSaved && Object.keys(policyOverrideRaw).length) {
+        fs.writeFileSync(
+          path.join(runDir, "policy_override.json"),
+          JSON.stringify(policyOverride, null, 2)
+        );
+        overrideSaved = true;
+      }
+      policyDecision = "allow_override";
+      policyReason = policyOverride.reason || "manual override";
+      appendPolicyEvent({
+        step: name,
+        enabled: true,
+        decision: "allow_override",
+        reason: policyReason,
+        policy_ref: policyRef,
+      });
+    } else {
+      fs.writeFileSync(logPath, `skipped: ${policyReason}\n`, "utf8");
+      appendPolicyEvent({
+        step: name,
+        enabled: true,
+        decision: "deny",
+        reason: policyReason,
+        policy_ref: policyRef,
+      });
+      stepResults.push({
+        name,
+        enabled: true,
+        status: "skipped",
+        exit_code: null,
+        log: relRepo(logPath),
+        output: null,
+        reason: policyReason,
+        policy: { decision: "deny", policy_ref: policyRef },
+      });
+      return;
+    }
+  }
+
+  const logSections = [];
+  const qualityReports = [];
+  const positiveStart = Date.now();
+  const beforePositive = captureQualityDirs();
+  const positiveChild = runNpmCommand(["run", "quality:invoice_ap"]);
+  const positiveText = `${positiveChild.stdout ?? ""}${positiveChild.stderr ?? ""}`;
+  logSections.push(
+    `[quality:invoice_ap]\n${positiveText}`.trimEnd()
+  );
+  if (positiveChild.error) {
+    logSections.push(`[quality:invoice_ap error] ${positiveChild.error.message}`);
+  }
+  const positiveInfo = findNewQualityDir(beforePositive, captureQualityDirs(), positiveStart);
+  const positiveVendor = positiveInfo ? vendorQualityReports("quality_invoice_ap", positiveInfo) : null;
+  if (positiveVendor) qualityReports.push(positiveVendor);
+  else logSections.push("[quality:invoice_ap] no quality artifacts detected");
+
+  let status = positiveChild.status === 0 ? "pass" : "fail";
+  let negativeVendor = null;
+  let negativeExit = null;
+
+  if (config.run_negative) {
+    const negativeStart = Date.now();
+    const beforeNegative = captureQualityDirs();
+    const negativeChild = runNpmCommand(["run", "quality:invoice_ap:neg"]);
+    negativeExit = negativeChild.status ?? 1;
+    const negativeText = `${negativeChild.stdout ?? ""}${negativeChild.stderr ?? ""}`;
+    logSections.push(
+      `[quality:invoice_ap:neg]\n${negativeText}`.trimEnd()
+    );
+    if (negativeChild.error) {
+      logSections.push(`[quality:invoice_ap:neg error] ${negativeChild.error.message}`);
+    }
+    const negativeInfo = findNewQualityDir(beforeNegative, captureQualityDirs(), negativeStart);
+    negativeVendor = negativeInfo
+      ? vendorQualityReports("quality_invoice_ap_neg", negativeInfo)
+      : null;
+    if (negativeVendor) qualityReports.push(negativeVendor);
+    else logSections.push("[quality:invoice_ap:neg] no negative quality artifacts detected");
+    if (negativeChild.status !== 0) status = "fail";
+  }
+
+  if (positiveChild.status !== 0) status = "fail";
+  const fatal = status === "fail" && config.strict;
+  const failureReason =
+    status === "fail"
+      ? fatal
+        ? "quality invoice_ap failed (strict)"
+        : "quality invoice_ap reported failures"
+      : null;
+
+  fs.writeFileSync(logPath, `${logSections.filter(Boolean).join("\n\n")}\n`);
+
+  const exitCode =
+    status === "pass"
+      ? 0
+      : positiveChild.status ??
+        (config.run_negative ? negativeExit ?? 1 : 1);
+
+  stepResults.push({
+    name,
+    enabled: true,
+    status,
+    exit_code: exitCode,
+    log: relRepo(logPath),
+    output:
+      positiveVendor?.report_json ||
+      positiveVendor?.report_md ||
+      positiveVendor?.report_negative_json ||
+      null,
+    report_json: positiveVendor?.report_json || null,
+    report_md: positiveVendor?.report_md || null,
+    report_negative_json: negativeVendor?.report_negative_json || negativeVendor?.report_json || null,
+    quality_origin_json: positiveVendor?.report_origin_json || null,
+    quality_origin_md: positiveVendor?.report_origin_md || null,
+    quality_negative_origin_json:
+      negativeVendor?.report_negative_origin_json || negativeVendor?.report_origin_json || null,
+    negative_exit_code: typeof negativeExit === "number" ? negativeExit : undefined,
+    vendor_reports: qualityReports.map((r) => ({
+      label: r.label,
+      run_id: r.run_id,
+      report_json: r.report_json || null,
+      report_md: r.report_md || null,
+      report_negative_json: r.report_negative_json || null,
+      origin_dir: r.origin_dir,
+    })),
+    reason: failureReason || (policyDecision === "allow_override" ? policyReason : null),
+    policy: { decision: policyDecision, policy_ref: policyRef },
+    fatal,
+  });
+  appendPolicyEvent({
+    step: name,
+    enabled: true,
+    decision: policyDecision,
+    reason: failureReason || (policyDecision === "allow_override" ? policyReason : null),
+    policy_ref: policyRef,
+    exit_code: exitCode,
   });
 }
 
@@ -735,6 +1010,7 @@ runWrapper("gates", steps.gates, wrappers.gates);
 runWrapper("wf_scaffold", wfCycle.scaffold, wrappers.wf_scaffold);
 runWrapper("wf_compare", wfCycle.compare, wrappers.wf_compare);
 runWrapper("wf_winner_pack", wfCycle.winner_pack, wrappers.wf_winner_pack);
+runQualityInvoiceApStep(steps.quality_invoice_ap);
 runEpisodeStoreStep(steps.episode_store, hasFatalFailures(stepResults) ? "failed" : "success");
 runFinishBranchStep(steps.finish_branch);
 

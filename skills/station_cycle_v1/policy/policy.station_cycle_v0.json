@@ -4,6 +4,7 @@
   "allow_steps": [
     "gates",
     "wf_compare",
+    "quality_invoice_ap",
     "episode_store",
     "finish_branch"
   ],

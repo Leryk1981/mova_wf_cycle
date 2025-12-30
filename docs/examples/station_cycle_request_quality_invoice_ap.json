@@ -1,0 +1,20 @@
+{
+  "notes": "station cycle with invoice_ap quality gate",
+  "steps": {
+    "gates": { "enabled": true },
+    "quality_invoice_ap": {
+      "enabled": true,
+      "run_negative": true,
+      "strict": true
+    },
+    "finish_branch": {
+      "enabled": true,
+      "mode": "preflight",
+      "base": "origin/main"
+    },
+    "episode_store": {
+      "enabled": true,
+      "strict": false
+    }
+  }
+}

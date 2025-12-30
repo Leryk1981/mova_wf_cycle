@@ -39,6 +39,7 @@ All four commands must pass on every branch before asking Codex to continue.
   node .codex/skills/mova_station_cycle_v1/scripts/run.mjs --request docs/examples/station_cycle_request_snapshot_override.json
   ```
 - Outputs: `artifacts/station_cycle/<runId>/` with per-step logs, vendored finish_branch reports, `policy_events.jsonl`, and `episode_store_result.json` when remote storage succeeds.
+- Quality gate: enable `steps.quality_invoice_ap` to run `npm run quality:invoice_ap` (and `quality:invoice_ap:neg` when `run_negative=true`) inside the station cycle. The step copies the resulting `quality_report*.json/md` into the station artifacts so finish_branch and episode_store can cite the same evidence. See `docs/examples/station_cycle_request_quality_invoice_ap.json` for a sample request that turns on gates, quality, finish_branch, and episode_store.
 
 ## Remote episode memory (Cloudflare Worker + D1)
 - Worker endpoints:  

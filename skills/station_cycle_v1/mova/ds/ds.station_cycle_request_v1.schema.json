@@ -13,6 +13,7 @@
         "snapshot": { "$ref": "#/definitions/step_with_request" },
         "gates": { "$ref": "#/definitions/step_toggle" },
         "episode_store": { "$ref": "#/definitions/episode_store_step" },
+        "quality_invoice_ap": { "$ref": "#/definitions/quality_step" },
         "finish_branch": { "$ref": "#/definitions/finish_branch_step" },
         "wf_cycle": {
           "type": "object",
@@ -52,6 +53,15 @@
       "type": "object",
       "properties": {
         "enabled": { "type": "boolean", "default": true },
+        "strict": { "type": "boolean", "default": false }
+      },
+      "additionalProperties": false
+    },
+    "quality_step": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean", "default": false },
+        "run_negative": { "type": "boolean", "default": false },
         "strict": { "type": "boolean", "default": false }
       },
       "additionalProperties": false
