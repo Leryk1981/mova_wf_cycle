@@ -1,48 +1,68 @@
 # MOVA wf_cycle standalone
-Українська версія: README.uk.md
 
-## Status & purpose
-- Deterministic workflow factory for MOVA wf_cycle with a local Inngest-based control plane (“pult”) for smoke/full/experiment runs without SaaS dependencies.
-- No hosted services, no background AI runtime — executions stay local and reproducible.
-- MOVA language/context references live in `MOVA_CONTEXT_PACK.md`.
+## What this repo is now
+- Deterministic wf_cycle machine with scaffold → probes → compare → winner_pack runners wired through Codex wrappers in `.codex/skills/`.
+- Packs and runtimes (FlashSlot v0, wf_cycle packs, ingest helpers) all live in-repo for reproducible runs.
+- `station_cycle_v1` orchestrates snapshot/gates/wf_cycle/episode_store/finish_branch with evidence trails + policy.
+- Remote episode memory v0 (Cloudflare Worker + D1) provides `/episode/store` and `/episode/search` for storing real runs.
+- Cloudflare worker sources + migrations live in `executors/cloudflare_worker_gateway_v0/worker`.
 
-## Runtime requirements
-- Node.js `22.16.x` (per `engines` and `.nvmrc`); npm `11.6.x` (ships with the required Node line).
-- One way with `nvm`:
-  1. `nvm install 22.16.0`
-  2. `nvm use 22.16.0`
-  3. `corepack enable` (keeps npm aligned with the pinned `packageManager`)
-
-## Quickstart
+## Quickstart (Local)
 1. `npm ci`
-2. `npm run smoke:wf_cycle`
-3. `npm run smoke:flashslot`
-4. Optional: `PULT_SMOKE_ENABLE=1 npm run smoke:pult` (skips by default unless explicitly enabled; see gates)
+2. `npm run validate`
+3. `npm test`
+4. `npm run smoke:wf_cycle`
 
-## Gates / smoke commands
-- `npm run validate` — schema/manifest validation for the skills lab.
-- `npm test` — validation plus unit checks for ingest, bootstrap, file-cleanup skills.
-- `npm run smoke:wf_cycle` — deterministic wf_cycle scaffold → probes → compare → winner_pack pipeline.
-- `npm run smoke:flashslot` — FlashSlot experiment smoke (winner pack + summary).
-- `npm run smoke:pult` — runs pult handlers locally (express + inngest stub, inngest-cli dev tunnel) and triggers wf_cycle/full/experiment + flashslot flows. **Default SKIP** to avoid network-heavy setup; set `PULT_SMOKE_ENABLE=1` and install dev deps (`express@5.2.1`, `inngest@3.48.1`, `inngest-cli@1.15.1`) before running.
+All four commands must pass on every branch before asking Codex to continue.
 
-## Where artifacts live
-- wf_cycle: `lab/wf_cycle_runs/<runId>/` and `lab/inngest_runs/<runId>/` (see `docs/WF_CYCLE_ARTIFACTS_GUIDE_v1.md`).
-- FlashSlot smoke/demo: `lab/flashslot_runs/<runId>/`.
-- Pult smoke: `lab/inngest_runs/<event.id>/` (per handler) with `result.json`/step outputs.
-- Detailed locations and checks: `docs/WF_CYCLE_ARTIFACTS_GUIDE_v1.md`.
+## Codex wrappers
+- Generate or refresh wrappers after touching `skills/` or schema files:
+  - `npm run codex:wrappers:gen`
+  - `npm run codex:wrappers:check`
+- Wrappers surface runnable bindings via `.codex/skills/mova_<skill_id>/scripts/run.mjs`.
 
-## Docs and inventory
-- Repo inventory snapshot: `docs/inventory/INVENTORY_WF_CYCLE_REPO_v1.md`.
-- Artifact reference: `docs/WF_CYCLE_ARTIFACTS_GUIDE_v1.md`.
+## Station cycle
+- Requests live in `docs/examples/` (e.g. `docs/examples/station_cycle_request_snapshot_override.json`).
+- Run full cycle:  
+  ```bash
+  node .codex/skills/mova_station_cycle_v1/scripts/run.mjs --request docs/examples/station_cycle_request_snapshot_override.json
+  ```
+- Outputs: `artifacts/station_cycle/<runId>/` with per-step logs, vendored finish_branch reports, `policy_events.jsonl`, and `episode_store_result.json` when remote storage succeeds.
 
-## FlashSlot demo (A/B/C)
-Run the committed dentist A/B/C hypothesis set end-to-end (noop driver + dry-run) with one command:
+## Remote episode memory (Cloudflare Worker + D1)
+- Worker endpoints:  
+  - Dev: `https://mova-tool-gateway-v0-dev.s-myasoedov81.workers.dev`  
+  - Prod: `https://mova-tool-gateway-v0.s-myasoedov81.workers.dev`
+- API routes:
+  - `POST /episode/store` — accepts `env.skill_ingest_run_store_episode_v1` envelope.
+  - `POST /episode/search` — filters by `episode_id`, `type`, `source`, timestamps, `limit`.
+- Auth: Bearer token must match `GATEWAY_AUTH_TOKEN` secret configured on the worker.
+- `skill_ingest_store_episode_basic` reads these env vars (or CLI overrides) when run through the wrapper:
+  - `STORE_EPISODE_REMOTE_URL`
+  - `STORE_EPISODE_REMOTE_TOKEN`
+  - (Optional file storage fallback: `STORE_EPISODE_BASE_DIR`)
+- Example store call via wrapper:  
+  ```bash
+  STORE_EPISODE_REMOTE_URL=https://mova-tool-gateway-v0.s-myasoedov81.workers.dev/episode/store \
+  STORE_EPISODE_REMOTE_TOKEN=*** \
+  node .codex/skills/mova_skill_ingest_store_episode_basic/scripts/run.mjs --request <path/to/envelope.json>
+  ```
+- Search via `Invoke-RestMethod`/`curl` and capture responses under `artifacts/cloudflare_memory_prod/`.
 
-```bash
-npm ci && npm run demo:flashslot
-```
+## FlashSlot Boot Camp A (noop driver sample)
+1. Prepare sample request (already committed): `docs/examples/flashslot_publish_offer_request_sample.json`.
+2. Run publish runtime:  
+   ```bash
+   node packs/flashslot_v0/runtime/impl/publish_offer_v0.mjs \
+     --in docs/examples/flashslot_publish_offer_request_sample.json \
+     --out artifacts/flashslot_publish/sample_run \
+     --driver noop
+   ```
+3. Store to remote memory with `skill_ingest_store_episode_basic` (same env vars as above).
+4. Search `/episode/search` for the emitted `episode_id` to confirm persistence.
+5. Artifacts land in `artifacts/flashslot_publish/<run>/` (`request.json`, `result.json`, driver evidence).
 
-Artifacts:
-- `lab/flashslot_runs/<runId>/experiment_summary.json`
-- `lab/flashslot_runs/<runId>/winner_pack/`
+## Reference docs
+- FlashSlot operator guides: `docs/flashslot/OPERATOR_CHECKLIST_v0.md`, `docs/flashslot/OPERATOR_DEMO_v0.md`.
+- WF cycle artifacts: `docs/WF_CYCLE_ARTIFACTS_GUIDE_v1.md`.
+- Repository inventory: `docs/inventory/INVENTORY_WF_CYCLE_REPO_v1.md`.

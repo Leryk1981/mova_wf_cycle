@@ -1,0 +1,32 @@
+{
+  "offer": {
+    "offer_id": "flashslot-sample-berlin-20260115T1000",
+    "service_type": "therapist_session",
+    "starts_at": "2026-01-15T10:00:00+01:00",
+    "duration_min": 45,
+    "location_id": "berlin-centre-room-a",
+    "price": 80,
+    "currency": "EUR",
+    "channel": "sms",
+    "audience_filter": "segment:returning_clients_berlin",
+    "expires_at": "2026-01-15T08:30:00Z",
+    "notes": "Sample slot for docs/examples. Mention quiet studio near Alexanderplatz.",
+    "meta": {
+      "timezone": "Europe/Berlin",
+      "window_local": "10:00-10:45 CET",
+      "operator": "flashslot_sample",
+      "location_note": "General city centre location."
+    },
+    "ext": {
+      "discount_pct": 10,
+      "safe_driver": "noop",
+      "idempotency_hint": "flashslot-sample-20260115-1000"
+    }
+  },
+  "dry_run": false,
+  "idempotency_key": "flashslot-sample-20260115-1000",
+  "channel_config": {
+    "driver": "noop",
+    "audience_window": "same-day"
+  }
+}
