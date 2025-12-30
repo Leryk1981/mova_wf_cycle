@@ -81,6 +81,13 @@ All four commands must pass on every branch before asking Codex to continue.
   ```
 - The helper (`tools/attempt_run.mjs`) captures stdout/stderr, normalized request/result/totals, and the config snapshot so both IDE/CLI attempts can be diffed without juggling branches.
 
+## Quality report
+- Run full invoice/AP quality sweep (gates + A/B attempts + compare):  
+  ```bash
+  npm run quality:invoice_ap
+  ```
+- Reports land in `artifacts/quality/<run_id>/quality_report.{json,md}` with links to gate logs, attempt outputs, and compare evidence.
+
 ## Reference docs
 - FlashSlot operator guides: `docs/flashslot/OPERATOR_CHECKLIST_v0.md`, `docs/flashslot/OPERATOR_DEMO_v0.md`.
 - WF cycle artifacts: `docs/WF_CYCLE_ARTIFACTS_GUIDE_v1.md`.

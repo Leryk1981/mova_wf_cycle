@@ -50,7 +50,8 @@
     "attempt:invoice:approve:a": "node tools/attempt_run.mjs --config docs/examples/attempt_invoice_approve_schedule_a.json --label ide",
     "attempt:invoice:approve:b": "node tools/attempt_run.mjs --config docs/examples/attempt_invoice_approve_schedule_b.json --label cli",
     "attempt:invoice:export:a": "node tools/attempt_run.mjs --config docs/examples/attempt_invoice_payment_export_a.json --label ide",
-    "attempt:invoice:export:b": "node tools/attempt_run.mjs --config docs/examples/attempt_invoice_payment_export_b.json --label cli"
+    "attempt:invoice:export:b": "node tools/attempt_run.mjs --config docs/examples/attempt_invoice_payment_export_b.json --label cli",
+    "quality:invoice_ap": "node tools/quality_report_v0.mjs --scope invoice_ap"
   },
   "dependencies": {
     "sql.js": "^1.9.0"
