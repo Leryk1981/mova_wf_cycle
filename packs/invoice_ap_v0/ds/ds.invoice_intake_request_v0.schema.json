@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mova.dev/packs/invoice_ap_v0/ds.invoice_intake_request_v0.schema.json",
+  "title": "Invoice Intake Request v0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "vendor",
+    "invoice_number",
+    "invoice_date",
+    "due_date",
+    "currency",
+    "line_items",
+    "idempotency_key",
+    "timezone"
+  ],
+  "properties": {
+    "vendor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "vat_id": {
+          "type": "string"
+        }
+      }
+    },
+    "invoice_number": {
+      "type": "string",
+      "minLength": 1
+    },
+    "invoice_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "due_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "currency": {
+      "type": "string",
+      "pattern": "^[A-Z]{3}$"
+    },
+    "timezone": {
+      "type": "string",
+      "const": "Europe/Berlin"
+    },
+    "line_items": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "description",
+          "quantity",
+          "unit_price",
+          "vat_rate"
+        ],
+        "properties": {
+          "description": {
+            "type": "string",
+            "minLength": 1
+          },
+          "quantity": {
+            "type": "number",
+            "minimum": 0
+          },
+          "unit_price": {
+            "type": "number"
+          },
+          "vat_rate": {
+            "type": "number",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "attachments": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "description": "Path to artifact (PDF/image) stored locally"
+      },
+      "default": []
+    },
+    "meta": {
+      "type": "object",
+      "description": "Optional metadata tags",
+      "additionalProperties": true
+    },
+    "idempotency_key": {
+      "type": "string",
+      "minLength": 8
+    }
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "vendor": {
+    "name": "Sample Supplier GmbH",
+    "vat_id": "DE123456789"
+  },
+  "invoice_number": "INV-2026-0001",
+  "invoice_date": "2026-01-10",
+  "due_date": "2026-01-24",
+  "currency": "EUR",
+  "timezone": "Europe/Berlin",
+  "line_items": [
+    {
+      "description": "AP automation bootcamp onboarding",
+      "quantity": 1,
+      "unit_price": 1200,
+      "vat_rate": 19
+    },
+    {
+      "description": "Support retainer (January)",
+      "quantity": 1,
+      "unit_price": 450,
+      "vat_rate": 19
+    }
+  ],
+  "attachments": [
+    "artifacts/invoice_ap/sample_bootcamp/intake/request.pdf"
+  ],
+  "idempotency_key": "invoice-sample-20260110"
+}

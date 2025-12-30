@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mova.dev/packs/invoice_ap_v0/ds.invoice_intake_result_v0.schema.json",
+  "title": "Invoice Intake Result v0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "ok",
+    "invoice_number",
+    "totals",
+    "currency",
+    "line_items",
+    "artifacts_dir"
+  ],
+  "properties": {
+    "ok": {
+      "type": "boolean"
+    },
+    "invoice_number": {
+      "type": "string"
+    },
+    "currency": {
+      "type": "string",
+      "pattern": "^[A-Z]{3}$"
+    },
+    "totals": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "subtotal",
+        "vat_total",
+        "grand_total"
+      ],
+      "properties": {
+        "subtotal": {
+          "type": "number"
+        },
+        "vat_total": {
+          "type": "number"
+        },
+        "grand_total": {
+          "type": "number"
+        }
+      }
+    },
+    "line_items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "description",
+          "quantity",
+          "unit_price",
+          "vat_rate",
+          "line_total",
+          "vat_amount"
+        ],
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number"
+          },
+          "unit_price": {
+            "type": "number"
+          },
+          "vat_rate": {
+            "type": "number"
+          },
+          "line_total": {
+            "type": "number"
+          },
+          "vat_amount": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "artifacts_dir": {
+      "type": "string"
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "ext": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  }
+}
