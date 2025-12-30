@@ -36,6 +36,7 @@ executors/cloudflare_worker_gateway_v0/worker/wrangler.dev.jsonc
 /pults/**/.server_pid_*
 lab/flashslot_runs/
 lab/episodes/
+lab/repo_snapshot_runs/
 
 
 # local test tmp

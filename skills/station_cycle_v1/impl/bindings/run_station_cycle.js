@@ -323,6 +323,18 @@ function runEpisodeStoreStep(config, baselineStatus) {
   const logPath = path.join(runDir, `${name}.log`);
   const policyEval = evaluatePolicy(name);
   const policyRef = relRepo(policyPath);
+  const evidencePath = path.join(runDir, "episode_store_evidence.json");
+
+  function writeEvidence(data) {
+    const payload = {
+      run_id: runId,
+      step: name,
+      timestamp: new Date().toISOString(),
+      ...data,
+    };
+    fs.writeFileSync(evidencePath, JSON.stringify(payload, null, 2));
+    return relRepo(evidencePath);
+  }
 
   if (!config.enabled) {
     const reason = config.reason || "episode store disabled";
@@ -392,6 +404,33 @@ function runEpisodeStoreStep(config, baselineStatus) {
     }
   }
 
+  const storeScriptExists = fs.existsSync(storeWrapperScript);
+  if (!storeScriptExists) {
+    const reason = "episode store wrapper unavailable locally; skipping";
+    fs.writeFileSync(logPath, `skipped: ${reason}\n`, "utf8");
+    const evidenceRel = writeEvidence({ status: "skipped", reason });
+    appendPolicyEvent({
+      step: name,
+      enabled: true,
+      decision: policyDecision,
+      reason,
+      policy_ref: policyRef,
+      exit_code: null,
+    });
+    stepResults.push({
+      name,
+      enabled: true,
+      status: "skipped",
+      exit_code: null,
+      log: relRepo(logPath),
+      output: evidenceRel,
+      reason,
+      policy: { decision: policyDecision, policy_ref: policyRef },
+      fatal: false,
+    });
+    return;
+  }
+
   const episodePath = path.join(runDir, "episode.json");
   const storeRequestPath = path.join(runDir, "store_episode_request.json");
   const episodeId = `station_cycle_v1__${runId}`;
@@ -453,11 +492,16 @@ function runEpisodeStoreStep(config, baselineStatus) {
   };
   fs.writeFileSync(episodePath, JSON.stringify(episodeRecord, null, 2));
 
-  const child = spawnSync(
-    process.execPath,
-    [storeWrapperScript, "--request", storeRequestPath],
-    { cwd: repoRoot, encoding: "utf8" }
-  );
+  let child;
+  try {
+    child = spawnSync(
+      process.execPath,
+      [storeWrapperScript, "--request", storeRequestPath],
+      { cwd: repoRoot, encoding: "utf8" }
+    );
+  } catch (err) {
+    child = { status: null, stdout: "", stderr: err.message, error: err };
+  }
   const combined = `${child.stdout ?? ""}${child.stderr ?? ""}` || "no output\n";
   fs.writeFileSync(logPath, combined, "utf8");
 
@@ -468,6 +512,34 @@ function runEpisodeStoreStep(config, baselineStatus) {
     fs.writeFileSync(outputPath, JSON.stringify(parsed, null, 2));
   } catch {
     outputPath = null;
+  }
+
+  const exitFailed = child.error || (child.status ?? 1) !== 0;
+  if (exitFailed && !config.strict) {
+    const reason =
+      child.error?.message ||
+      `episode store exited with code ${child.status ?? "unknown"}; skipping in local mode`;
+    const evidenceRel = writeEvidence({ status: "skipped", reason });
+    appendPolicyEvent({
+      step: name,
+      enabled: true,
+      decision: policyDecision,
+      reason,
+      policy_ref: policyRef,
+      exit_code: child.status ?? 1,
+    });
+    stepResults.push({
+      name,
+      enabled: true,
+      status: "skipped",
+      exit_code: child.status ?? 1,
+      log: relRepo(logPath),
+      output: evidenceRel,
+      reason,
+      policy: { decision: policyDecision, policy_ref: policyRef },
+      fatal: false,
+    });
+    return;
   }
 
   const status = child.status === 0 ? "pass" : "fail";

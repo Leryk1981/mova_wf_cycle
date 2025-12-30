@@ -1,8 +1,8 @@
 {
-  "notes": "station cycle with gates enabled",
+  "notes": "station cycle gates strict episode_store",
   "steps": {
     "gates": { "enabled": true },
-    "episode_store": { "enabled": true, "strict": false },
+    "episode_store": { "enabled": true, "strict": true },
     "finish_branch": {
       "enabled": true,
       "mode": "preflight",
