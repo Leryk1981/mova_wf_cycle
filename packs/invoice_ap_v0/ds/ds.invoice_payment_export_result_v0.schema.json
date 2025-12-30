@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mova.dev/packs/invoice_ap_v0/ds.invoice_payment_export_result_v0.schema.json",
+  "title": "Invoice Payment Export Result v0",
+  "description": "Deterministic export payload ready for treasury integration.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "export_batch_id",
+    "export_format",
+    "payments",
+    "export_hash"
+  ],
+  "properties": {
+    "export_batch_id": { "type": "string" },
+    "export_format": {
+      "type": "string",
+      "enum": [ "payments_json_v0" ]
+    },
+    "payments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "vendor_id",
+          "invoice_id",
+          "creditor_name",
+          "iban",
+          "amount",
+          "currency",
+          "execution_date",
+          "remittance_text"
+        ],
+        "properties": {
+          "vendor_id": { "type": "string" },
+          "invoice_id": { "type": "string" },
+          "creditor_name": { "type": "string" },
+          "iban": { "type": "string" },
+          "bic": { "type": [ "string", "null" ] },
+          "amount": { "type": "number" },
+          "currency": { "type": "string" },
+          "execution_date": { "type": "string" },
+          "remittance_text": { "type": "string" }
+        }
+      }
+    },
+    "export_hash": { "type": "string" },
+    "totals_by_currency": {
+      "type": "object",
+      "additionalProperties": { "type": "number" }
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  }
+}
