@@ -1,0 +1,30 @@
+{
+  "label": "invoice_match_po_b",
+  "command": "node",
+  "args": [
+    "packs/invoice_ap_v0/runtime/impl/invoice_match_po_v0.mjs",
+    "--in",
+    "docs/examples/invoice_match_po_request_sample.json",
+    "--out",
+    "{{ATTEMPT_DIR}}/run"
+  ],
+  "captures": [
+    "docs/examples/invoice_match_po_request_sample.json",
+    "{{ATTEMPT_DIR}}/run/request.json",
+    "{{ATTEMPT_DIR}}/run/result.json",
+    "{{ATTEMPT_DIR}}/run/evidence/totals.json"
+  ],
+  "env": {
+    "schema": "packs/invoice_ap_v0/env/env.invoice_match_po_run_v0.schema.json",
+    "artifacts_dir": "{{ATTEMPT_DIR}}/run",
+    "request_ref": "{{ATTEMPT_DIR}}/run/request.json",
+    "result_ref": "{{ATTEMPT_DIR}}/run/result.json",
+    "totals_ref": "{{ATTEMPT_DIR}}/run/evidence/totals.json",
+    "evidence_refs": [
+      "{{ATTEMPT_DIR}}/run/evidence/totals.json"
+    ],
+    "meta": {
+      "pipeline": "invoice_match_po_v0"
+    }
+  }
+}

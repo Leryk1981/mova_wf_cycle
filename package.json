@@ -44,7 +44,9 @@
     "codex:wrappers:gen": "node tools/generate_codex_wrappers.mjs --skills skills --out .codex/skills --report docs/skills/CODEX_WRAPPERS_GENERATED.json --overwrite",
     "codex:wrappers:check": "node tools/generate_codex_wrappers.mjs --skills skills --out .codex/skills --report docs/skills/CODEX_WRAPPERS_GENERATED.json --check",
     "attempt:invoice:a": "node tools/attempt_run.mjs --config docs/examples/attempt_invoice_intake_a.json --label ide",
-    "attempt:invoice:b": "node tools/attempt_run.mjs --config docs/examples/attempt_invoice_intake_b.json --label cli"
+    "attempt:invoice:b": "node tools/attempt_run.mjs --config docs/examples/attempt_invoice_intake_b.json --label cli",
+    "attempt:invoice:match_po:a": "node tools/attempt_run.mjs --config docs/examples/attempt_invoice_match_po_a.json --label ide",
+    "attempt:invoice:match_po:b": "node tools/attempt_run.mjs --config docs/examples/attempt_invoice_match_po_b.json --label cli"
   },
   "dependencies": {
     "sql.js": "^1.9.0"
