@@ -1,0 +1,6 @@
+.codex/skills/**        text eol=lf
+docs/skills/**          text eol=lf
+tools/generate_codex_wrappers.mjs text eol=lf
+*.mjs                   text eol=lf
+*.md                    text eol=lf
+*.json                  text eol=lf

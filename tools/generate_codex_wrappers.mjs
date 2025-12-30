@@ -8,6 +8,16 @@ function getArg(name, def) {
   return process.argv[idx + 1] ?? def;
 }
 
+function normalizePath(value) {
+  if (!value) return value;
+  return value.replace(/\\/g, "/");
+}
+
+function normalizeContent(content) {
+  if (typeof content !== "string") return content;
+  return content.replace(/\r\n/g, "\n");
+}
+
 const skillsRel = getArg("--skills", "skills");
 const outRel = getArg("--out", ".codex/skills");
 const reportRel = getArg("--report", "docs/skills/CODEX_WRAPPERS_GENERATED.json");
@@ -29,7 +39,7 @@ function ensureDir(p) {
 }
 
 function rel(p) {
-  return path.relative(repoRoot, p).replace(/\\/g, "/");
+  return normalizePath(path.relative(repoRoot, p));
 }
 
 function readJson(p) {
@@ -89,6 +99,7 @@ function extractEntrypointFromBinding(bindingPath) {
   }
   if (!candidate) return null;
   if (typeof candidate !== "string") return null;
+  candidate = normalizePath(candidate);
   if (!/\.mjs$|\.js$/i.test(candidate)) return null;
   const abs = path.resolve(repoRoot, candidate);
   if (!exists(abs)) return null;
@@ -170,25 +181,27 @@ function renderSkillMd(info) {
 function writeFile(filePath, content) {
   const dir = path.dirname(filePath);
   ensureDir(dir);
-  fs.writeFileSync(filePath, content);
+  fs.writeFileSync(filePath, normalizeContent(content));
 }
 
 function maybeWrite(filePath, content) {
   if (checkOnly) return;
   if (exists(filePath) && !overwrite) return;
-  const current = exists(filePath) ? fs.readFileSync(filePath, "utf8") : null;
-  if (!overwrite && current === content) return;
-  writeFile(filePath, content);
+  const normalizedContent = normalizeContent(content);
+  const current = exists(filePath) ? normalizeContent(fs.readFileSync(filePath, "utf8")) : null;
+  if (!overwrite && current === normalizedContent) return;
+  writeFile(filePath, normalizedContent);
 }
 
 function buildRunScript(entrypoint) {
   if (!entrypoint) return null;
+  const normalizedEntrypoint = normalizePath(entrypoint);
   return `import { spawnSync } from "node:child_process";
 import path from "node:path";
 import process from "node:process";
 
 const repoRoot = process.cwd();
-const entrypoint = path.resolve(repoRoot, "${entrypoint}");
+const entrypoint = path.resolve(repoRoot, "${normalizedEntrypoint}");
 const args = process.argv.slice(2);
 const child = spawnSync(process.execPath, [entrypoint, ...args], { stdio: "inherit" });
 process.exit(child.status ?? 1);
@@ -213,7 +226,7 @@ function processSkill(skillId) {
   const skillDir = path.join(skillsRoot, skillId);
   const manifest = readJson(path.join(skillDir, "manifest.skill.json"));
   const schemas = collectSchemas(skillDir);
-  const entrypoint = pickNodeScript(skillDir) ?? pickEntryFromBindings(skillDir);
+  const entrypoint = normalizePath(pickNodeScript(skillDir) ?? pickEntryFromBindings(skillDir));
   const wrapperId = `mova_${skillId}`;
   ensureDir(path.join(outRoot, wrapperId));
 
@@ -265,8 +278,9 @@ function checkFile(filePath, expectedContent, shouldExist) {
     return;
   }
   if (existsOnDisk && shouldExist) {
-    const current = fs.readFileSync(filePath, "utf8");
-    if (current !== expectedContent) checkDiffs.push(rel(filePath));
+    const current = normalizeContent(fs.readFileSync(filePath, "utf8"));
+    const expected = normalizeContent(expectedContent);
+    if (current !== expected) checkDiffs.push(rel(filePath));
   }
 }
 
