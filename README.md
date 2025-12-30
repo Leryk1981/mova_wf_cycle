@@ -62,6 +62,17 @@ All four commands must pass on every branch before asking Codex to continue.
 4. Search `/episode/search` for the emitted `episode_id` to confirm persistence.
 5. Artifacts land in `artifacts/flashslot_publish/<run>/` (`request.json`, `result.json`, driver evidence).
 
+## Invoice AP Boot Camp v0
+1. Use sample intake request: `docs/examples/invoice_intake_request_sample.json`.
+2. Run deterministic runtime:
+   ```bash
+   node packs/invoice_ap_v0/runtime/impl/invoice_intake_v0.mjs \
+     --in docs/examples/invoice_intake_request_sample.json \
+     --out artifacts/invoice_ap/sample_run
+   ```
+3. The runtime writes `request.json`, `result.json`, and `evidence/totals.json`.
+4. Store and search the run through the Cloudflare worker using `mova_skill_ingest_store_episode_basic` and `/episode/search` exactly as described above (reuse PROD env vars).
+
 ## Reference docs
 - FlashSlot operator guides: `docs/flashslot/OPERATOR_CHECKLIST_v0.md`, `docs/flashslot/OPERATOR_DEMO_v0.md`.
 - WF cycle artifacts: `docs/WF_CYCLE_ARTIFACTS_GUIDE_v1.md`.
