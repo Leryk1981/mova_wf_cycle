@@ -1,0 +1,144 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mova.dev/packs/invoice_ap_v0/ds.invoice_intake_request_v0.schema.json",
+  "title": "Invoice Intake Request v0",
+  "description": "Normalized AP invoice payload captured at intake before posting to downstream systems.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "vendor",
+    "invoice_number",
+    "invoice_date",
+    "currency",
+    "line_items",
+    "idempotency_key"
+  ],
+  "properties": {
+    "vendor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Supplier or bill-from entity name."
+        },
+        "vat_id": {
+          "type": "string",
+          "description": "Optional VAT or tax identifier."
+        },
+        "address": {
+          "type": "string",
+          "description": "Mailing address pulled from invoice header.",
+          "default": ""
+        }
+      }
+    },
+    "invoice_number": {
+      "type": "string",
+      "description": "Invoice identifier as provided by the vendor."
+    },
+    "invoice_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Issue date of the invoice."
+    },
+    "due_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Payment due date when available."
+    },
+    "currency": {
+      "type": "string",
+      "description": "ISO 4217 currency code."
+    },
+    "timezone": {
+      "type": "string",
+      "description": "Timezone identifier used for timestamps (IANA tz database)."
+    },
+    "line_items": {
+      "type": "array",
+      "description": "Individual charge lines extracted from the invoice.",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "description",
+          "quantity",
+          "unit_price",
+          "vat_rate"
+        ],
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number",
+            "minimum": 0
+          },
+          "unit_price": {
+            "type": "number"
+          },
+          "vat_rate": {
+            "type": "number",
+            "description": "VAT percentage applied to the line (e.g. 19 for 19%)."
+          },
+          "account_code": {
+            "type": "string",
+            "description": "Optional GL/accounting code classification."
+          },
+          "notes": {
+            "type": "string",
+            "description": "Free-form annotation for this line.",
+            "default": ""
+          }
+        }
+      }
+    },
+    "attachments": {
+      "type": "array",
+      "description": "Evidence files related to the intake run (PDF, CSV, images).",
+      "items": {
+        "type": "string"
+      }
+    },
+    "idempotency_key": {
+      "type": "string",
+      "description": "Client-provided key preventing duplicate intake runs."
+    },
+    "computed_totals": {
+      "type": "object",
+      "description": "Pre-computed totals if upstream already calculated them.",
+      "additionalProperties": false,
+      "required": [
+        "subtotal",
+        "vat_total",
+        "grand_total"
+      ],
+      "properties": {
+        "subtotal": {
+          "type": "number"
+        },
+        "vat_total": {
+          "type": "number"
+        },
+        "grand_total": {
+          "type": "number"
+        }
+      }
+    },
+    "meta": {
+      "type": "object",
+      "description": "Execution metadata (operator, workflow id, ingestion hints).",
+      "additionalProperties": true
+    },
+    "ext": {
+      "type": "object",
+      "description": "Extension area reserved for downstream workflow enrichment.",
+      "additionalProperties": true
+    }
+  }
+}

@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mova.dev/packs/invoice_ap_v0/ds.invoice_intake_result_v0.schema.json",
+  "title": "Invoice Intake Result v0",
+  "description": "Deterministic totals and per-line stats produced by the invoice intake runtime.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "ok",
+    "invoice_number",
+    "currency",
+    "totals",
+    "line_items"
+  ],
+  "properties": {
+    "ok": {
+      "type": "boolean",
+      "description": "Indicates whether the runtime completed successfully."
+    },
+    "invoice_number": {
+      "type": "string",
+      "description": "Invoice identifier associated with this run."
+    },
+    "currency": {
+      "type": "string",
+      "description": "ISO 4217 currency code used for totals."
+    },
+    "totals": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "subtotal",
+        "vat_total",
+        "grand_total"
+      ],
+      "properties": {
+        "subtotal": {
+          "type": "number",
+          "description": "Sum of line totals before tax."
+        },
+        "vat_total": {
+          "type": "number",
+          "description": "Sum of VAT amounts across all lines."
+        },
+        "grand_total": {
+          "type": "number",
+          "description": "Subtotal + VAT."
+        }
+      }
+    },
+    "line_items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "description",
+          "quantity",
+          "unit_price",
+          "vat_rate",
+          "line_total",
+          "vat_amount"
+        ],
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number"
+          },
+          "unit_price": {
+            "type": "number"
+          },
+          "vat_rate": {
+            "type": "number"
+          },
+          "line_total": {
+            "type": "number",
+            "description": "quantity * unit_price rounded to 2 decimals."
+          },
+          "vat_amount": {
+            "type": "number",
+            "description": "line_total * vat_rate / 100 rounded to 2 decimals."
+          }
+        }
+      }
+    },
+    "artifacts_dir": {
+      "type": "string",
+      "description": "Directory capturing request/result/evidence outputs."
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "ext": {
+      "type": "object",
+      "description": "Extended metadata (timezone, ledger ids, etc.).",
+      "additionalProperties": true
+    }
+  }
+}
