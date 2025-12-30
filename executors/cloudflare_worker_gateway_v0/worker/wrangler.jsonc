@@ -27,7 +27,8 @@
       "binding": "EPISODES_DB",
       "database_name": "mova_gateway_episodes_dev",
       "database_id": "REPLACE_ME",
-      "preview_database_id": "REPLACE_ME"
+      "preview_database_id": "REPLACE_ME",
+      "migrations_dir": "sql"
     }
   ],
   
@@ -54,6 +55,7 @@
   // Copy this file to wrangler.dev.jsonc and replace REPLACE_ME with actual IDs
   "env": {
     "dev": {
+      "name": "mova-tool-gateway-v0-dev",
       "vars": {
         "GATEWAY_VERSION": "cloudflare_worker_gateway_v0",
         "DEFAULT_POLICY_REF": "policy.default"
@@ -68,7 +70,8 @@
         {
           "binding": "EPISODES_DB",
           "database_name": "mova_gateway_episodes_dev",
-          "database_id": "REPLACE_ME"
+          "database_id": "REPLACE_ME",
+          "migrations_dir": "sql"
         }
       ],
       "r2_buckets": [

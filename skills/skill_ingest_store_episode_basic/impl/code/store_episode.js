@@ -21,7 +21,41 @@ function resolveBaseDir(customDir) {
   return path.join(__dirname, "..", "..", "..", "..", "lab", "episodes", "skill_ingest");
 }
 
-function storeSkillIngestEpisodeBasic(envelope, options = {}) {
+function fetchJson(url, options) {
+  return new Promise((resolve, reject) => {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => {
+      controller.abort();
+      reject(new Error("Remote store request timed out"));
+    }, options.timeout ?? 15000);
+
+    fetch(url, {
+      ...options,
+      signal: controller.signal
+    }).then(async (res) => {
+      clearTimeout(timeout);
+      const text = await res.text();
+      let json;
+      try {
+        json = text ? JSON.parse(text) : {};
+      } catch (err) {
+        reject(new Error(`Remote store returned non-JSON payload (${err.message})`));
+        return;
+      }
+      if (!res.ok || json.ok === false) {
+        const code = json.error || res.statusText || "remote error";
+        reject(new Error(`Remote store failed (${res.status}): ${code}`));
+        return;
+      }
+      resolve({ status: res.status, body: json });
+    }).catch((err) => {
+      clearTimeout(timeout);
+      reject(err);
+    });
+  });
+}
+
+async function storeSkillIngestEpisodeBasic(envelope, options = {}) {
   if (!envelope || envelope.envelope_type !== "env.skill_ingest_run_store_episode_v1") {
     throw new Error("Invalid envelope_type, expected env.skill_ingest_run_store_episode_v1");
   }
@@ -35,6 +69,29 @@ function storeSkillIngestEpisodeBasic(envelope, options = {}) {
   }
   if (!episode.episode_id || !episode.envelope_id) {
     throw new Error("episode_id and envelope_id are required");
+  }
+
+  const remoteUrl = options.remoteUrl || process.env.STORE_EPISODE_REMOTE_URL;
+  if (remoteUrl) {
+    const token = options.remoteToken || process.env.STORE_EPISODE_REMOTE_TOKEN;
+    if (!token) {
+      throw new Error("STORE_EPISODE_REMOTE_TOKEN required when STORE_EPISODE_REMOTE_URL is set");
+    }
+    const result = await fetchJson(remoteUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify(envelope)
+    });
+    return {
+      ok: true,
+      episode_id: result.body.episode_id || episode.episode_id,
+      remote: true,
+      endpoint: remoteUrl,
+      response: result.body
+    };
   }
 
   const baseDir = resolveBaseDir(options.baseDir);
@@ -54,19 +111,42 @@ function storeSkillIngestEpisodeBasic(envelope, options = {}) {
   };
 }
 
-function main() {
-  const inputPath = process.argv[2];
-  if (!inputPath) {
-    console.error("Usage: node store_episode.js <path/to/envelope.json>");
+async function main() {
+  function resolveInputArg() {
+    const args = process.argv.slice(2);
+    let candidate = null;
+    for (let i = 0; i < args.length; i++) {
+      const arg = args[i];
+      if (arg === "--request" || arg === "--input" || arg === "-r") {
+        candidate = args[i + 1];
+        i += 1;
+        continue;
+      }
+      const match = arg.match(/^--(?:request|input)=(.+)$/);
+      if (match) {
+        candidate = match[1];
+        continue;
+      }
+      if (!arg.startsWith("--") && !candidate) {
+        candidate = arg;
+        continue;
+      }
+    }
+    return candidate;
+  }
+
+  const inputArg = resolveInputArg();
+  if (!inputArg) {
+    console.error("Usage: node store_episode.js --request <path/to/envelope.json>");
     process.exit(1);
   }
-  const absolutePath = path.isAbsolute(inputPath)
-    ? inputPath
-    : path.join(process.cwd(), inputPath);
+  const absolutePath = path.isAbsolute(inputArg)
+    ? inputArg
+    : path.join(process.cwd(), inputArg);
 
   const envelope = JSON.parse(fs.readFileSync(absolutePath, "utf8"));
   try {
-    const res = storeSkillIngestEpisodeBasic(envelope);
+    const res = await storeSkillIngestEpisodeBasic(envelope);
     console.log(JSON.stringify(res, null, 2));
   } catch (err) {
     console.error("Error:", err.message);
@@ -75,7 +155,10 @@ function main() {
 }
 
 if (require.main === module) {
-  main();
+  main().catch((err) => {
+    console.error("Error:", err.message);
+    process.exit(1);
+  });
 }
 
 module.exports = {

@@ -3,7 +3,7 @@ const fs = require("fs");
 const path = require("path");
 const { storeSkillIngestEpisodeBasic } = require("../impl/code/store_episode");
 
-function testStoreEpisode() {
+async function testStoreEpisode() {
   const tempDir = path.join(__dirname, "tmp");
   if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
 
@@ -19,7 +19,7 @@ function testStoreEpisode() {
     }
   };
 
-  const res = storeSkillIngestEpisodeBasic(envelope, {
+  const res = await storeSkillIngestEpisodeBasic(envelope, {
     baseDir: tempDir,
     fileName: "ep-123.json"
   });
@@ -34,11 +34,14 @@ function testStoreEpisode() {
   assert.strictEqual(data.run_result.run_id, "run-1");
 }
 
-function main() {
-  testStoreEpisode();
+async function main() {
+  await testStoreEpisode();
   console.log("skill_ingest_store_episode_basic tests passed.");
 }
 
 if (require.main === module) {
-  main();
+  main().catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
 }

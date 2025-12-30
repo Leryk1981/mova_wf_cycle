@@ -101,6 +101,35 @@ interface PayloadValidateResponse {
   evidence_refs: string[];
 }
 
+interface EpisodeStoreEnvelope {
+  mova_version: string;
+  envelope_type: string;
+  envelope_id: string;
+  requested_by?: string;
+  requested_at?: string;
+  episode: Record<string, any>;
+}
+
+interface EpisodeStoreMeta {
+  episode_id: string;
+  type: string;
+  source: string;
+  run_id: string | null;
+  created_ts: number;
+  stored_ts: number;
+}
+
+interface EpisodeSearchRequest {
+  episode_id?: string;
+  type?: string;
+  source?: string;
+  run_id?: string;
+  since_ts?: number;
+  until_ts?: number;
+  limit?: number;
+  order?: 'asc' | 'desc';
+}
+
 // Validator cache entry
 interface CachedValidator {
   validator: Validator;
@@ -381,6 +410,50 @@ function prepareSchemaValidator(schemaJson: any, schemaHash: string): CachedVali
   schemaCache.set(schemaHash, cachedValidator);
   
   return cachedValidator;
+}
+
+function parseTimestamp(input: any): number {
+  if (typeof input === 'number' && Number.isFinite(input)) {
+    return input;
+  }
+  if (typeof input === 'string') {
+    const parsed = Date.parse(input);
+    if (!Number.isNaN(parsed)) {
+      return parsed;
+    }
+  }
+  return Date.now();
+}
+
+function extractEpisodeMetadata(envelope: EpisodeStoreEnvelope): EpisodeStoreMeta {
+  const episode = envelope.episode || {};
+  const summary = episode.summary || {};
+  const context = episode.context || {};
+
+  const episodeId = episode.episode_id || envelope.envelope_id || `episode_${Date.now()}`;
+  const type =
+    episode.type ||
+    summary.type ||
+    context.executor ||
+    envelope.requested_by ||
+    'unknown';
+  const source =
+    envelope.requested_by ||
+    context.executor ||
+    context.source ||
+    'unknown';
+  const runId = summary.run_id || summary.runId || null;
+  const createdTs = parseTimestamp(episode.ts || envelope.requested_at);
+  const storedTs = Date.now();
+
+  return {
+    episode_id: episodeId,
+    type,
+    source,
+    run_id: runId ? String(runId) : null,
+    created_ts: createdTs,
+    stored_ts: storedTs
+  };
 }
 
 /**
@@ -924,94 +997,161 @@ async function writeEpisode(
 }
 
 /**
+ * Handle episode store request
+ */
+async function handleEpisodeStore(request: Request, env: Env): Promise<Response> {
+  try {
+    const body = await request.json() as EpisodeStoreEnvelope;
+    if (!body || typeof body !== 'object') {
+      return new Response(
+        JSON.stringify({ ok: false, error: 'Invalid JSON body' }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+    if (body.mova_version !== '4.0.0') {
+      return new Response(
+        JSON.stringify({ ok: false, error: 'mova_version must be 4.0.0' }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+    if (body.envelope_type !== 'env.skill_ingest_run_store_episode_v1') {
+      return new Response(
+        JSON.stringify({ ok: false, error: 'Invalid envelope_type' }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+    if (!body.episode || typeof body.episode !== 'object') {
+      return new Response(
+        JSON.stringify({ ok: false, error: 'episode payload required' }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+    if (body.episode.mova_version !== '4.0.0') {
+      return new Response(
+        JSON.stringify({ ok: false, error: 'episode.mova_version must be 4.0.0' }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const meta = extractEpisodeMetadata(body);
+    const episodeJson = JSON.stringify(body.episode);
+    const envelopeJson = JSON.stringify(body);
+
+    const stmt = env.EPISODES_DB.prepare(`
+      INSERT INTO memory_episodes (
+        episode_id, type, source, run_id, created_ts, stored_ts, episode_json, envelope_json
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(episode_id) DO UPDATE SET
+        type=excluded.type,
+        source=excluded.source,
+        run_id=excluded.run_id,
+        created_ts=excluded.created_ts,
+        stored_ts=excluded.stored_ts,
+        episode_json=excluded.episode_json,
+        envelope_json=excluded.envelope_json
+    `);
+
+    const result = await stmt.bind(
+      meta.episode_id,
+      meta.type,
+      meta.source,
+      meta.run_id,
+      meta.created_ts,
+      meta.stored_ts,
+      episodeJson,
+      envelopeJson
+    ).run();
+
+    const replaced = (result.meta?.changes ?? 0) > 1;
+
+    return new Response(
+      JSON.stringify({
+        ok: true,
+        episode_id: meta.episode_id,
+        type: meta.type,
+        source: meta.source,
+        run_id: meta.run_id,
+        created_ts: meta.created_ts,
+        stored_ts: meta.stored_ts,
+        replaced
+      }),
+      { headers: { 'Content-Type': 'application/json' } }
+    );
+  } catch (error: any) {
+    return new Response(
+      JSON.stringify({ ok: false, error: error.message }),
+      { status: 400, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+}
+
+/**
  * Handle episode search request
  */
 async function handleEpisodeSearch(request: Request, env: Env): Promise<Response> {
   try {
-    const body = await request.json() as {
-      limit?: number;
-      id?: string;
-      id_prefix?: string;
-      decision?: 'allow' | 'deny';
-      type?: 'tool_execution' | 'policy_deny';
-      since_ts?: number;
-      until_ts?: number;
-      order?: 'desc' | 'asc';
-    };
-    
-    // Validate and set defaults
-    const limit = Math.min(Math.max(body.limit || 20, 1), 100);
-    const order = body.order || 'desc';
-    const orderClause = order === 'asc' ? 'ASC' : 'DESC';
-    
-    // Build query with bound parameters
-    let query = 'SELECT id, ts, type, run_id, step_id, policy_ref, policy_version, engine_ref, decision, reason, evidence_refs_json, payload_json FROM episodes WHERE 1=1';
+    const body = await request.json() as EpisodeSearchRequest;
+    const limit = Math.min(Math.max(body.limit ?? 20, 1), 100);
+    const order = body.order === 'asc' ? 'ASC' : 'DESC';
+
+    let query = `
+      SELECT episode_id, type, source, run_id, created_ts, stored_ts, episode_json
+      FROM memory_episodes
+      WHERE 1=1
+    `;
     const bindings: any[] = [];
-    
-    if (body.id) {
-      query += ' AND id = ?';
-      bindings.push(body.id);
+
+    if (body.episode_id) {
+      query += ' AND episode_id = ?';
+      bindings.push(body.episode_id);
     }
-    
-    if (body.id_prefix) {
-      query += ' AND id LIKE ?';
-      bindings.push(`${body.id_prefix}%`);
-    }
-    
-    if (body.decision) {
-      query += ' AND decision = ?';
-      bindings.push(body.decision);
-    }
-    
     if (body.type) {
       query += ' AND type = ?';
       bindings.push(body.type);
     }
-    
+    if (body.source) {
+      query += ' AND source = ?';
+      bindings.push(body.source);
+    }
+    if (body.run_id) {
+      query += ' AND run_id = ?';
+      bindings.push(body.run_id);
+    }
     if (body.since_ts) {
-      query += ' AND ts >= ?';
+      query += ' AND stored_ts >= ?';
       bindings.push(body.since_ts);
     }
-    
     if (body.until_ts) {
-      query += ' AND ts <= ?';
+      query += ' AND stored_ts <= ?';
       bindings.push(body.until_ts);
     }
-    
-    query += ` ORDER BY ts ${orderClause} LIMIT ?`;
+
+    query += ` ORDER BY stored_ts ${order} LIMIT ?`;
     bindings.push(limit);
-    
-    // Execute query with bound parameters (bind all at once)
+
     const stmt = env.EPISODES_DB.prepare(query);
     const result = await stmt.bind(...bindings).all();
-    
-    // Transform results
+
     const results = (result.results || []).map((row: any) => {
-      let evidenceRefs: string[] = [];
+      let episodePayload: any = null;
       try {
-        evidenceRefs = JSON.parse(row.evidence_refs_json || '[]');
-      } catch (e) {
-        evidenceRefs = [];
+        episodePayload = row.episode_json ? JSON.parse(row.episode_json) : null;
+      } catch {
+        episodePayload = null;
       }
-      
       return {
-        id: row.id,
-        ts: row.ts,
+        episode_id: row.episode_id,
         type: row.type,
+        source: row.source,
         run_id: row.run_id,
-        step_id: row.step_id,
-        policy_ref: row.policy_ref,
-        policy_version: row.policy_version,
-        engine_ref: row.engine_ref,
-        decision: row.decision,
-        reason: row.reason,
-        evidence_refs: evidenceRefs,
-        payload_json: row.payload_json || null
+        created_ts: row.created_ts,
+        stored_ts: row.stored_ts,
+        episode: episodePayload
       };
     });
-    
+
     return new Response(
-      JSON.stringify({ ok: true, results }),
+      JSON.stringify({ ok: true, count: results.length, results }),
       { headers: { 'Content-Type': 'application/json' } }
     );
   } catch (error: any) {
@@ -1274,6 +1414,27 @@ export default {
       return handleToolRun(request, env);
     }
     
+    // Episode store
+    if (url.pathname === '/episode/store' && request.method === 'POST') {
+      const authHeader = request.headers.get('Authorization');
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return new Response(
+          JSON.stringify({ ok: false, error: 'Missing or invalid Authorization header' }),
+          { status: 401, headers: { 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const token = authHeader.substring(7);
+      if (token !== env.GATEWAY_AUTH_TOKEN) {
+        return new Response(
+          JSON.stringify({ ok: false, error: 'Invalid auth token' }),
+          { status: 401, headers: { 'Content-Type': 'application/json' } }
+        );
+      }
+
+      return handleEpisodeStore(request, env);
+    }
+
     // Episode search
     if (url.pathname === '/episode/search' && request.method === 'POST') {
       // Check auth
