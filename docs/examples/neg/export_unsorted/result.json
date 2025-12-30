@@ -1,0 +1,30 @@
+{
+  "export_batch_id": "neg-export-1",
+  "export_format": "payments_json_v0",
+  "payments": [
+    {
+      "vendor_id": "OMEGA",
+      "invoice_id": "INV-2",
+      "creditor_name": "Omega Labs Oy",
+      "iban": "FI0011223344556677",
+      "amount": 500,
+      "currency": "EUR",
+      "execution_date": "2025-12-01",
+      "remittance_text": "INV-2"
+    },
+    {
+      "vendor_id": "ACME",
+      "invoice_id": "INV-1",
+      "creditor_name": "Acme GmbH",
+      "iban": "DE0012345678000000",
+      "amount": 400,
+      "currency": "EUR",
+      "execution_date": "2025-12-01",
+      "remittance_text": "INV-1"
+    }
+  ],
+  "export_hash": "0000",
+  "totals_by_currency": {
+    "EUR": 1000
+  }
+}

@@ -21,6 +21,17 @@ All four commands must pass on every branch before asking Codex to continue.
   - `npm run codex:wrappers:check`
 - Wrappers surface runnable bindings via `.codex/skills/mova_<skill_id>/scripts/run.mjs`.
 
+## Quality report
+- Deterministic quality run (gates + invoice attempts + compare + invariants + optional episode store):  
+  ```bash
+  npm run quality:invoice_ap
+  ```
+- Negative suite with intentionally bad fixtures (should stay red but verified separately):  
+  ```bash
+  npm run quality:invoice_ap:neg
+  ```
+- Artifacts land under `artifacts/quality/<run_id>/` (`quality_report.json`, Markdown summary, per-workflow logs, invariants, optional `episode_store/` evidence).
+
 ## Station cycle
 - Requests live in `docs/examples/` (e.g. `docs/examples/station_cycle_request_snapshot_override.json`).
 - Run full cycle:  

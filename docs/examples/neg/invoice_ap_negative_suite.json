@@ -1,0 +1,22 @@
+{
+  "cases": [
+    {
+      "name": "match_po_missing_po",
+      "workflow": "invoice:match_po",
+      "dir": "docs/examples/neg/match_po_missing_po",
+      "expect": "fail"
+    },
+    {
+      "name": "approve_mismatch_amount",
+      "workflow": "invoice:approve",
+      "dir": "docs/examples/neg/approve_mismatch_amount",
+      "expect": "fail"
+    },
+    {
+      "name": "export_unsorted",
+      "workflow": "invoice:export",
+      "dir": "docs/examples/neg/export_unsorted",
+      "expect": "fail"
+    }
+  ]
+}

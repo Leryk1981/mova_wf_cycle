@@ -1,0 +1,13 @@
+{
+  "invoice": {
+    "invoice_number": "INV-NEG-300",
+    "currency": "EUR"
+  },
+  "policy": {
+    "variance_threshold": 5
+  },
+  "match_po": {
+    "status": "matched",
+    "total_amount_variance": 0
+  }
+}

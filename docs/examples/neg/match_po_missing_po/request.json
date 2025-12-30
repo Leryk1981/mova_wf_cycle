@@ -1,0 +1,17 @@
+{
+  "invoice": {
+    "invoice_number": "INV-NEG-100",
+    "currency": "EUR",
+    "line_items": [
+      { "sku": "SKU-NEG-1", "description": "Broken gizmo", "quantity": 2, "unit_price": 50 },
+      { "sku": "SKU-NEG-2", "description": "Missing adapter", "quantity": 1, "unit_price": 30 }
+    ]
+  },
+  "purchase_order": {
+    "po_number": "PO-NEG-200",
+    "currency": "EUR",
+    "line_items": [
+      { "sku": "SKU-NEG-1", "description": "Broken gizmo", "quantity": 2, "unit_price": 50 }
+    ]
+  }
+}

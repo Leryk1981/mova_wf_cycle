@@ -1,0 +1,10 @@
+{
+  "invoice_number": "INV-NEG-100",
+  "match_summary": {
+    "total_invoice_lines": 1,
+    "matched_lines": 1,
+    "partial_lines": 0,
+    "unmatched_lines": 0,
+    "total_amount_variance": -10
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "export_batch_id": "neg-export-1",
+  "total_payments": 2,
+  "totals_by_currency": {
+    "EUR": 400
+  }
+}
