@@ -21,7 +21,15 @@ jobs:
       - run: npm run validate
       - run: npm test
       - run: npm run smoke:wf_cycle
+      - run: npm run codex:wrappers:check
+      - run: npm run quality:invoice_ap
+      - run: npm run quality:invoice_ap:neg
       - run: npm run smoke:flashslot:experiment
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: quality-artifacts
+          path: artifacts/quality/**
 
   pult-smoke:
     runs-on: ubuntu-latest
