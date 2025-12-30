@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mova.dev/packs/invoice_ap_v0/ds.invoice_approve_schedule_request_v0.schema.json",
+  "title": "Invoice Approve & Schedule Request v0",
+  "description": "Aggregated request for approving an invoice based on PO match summary and policy.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "invoice",
+    "match_summary",
+    "policy"
+  ],
+  "properties": {
+    "invoice": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "invoice_number",
+        "invoice_date",
+        "currency",
+        "totals"
+      ],
+      "properties": {
+        "invoice_number": { "type": "string" },
+        "invoice_date": { "type": "string" },
+        "currency": { "type": "string" },
+        "totals": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [ "grand_total" ],
+          "properties": {
+            "grand_total": { "type": "number" }
+          }
+        },
+        "vendor": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
+    "match_summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "total_amount_variance"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "description": "Resulting status from invoice_match_po (matched, partial, unmatched, etc.)."
+        },
+        "total_amount_variance": {
+          "type": "number"
+        },
+        "matched_lines": { "type": "integer" },
+        "partial_lines": { "type": "integer" },
+        "unmatched_lines": { "type": "integer" }
+      }
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [ "variance_threshold" ],
+      "properties": {
+        "variance_threshold": {
+          "type": "number",
+          "description": "Absolute amount variance tolerated for auto-approval.",
+          "default": 0
+        },
+        "required_status": {
+          "type": "string",
+          "description": "Match status required for approval (default matched).",
+          "default": "matched"
+        }
+      }
+    },
+    "payment_terms_days": {
+      "type": "integer",
+      "description": "Optional override for payment scheduling window.",
+      "minimum": 0,
+      "default": 14
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Optional metadata to echo back.",
+      "additionalProperties": true
+    }
+  }
+}
