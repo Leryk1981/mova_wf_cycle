@@ -13,5 +13,18 @@
     "{{ATTEMPT_DIR}}/run/request.json",
     "{{ATTEMPT_DIR}}/run/result.json",
     "{{ATTEMPT_DIR}}/run/evidence/totals.json"
-  ]
+  ],
+  "env": {
+    "schema": "packs/invoice_ap_v0/env/env.invoice_intake_run_v0.schema.json",
+    "artifacts_dir": "{{ATTEMPT_DIR}}/run",
+    "request_ref": "{{ATTEMPT_DIR}}/run/request.json",
+    "result_ref": "{{ATTEMPT_DIR}}/run/result.json",
+    "totals_ref": "{{ATTEMPT_DIR}}/run/evidence/totals.json",
+    "evidence_refs": [
+      "{{ATTEMPT_DIR}}/run/evidence/totals.json"
+    ],
+    "meta": {
+      "pipeline": "invoice_intake_v0"
+    }
+  }
 }

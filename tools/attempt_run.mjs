@@ -3,6 +3,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import process from "node:process";
+import Ajv2020 from "ajv/dist/2020.js";
+import addFormats from "ajv-formats";
 
 const repoRoot = process.cwd();
 
@@ -40,8 +42,26 @@ function template(value, map) {
 
 function expand(value, map) {
   if (Array.isArray(value)) return value.map((v) => expand(v, map));
+  if (value && typeof value === "object") {
+    const clone = {};
+    for (const [k, v] of Object.entries(value)) clone[k] = expand(v, map);
+    return clone;
+  }
   if (typeof value === "string") return template(value, map);
   return value;
+}
+
+function gitCommitSha() {
+  try {
+    const res = spawnSync("git", ["rev-parse", "HEAD"], {
+      cwd: repoRoot,
+      encoding: "utf8",
+    });
+    if (res.status === 0) return res.stdout.trim();
+  } catch {
+    /* noop */
+  }
+  return null;
 }
 
 async function main() {
@@ -66,12 +86,12 @@ async function main() {
   const command = config.command || "node";
   const argsExpanded = expand(config.args || [], replacements);
   const captures = expand(config.captures || [], replacements);
-  const env = { ...process.env, ...(config.env || {}) };
+  const runtimeEnv = { ...process.env, ...(config.env_vars || {}) };
 
   const startedAt = new Date();
   const result = spawnSync(command, argsExpanded, {
     cwd: repoRoot,
-    env,
+    env: runtimeEnv,
     encoding: "utf8",
   });
 
@@ -116,6 +136,37 @@ async function main() {
   if (config.copy_config !== false) {
     const destConfig = path.join(attemptDir, path.basename(configPath));
     fs.copyFileSync(configPath, destConfig);
+  }
+
+  if (config.env) {
+    const envConfigExpanded = expand(config.env, replacements);
+    const { schema: envSchemaRel, ...envPayload } = envConfigExpanded;
+    envPayload.run_id ??= runId;
+    envPayload.label ??= label;
+    envPayload.runtime = {
+      ...(envPayload.runtime || {}),
+      command,
+      args: argsExpanded,
+      exit_code: result.status ?? 1,
+      started_at: startedAt.toISOString(),
+      finished_at: finishedAt.toISOString(),
+    };
+    envPayload.meta = envPayload.meta || {};
+    const gitSha = gitCommitSha();
+    if (gitSha) envPayload.meta.git_commit = gitSha;
+    const envPath = path.join(attemptDir, "env.json");
+    if (envSchemaRel) {
+      const envSchemaPath = path.resolve(repoRoot, envSchemaRel);
+      const envSchema = loadJson(envSchemaPath);
+      const ajv = new Ajv2020({ allErrors: true, strict: false });
+      addFormats(ajv);
+      const validate = ajv.compile(envSchema);
+      if (!validate(envPayload)) {
+        const message = ajv.errorsText(validate.errors, { separator: " | " });
+        throw new Error(`env validation failed: ${message}`);
+      }
+    }
+    fs.writeFileSync(envPath, JSON.stringify(envPayload, null, 2), "utf8");
   }
 
   process.exit(result.status ?? 1);

@@ -85,16 +85,6 @@
         }
       }
     },
-    "artifacts_dir": {
-      "type": "string",
-      "description": "Directory capturing request/result/evidence outputs."
-    },
-    "evidence_refs": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    },
     "ext": {
       "type": "object",
       "description": "Extended metadata (timezone, ledger ids, etc.).",

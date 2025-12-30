@@ -180,7 +180,6 @@ async function main() {
   ensureDir(evidenceDir);
   const evidencePath = path.join(evidenceDir, "totals.json");
   const evidencePayload = {
-    generated_at: new Date().toISOString(),
     invoice_number: normalizedRequest.invoice_number,
     totals,
     line_items: computedLineItems,
@@ -194,20 +193,16 @@ async function main() {
     `lines: ${computedLineItems.length}`,
     `subtotal=${totals.subtotal}, vat_total=${totals.vat_total}, grand_total=${totals.grand_total}`,
     `dry_run=${Boolean(args.dryRun)}`,
-    `timestamp=${evidencePayload.generated_at}`,
+    `timestamp=${new Date().toISOString()}`,
   ];
   fs.writeFileSync(logPath, logLines.join("\n"), "utf8");
 
-  const artifactsRef = toRepoRelative(outPath);
-  const evidenceRef = toRepoRelative(evidencePath);
   const resultEnvelope = {
     ok: true,
     invoice_number: normalizedRequest.invoice_number,
     currency: normalizedRequest.currency,
     totals,
     line_items: computedLineItems,
-    artifacts_dir: artifactsRef,
-    evidence_refs: [evidenceRef],
     ext: {},
   };
   if (normalizedRequest.timezone) {
