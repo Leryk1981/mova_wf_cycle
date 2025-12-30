@@ -1,0 +1,61 @@
+{
+  "invoice": {
+    "invoice_number": "INV-PO-1001",
+    "currency": "EUR",
+    "issue_date": "2025-12-05",
+    "vendor": {
+      "name": "Acme Parts GmbH",
+      "vat_id": "DE123456789"
+    },
+    "line_items": [
+      {
+        "sku": "SKU-100",
+        "description": "Widget A (bundle)",
+        "quantity": 10,
+        "unit_price": 20
+      },
+      {
+        "sku": "SKU-200",
+        "description": "Widget B support",
+        "quantity": 5,
+        "unit_price": 15
+      },
+      {
+        "description": "Custom configuration service",
+        "quantity": 2,
+        "unit_price": 120
+      }
+    ]
+  },
+  "purchase_order": {
+    "po_number": "PO-9001",
+    "currency": "EUR",
+    "issue_date": "2025-11-28",
+    "vendor": {
+      "name": "Acme Parts GmbH",
+      "vat_id": "DE123456789"
+    },
+    "line_items": [
+      {
+        "sku": "SKU-100",
+        "description": "Widget A (bundle)",
+        "quantity": 10,
+        "unit_price": 20
+      },
+      {
+        "sku": "SKU-200",
+        "description": "Widget B support",
+        "quantity": 4,
+        "unit_price": 15
+      },
+      {
+        "description": "Custom configuration service",
+        "quantity": 2,
+        "unit_price": 120
+      }
+    ]
+  },
+  "metadata": {
+    "batch_id": "match_po_demo_a"
+  }
+}

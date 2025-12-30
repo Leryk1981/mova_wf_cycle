@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mova.dev/packs/invoice_ap_v0/ds.invoice_match_po_result_v0.schema.json",
+  "title": "Invoice vs Purchase Order Match Result v0",
+  "description": "Deterministic per-line matching results between invoice and purchase order.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "invoice_number",
+    "purchase_order_number",
+    "currency",
+    "matches",
+    "match_summary"
+  ],
+  "properties": {
+    "invoice_number": {
+      "type": "string"
+    },
+    "purchase_order_number": {
+      "type": "string"
+    },
+    "currency": {
+      "type": "string"
+    },
+    "matches": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "invoice_index",
+          "status",
+          "invoice_quantity",
+          "invoice_unit_price",
+          "invoice_line_total",
+          "quantity_variance",
+          "unit_price_variance",
+          "line_total_variance"
+        ],
+        "properties": {
+          "invoice_index": { "type": "integer" },
+          "invoice_sku": { "type": "string" },
+          "description": { "type": "string" },
+          "po_index": { "type": [ "integer", "null" ] },
+          "match_kind": { "type": "string", "enum": [ "sku", "description", "unmatched" ] },
+          "status": { "type": "string", "enum": [ "matched", "partial", "unmatched" ] },
+          "invoice_quantity": { "type": "number" },
+          "invoice_unit_price": { "type": "number" },
+          "invoice_line_total": { "type": "number" },
+          "po_quantity": { "type": [ "number", "null" ] },
+          "po_unit_price": { "type": [ "number", "null" ] },
+          "po_line_total": { "type": [ "number", "null" ] },
+          "quantity_variance": { "type": "number" },
+          "unit_price_variance": { "type": "number" },
+          "line_total_variance": { "type": "number" }
+        }
+      }
+    },
+    "match_summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "total_invoice_lines",
+        "matched_lines",
+        "partial_lines",
+        "unmatched_lines",
+        "total_quantity_variance",
+        "total_amount_variance"
+      ],
+      "properties": {
+        "total_invoice_lines": { "type": "integer" },
+        "matched_lines": { "type": "integer" },
+        "partial_lines": { "type": "integer" },
+        "unmatched_lines": { "type": "integer" },
+        "total_quantity_variance": { "type": "number" },
+        "total_amount_variance": { "type": "number" }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Echoed metadata from the request.",
+      "additionalProperties": true
+    }
+  }
+}

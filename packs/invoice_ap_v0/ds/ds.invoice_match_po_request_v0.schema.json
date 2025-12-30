@@ -1,0 +1,150 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mova.dev/packs/invoice_ap_v0/ds.invoice_match_po_request_v0.schema.json",
+  "title": "Invoice vs Purchase Order Match Request v0",
+  "description": "Request payload describing an invoice and purchase order to be matched line-by-line.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "invoice",
+    "purchase_order"
+  ],
+  "properties": {
+    "invoice": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "invoice_number",
+        "currency",
+        "line_items"
+      ],
+      "properties": {
+        "invoice_number": {
+          "type": "string"
+        },
+        "currency": {
+          "type": "string",
+          "description": "ISO 4217 currency code."
+        },
+        "issue_date": {
+          "type": "string"
+        },
+        "vendor": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "line_items": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "quantity",
+              "unit_price"
+            ],
+            "properties": {
+              "sku": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "quantity": {
+                "type": "number"
+              },
+              "unit_price": {
+                "type": "number"
+              },
+              "notes": {
+                "type": "string"
+              }
+            },
+            "anyOf": [
+              { "required": [ "sku" ] },
+              { "required": [ "description" ] }
+            ]
+          }
+        }
+      }
+    },
+    "purchase_order": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "po_number",
+        "currency",
+        "line_items"
+      ],
+      "properties": {
+        "po_number": {
+          "type": "string"
+        },
+        "currency": {
+          "type": "string"
+        },
+        "issue_date": {
+          "type": "string"
+        },
+        "vendor": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "line_items": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "quantity",
+              "unit_price"
+            ],
+            "properties": {
+              "sku": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "quantity": {
+                "type": "number"
+              },
+              "unit_price": {
+                "type": "number"
+              }
+            },
+            "anyOf": [
+              { "required": [ "sku" ] },
+              { "required": [ "description" ] }
+            ]
+          }
+        }
+      }
+    },
+    "tolerances": {
+      "type": "object",
+      "description": "Optional manual tolerances for variance comparisons.",
+      "additionalProperties": false,
+      "properties": {
+        "quantity": {
+          "type": "number",
+          "default": 0
+        },
+        "unit_price": {
+          "type": "number",
+          "default": 0
+        },
+        "amount": {
+          "type": "number",
+          "default": 0
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Optional metadata that should be echoed back unchanged.",
+      "additionalProperties": true
+    }
+  }
+}
