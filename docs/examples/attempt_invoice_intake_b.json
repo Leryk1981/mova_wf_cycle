@@ -1,0 +1,17 @@
+{
+  "label": "invoice_intake_b",
+  "command": "node",
+  "args": [
+    "packs/invoice_ap_v0/runtime/impl/invoice_intake_v0.mjs",
+    "--in",
+    "docs/examples/invoice_intake_request_sample.json",
+    "--out",
+    "{{ATTEMPT_DIR}}/run"
+  ],
+  "captures": [
+    "docs/examples/invoice_intake_request_sample.json",
+    "{{ATTEMPT_DIR}}/run/request.json",
+    "{{ATTEMPT_DIR}}/run/result.json",
+    "{{ATTEMPT_DIR}}/run/evidence/totals.json"
+  ]
+}

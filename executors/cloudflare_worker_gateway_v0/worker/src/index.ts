@@ -1008,9 +1008,9 @@ async function handleEpisodeStore(request: Request, env: Env): Promise<Response>
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
-    if (body.mova_version !== '4.0.0') {
+    if (body.mova_version !== '4.1.1') {
       return new Response(
-        JSON.stringify({ ok: false, error: 'mova_version must be 4.0.0' }),
+        JSON.stringify({ ok: false, error: 'mova_version must be 4.1.1' }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
@@ -1026,9 +1026,9 @@ async function handleEpisodeStore(request: Request, env: Env): Promise<Response>
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
-    if (body.episode.mova_version !== '4.0.0') {
+    if (body.episode.mova_version !== '4.1.1') {
       return new Response(
-        JSON.stringify({ ok: false, error: 'episode.mova_version must be 4.0.0' }),
+        JSON.stringify({ ok: false, error: 'episode.mova_version must be 4.1.1' }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
