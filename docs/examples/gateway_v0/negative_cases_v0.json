@@ -3,31 +3,39 @@
   "cases": [
     {
       "name": "missing_auth",
-      "path": "/gw/demo.local/echo",
+      "path": "/api/demo.local/echo",
       "expect_status": 401,
       "expect_ok": false,
       "reason": "Requests without a bearer token are rejected"
     },
     {
       "name": "policy_denied",
-      "path": "/gw/demo.local/blocked",
+      "path": "/api/demo.local/blocked",
       "expect_status": 403,
       "expect_ok": false,
       "reason": "Actions not in the allowlist are denied"
     },
     {
       "name": "route_missing",
-      "path": "/gw/missing.example/ping",
+      "path": "/api/missing.example/ping",
       "expect_status": 404,
       "expect_ok": false,
       "reason": "Unknown domain/action pairs are normalized to not_found"
     },
     {
       "name": "timeout",
-      "path": "/gw/demo.local/slow",
+      "path": "/api/demo.local/slow",
       "expect_status": 504,
       "expect_ok": false,
       "reason": "Slow downstreams are terminated by the hard timeout"
+    },
+    {
+      "name": "oversize_request",
+      "path": "/api/demo.local/echo",
+      "expect_status": 413,
+      "expect_ok": false,
+      "reason": "Bodies larger than the hard limit are rejected early",
+      "payload_bytes": 17000
     }
   ]
 }

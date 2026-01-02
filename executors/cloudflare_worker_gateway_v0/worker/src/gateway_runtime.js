@@ -210,6 +210,25 @@ function applyQueryParams(base, query) {
   return url.toString();
 }
 
+function normalizePath(pathname) {
+  if (!pathname) return "";
+  return pathname.startsWith("/") ? pathname : `/${pathname}`;
+}
+
+function joinUrl(base, pathname = "") {
+  const normalizedBase = base.endsWith("/") ? base.slice(0, -1) : base;
+  const normalizedPath = normalizePath(pathname);
+  return `${normalizedBase}${normalizedPath}`;
+}
+
+function parseUrlSafe(value) {
+  try {
+    return new URL(value);
+  } catch {
+    return null;
+  }
+}
+
 async function invokeGatewayRoute(route, requestId, domain, action, body, env, logs) {
   const timeoutMs = route.timeout_ms ?? DEFAULT_GATEWAY_TIMEOUT_MS;
   const maxBytes = route.max_response_bytes ?? DEFAULT_GATEWAY_RESPONSE_LIMIT;
@@ -247,7 +266,10 @@ async function invokeGatewayRoute(route, requestId, domain, action, body, env, l
           }
         };
       }
-      const targetUrl = applyQueryParams(`https://${route.domain}${route.path || `/${action}`}`, body.query);
+      const targetUrl = applyQueryParams(
+        joinUrl(`https://${route.domain}`, route.path || `/${action}`),
+        body.query
+      );
       const headers = new Headers(baseHeaders);
       Object.entries(body.headers || {}).forEach(([key, value]) => headers.set(key, value));
       invocationPromise = binding.fetch(
@@ -259,8 +281,30 @@ async function invokeGatewayRoute(route, requestId, domain, action, body, env, l
         })
       );
     } else {
-      const targetBase = route.url || `https://${route.domain}/${action}`;
-      const targetUrl = applyQueryParams(targetBase, body.query);
+      const envUrl = route.env_url_key ? env?.[route.env_url_key] : null;
+      const targetBase = envUrl || route.url || `https://${route.domain}`;
+      if (!targetBase) {
+        logs.push(
+          makeLogEntry("route", "HTTPS route missing URL", "error", {
+            domain,
+            action,
+            env_url_key: route.env_url_key || null
+          })
+        );
+        return {
+          error: {
+            code: "route_url_missing",
+            message: `No HTTPS target configured for ${domain}/${action}`
+          }
+        };
+      }
+      const parsedBase = parseUrlSafe(targetBase);
+      const baseHasPath = !!(parsedBase && parsedBase.pathname && parsedBase.pathname !== "/");
+      const targetPath = route.path || (baseHasPath ? "" : `/${action}`);
+      const targetUrl = applyQueryParams(
+        targetPath ? joinUrl(targetBase, targetPath) : targetBase,
+        body.query
+      );
       const headers = new Headers(baseHeaders);
       Object.entries(body.headers || {}).forEach(([key, value]) => headers.set(key, value));
       if (route.hmac_secret_env) {
@@ -336,7 +380,10 @@ export async function handleGatewayRoute(request, env, domain, action) {
     };
     return new Response(JSON.stringify(responsePayload, null, 2), {
       status,
-      headers: { "Content-Type": "application/json" }
+      headers: {
+        "Content-Type": "application/json",
+        "x-gw-request-id": requestId
+      }
     });
   };
 

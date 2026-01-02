@@ -24,6 +24,7 @@
       "action": "status",
       "mode": "https",
       "url": "https://remote.example/gateway/status",
+      "env_url_key": "GATEWAY_REMOTE_STATUS_URL",
       "hmac_secret_env": "GATEWAY_HMAC_SECRET",
       "timeout_ms": 1200,
       "max_response_bytes": 4096

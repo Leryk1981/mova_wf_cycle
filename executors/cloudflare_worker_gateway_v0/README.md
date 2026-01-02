@@ -35,6 +35,63 @@ Health check endpoint.
 }
 ```
 
+### `POST /api/:domain/:action`
+
+Domain router endpoint (alias: `/gw/:domain/:action`) for forwarding to downstream domain workers with policy and hard limits.
+
+**Headers:**
+- `Authorization: Bearer <GATEWAY_AUTH_TOKEN>` (required)
+- `Content-Type: application/json`
+
+**Request Body (`ds.gateway_request_v0`):**
+```json
+{
+  "request_id": "gw_echo_001",
+  "payload": { "message": "hello" },
+  "headers": { "x-trace": "demo" },
+  "query": { "lang": "en" }
+}
+```
+
+**Routing & policy:**
+- Deny-by-default allowlist from `worker/config/gateway_policy_v0.json` (KV override supported).
+- Routes resolved from `worker/config/gateway_routes_v0.json` with per-route `mode` (`service` bindings or `https`).
+- `env_url_key` allows HTTPS routes to read the base URL from the Worker env (e.g., `GATEWAY_REMOTE_STATUS_URL`); `url` remains as fallback.
+- Optional HMAC signing via `hmac_secret_env`, always forwards `x-gw-request-id` to downstream.
+
+**Limits & timeouts:**
+- Request size hard limit: **16KB** → `413 request_too_large`.
+- Downstream timeout: **1500ms** default (override via `timeout_ms` per route) → `504 timeout`.
+- Response cap: **64KB** default unless `max_response_bytes` overrides.
+
+**Response (ALLOW):**
+```json
+{
+  "ok": true,
+  "request_id": "gw_echo_001",
+  "domain": "demo.local",
+  "action": "echo",
+  "route_mode": "service",
+  "result": { "status": 200, "body": { "echoed": { "message": "hello" } } },
+  "policy_check": { "decision": "allow", "rule_id": "allow_match" },
+  "engine_ref": "cloudflare_worker_gateway_v0@..."
+}
+```
+
+**Response (normalized error):**
+```json
+{
+  "ok": false,
+  "request_id": "gw_echo_oversize",
+  "error": { "code": "request_too_large", "message": "Request body ... exceeds limit 16384" },
+  "policy_check": { "decision": "allow", "rule_id": "allow_match" },
+  "route_mode": "service",
+  "engine_ref": "cloudflare_worker_gateway_v0@..."
+}
+```
+
+Error codes include `unauthorized`, `policy_denied`, `route_not_found`, `route_url_missing`, `timeout`, `response_too_large`, `invoke_failed`, `request_too_large`.
+
 ### `POST /tool/run`
 
 Execute a tool with policy checking.
@@ -262,6 +319,10 @@ npm run cf:test:gateway:local
 
 # Run smoke test via driver
 npm run cf:smoke:gateway
+
+# Run quality suites (gates + positive[/negative] cases)
+npm run quality:gateway
+npm run quality:gateway:neg
 ```
 
 ## Local Config
@@ -388,4 +449,3 @@ Every request also creates an episode record in D1 with:
 - **No Durable Objects**: v0 uses KV, D1, R2 only
 - **Deny path has 0 side effects**: Policy DENY creates evidence but does not execute tool
 - **v0 tools only**: kv.get and http.fetch (GET) with hostname allowlist
-
