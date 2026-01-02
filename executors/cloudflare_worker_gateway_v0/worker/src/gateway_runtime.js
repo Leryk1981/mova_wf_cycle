@@ -8,11 +8,6 @@ const gatewayRoutesLocal = (gatewayRoutesConfig.routes || []);
 
 // Signature library functions for gateway
 async function sha256Hex(input) {
-  // Use Node.js crypto for server-side execution
-  if (typeof require !== 'undefined') {
-    const crypto = require('crypto');
-    return crypto.createHash('sha256').update(input).digest('hex');
-  }
   // Use Web Crypto API for browser/worker execution
   const encoder = new TextEncoder();
   const data = encoder.encode(input);
@@ -33,61 +28,39 @@ async function signRequest(
   // Canonical string to sign
   const stringToSign = `${method}\n${pathname}\n${ts}\n${bodySha256}`;
 
-  // Create HMAC signature
-  if (typeof require !== 'undefined') {
-    // Node.js implementation
-    const crypto = require('crypto');
-    const hmac = crypto.createHmac('sha256', secretKey);
-    hmac.update(stringToSign);
-    const signatureHex = hmac.digest('hex');
+  // Web Crypto API implementation for Cloudflare Workers
+  const encoder = new TextEncoder();
+  const keyBuffer = encoder.encode(secretKey);
+  const signingKey = await crypto.subtle.importKey(
+    'raw',
+    keyBuffer,
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
 
-    // Generate request ID
-    const requestId = crypto.randomUUID();
+  const signatureBuffer = await crypto.subtle.sign(
+    'HMAC',
+    signingKey,
+    encoder.encode(stringToSign)
+  );
 
-    return {
-      headers: {
-        'x-gw-request-id': requestId,
-        'x-gw-ts': ts,
-        'x-gw-body-sha256': bodySha256,
-        'x-gw-sig': signatureHex,
-      },
-      body
-    };
-  } else {
-    // Web Crypto API implementation for Cloudflare Workers
-    const encoder = new TextEncoder();
-    const keyBuffer = encoder.encode(secretKey);
-    const signingKey = await crypto.subtle.importKey(
-      'raw',
-      keyBuffer,
-      { name: 'HMAC', hash: 'SHA-256' },
-      false,
-      ['sign']
-    );
+  // Convert signature to hex
+  const signatureArray = Array.from(new Uint8Array(signatureBuffer));
+  const signatureHex = signatureArray.map(b => b.toString(16).padStart(2, '0')).join('');
 
-    const signatureBuffer = await crypto.subtle.sign(
-      'HMAC',
-      signingKey,
-      encoder.encode(stringToSign)
-    );
+  // Generate request ID
+  const requestId = crypto.randomUUID();
 
-    // Convert signature to hex
-    const signatureArray = Array.from(new Uint8Array(signatureBuffer));
-    const signatureHex = signatureArray.map(b => b.toString(16).padStart(2, '0')).join('');
-
-    // Generate request ID
-    const requestId = crypto.randomUUID();
-
-    return {
-      headers: {
-        'x-gw-request-id': requestId,
-        'x-gw-ts': ts,
-        'x-gw-body-sha256': bodySha256,
-        'x-gw-sig': signatureHex,
-      },
-      body
-    };
-  }
+  return {
+    headers: {
+      'x-gw-request-id': requestId,
+      'x-gw-ts': ts,
+      'x-gw-body-sha256': bodySha256,
+      'x-gw-sig': signatureHex,
+    },
+    body
+  };
 }
 
 const DEFAULT_GATEWAY_TIMEOUT_MS = 1500;

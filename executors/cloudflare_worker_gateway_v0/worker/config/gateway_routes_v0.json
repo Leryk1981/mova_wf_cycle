@@ -28,6 +28,25 @@
       "hmac_secret_env": "GATEWAY_HMAC_SECRET",
       "timeout_ms": 1200,
       "max_response_bytes": 4096
+    },
+    {
+      "domain": "mova.domain.test",
+      "action": "test",
+      "mode": "https",
+      "url": "https://mova-cloudflare-worker-v1.s-myasoedov81.workers.dev",
+      "hmac_secret_env": "GW_SECRET_KEY",
+      "timeout_ms": 2000,
+      "max_response_bytes": 16384
+    },
+    {
+      "domain": "mova.domain.test",
+      "action": "probe",
+      "mode": "https",
+      "url": "https://mova-cloudflare-worker-v1.s-myasoedov81.workers.dev",
+      "path": "/__gw_probe",
+      "hmac_secret_env": "GW_SECRET_KEY",
+      "timeout_ms": 2000,
+      "max_response_bytes": 16384
     }
   ]
 }

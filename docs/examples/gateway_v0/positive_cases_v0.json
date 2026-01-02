@@ -14,6 +14,13 @@
       "expect_status": 200,
       "expect_ok": true,
       "reason": "HTTPS + HMAC mode remains available when configured"
+    },
+    {
+      "name": "gw_signature_probe",
+      "path": "/api/mova.domain.test/probe",
+      "expect_status": 200,
+      "expect_ok": true,
+      "reason": "Gateway signature probe route should return 200 OK with signature verification proof"
     }
   ]
 }

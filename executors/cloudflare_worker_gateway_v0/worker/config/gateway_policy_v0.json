@@ -13,6 +13,10 @@
     {
       "domain": "missing.example",
       "actions": ["ping"]
+    },
+    {
+      "domain": "mova.domain.test",
+      "actions": ["test", "probe"]
     }
   ]
 }

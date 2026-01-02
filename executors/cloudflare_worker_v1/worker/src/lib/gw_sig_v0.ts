@@ -28,10 +28,10 @@ export async function signRequest(
 }> {
   const ts = Math.floor(Date.now() / 1000).toString();
   const bodySha256 = await sha256Hex(body);
-  
+
   // Canonical string to sign
   const stringToSign = `${method}\n${pathname}\n${ts}\n${bodySha256}`;
-  
+
   // Create HMAC signature
   const encoder = new TextEncoder();
   const keyBuffer = encoder.encode(secretKey);
@@ -42,20 +42,20 @@ export async function signRequest(
     false,
     ['sign']
   );
-  
+
   const signatureBuffer = await crypto.subtle.sign(
     'HMAC',
     signingKey,
     encoder.encode(stringToSign)
   );
-  
+
   // Convert signature to hex
   const signatureArray = Array.from(new Uint8Array(signatureBuffer));
   const signatureHex = signatureArray.map(b => b.toString(16).padStart(2, '0')).join('');
-  
+
   // Generate request ID
   const requestId = crypto.randomUUID();
-  
+
   return {
     headers: {
       'x-gw-request-id': requestId,
@@ -82,15 +82,15 @@ export async function verifySignature(
   // Check timestamp is within allowed window (±60 seconds by default)
   const now = Math.floor(Date.now() / 1000);
   const tsNum = parseInt(ts, 10);
-  
+
   if (isNaN(tsNum) || Math.abs(now - tsNum) > timeWindowSeconds) {
     console.log(`Timestamp check failed: now=${now}, ts=${tsNum}, diff=${Math.abs(now - tsNum)}`);
     return false;
   }
-  
+
   // Recreate the canonical string to verify
   const stringToVerify = `${method}\n${pathname}\n${ts}\n${bodySha256}`;
-  
+
   // Import the key for verification
   const encoder = new TextEncoder();
   const keyBuffer = encoder.encode(secretKey);
@@ -101,7 +101,7 @@ export async function verifySignature(
     false,
     ['verify']
   );
-  
+
   // Import the signature for verification
   const signatureBytes = hexToBytes(signature);
   const isValid = await crypto.subtle.verify(
@@ -110,7 +110,7 @@ export async function verifySignature(
     signatureBytes,
     encoder.encode(stringToVerify)
   );
-  
+
   return isValid;
 }
 
@@ -133,29 +133,29 @@ export function createSignatureVerificationMiddleware(secretKey: string, timeWin
     const url = new URL(request.url);
     const method = request.method.toUpperCase();
     const pathname = url.pathname;
-    
+
     // Extract required headers
     const requestId = request.headers.get('x-gw-request-id');
     const ts = request.headers.get('x-gw-ts');
     const bodySha256 = request.headers.get('x-gw-body-sha256');
     const signature = request.headers.get('x-gw-sig');
-    
+
     // Check if all required headers are present
     if (!requestId || !ts || !bodySha256 || !signature) {
       console.log('Missing required signature headers');
       return { isValid: false, error: 'Missing required signature headers' };
     }
-    
+
     // Get the request body for verification
     const body = await request.text();
     const actualBodySha256 = await sha256Hex(body);
-    
+
     // Verify body hash matches
     if (actualBodySha256 !== bodySha256) {
       console.log('Body hash mismatch');
       return { isValid: false, error: 'Body hash mismatch' };
     }
-    
+
     // Verify the signature
     const isValid = await verifySignature(
       method,
@@ -166,12 +166,12 @@ export function createSignatureVerificationMiddleware(secretKey: string, timeWin
       secretKey,
       timeWindowSeconds
     );
-    
+
     if (!isValid) {
       console.log('Signature verification failed');
       return { isValid: false, error: 'Invalid signature' };
     }
-    
+
     return { isValid: true };
   };
 }
