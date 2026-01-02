@@ -9,6 +9,7 @@
  */
 
 import { Validator } from '@cfworker/json-schema';
+import { handleGatewayRoute } from './gateway_runtime.js';
 
 interface Env {
   POLICY_KV: any; // KVNamespace
@@ -52,6 +53,12 @@ interface ToolResult {
 
 interface GatewayResponse {
   ok: boolean;
+  request_id?: string;
+  domain?: string;
+  action?: string;
+  route_mode?: string;
+  result?: GatewayResultPayload;
+  error?: GatewayErrorPayload;
   tool_result?: ToolResult;
   policy_check?: {
     decision: 'allow' | 'deny';
@@ -60,6 +67,58 @@ interface GatewayResponse {
   };
   evidence_refs?: string[];
   engine_ref: string;
+  logs?: GatewayLogEntry[];
+}
+
+interface GatewayRoute {
+  domain: string;
+  action: string;
+  mode: 'service' | 'https';
+  service_binding?: string;
+  path?: string;
+  url?: string;
+  hmac_secret_env?: string;
+  timeout_ms?: number;
+  max_response_bytes?: number;
+}
+
+interface GatewayPolicyAllowRule {
+  domain: string;
+  actions?: string[];
+}
+
+interface GatewayPolicy {
+  version?: string;
+  default_decision: 'allow' | 'deny';
+  allow: GatewayPolicyAllowRule[];
+}
+
+interface GatewayRequestV0 {
+  request_id?: string;
+  payload?: Record<string, any>;
+  headers?: Record<string, string>;
+  query?: Record<string, string>;
+  mode?: 'service' | 'https';
+}
+
+interface GatewayResultPayload {
+  status: number;
+  body: any;
+  headers: Record<string, string>;
+}
+
+interface GatewayErrorPayload {
+  code: string;
+  message: string;
+  details?: Record<string, any>;
+}
+
+interface GatewayLogEntry {
+  at: string;
+  level: 'info' | 'warn' | 'error';
+  stage: string;
+  message: string;
+  data?: Record<string, any>;
 }
 
 // Schema registry interfaces
@@ -1241,6 +1300,7 @@ async function handleArtifactGet(request: Request, env: Env): Promise<Response> 
   }
 }
 
+
 /**
  * Handle tool execution request
  */
@@ -1391,6 +1451,14 @@ export default {
         { headers: { 'Content-Type': 'application/json' } }
       );
     }
+
+    // Gateway universal route: /gw/:domain/:action
+    const segments = url.pathname.split('/').filter(Boolean);
+    if (segments[0] === 'gw' && segments.length >= 3 && request.method === 'POST') {
+      const domain = decodeURIComponent(segments[1]);
+      const action = decodeURIComponent(segments[2]);
+      return handleGatewayRoute(request, env, domain, action);
+    }
     
     // Tool execution
     if (url.pathname === '/tool/run' && request.method === 'POST') {
@@ -1501,4 +1569,3 @@ export default {
     );
   }
 };
-

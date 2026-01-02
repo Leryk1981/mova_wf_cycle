@@ -1,0 +1,18 @@
+{
+  "version": "v0",
+  "default_decision": "deny",
+  "allow": [
+    {
+      "domain": "demo.local",
+      "actions": ["echo", "slow"]
+    },
+    {
+      "domain": "remote.example",
+      "actions": ["status"]
+    },
+    {
+      "domain": "missing.example",
+      "actions": ["ping"]
+    }
+  ]
+}

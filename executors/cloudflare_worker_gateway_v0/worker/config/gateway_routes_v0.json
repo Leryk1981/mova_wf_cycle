@@ -1,0 +1,32 @@
+{
+  "version": "v0",
+  "routes": [
+    {
+      "domain": "demo.local",
+      "action": "echo",
+      "mode": "service",
+      "service_binding": "SERVICE_ECHO",
+      "path": "/echo",
+      "timeout_ms": 1500,
+      "max_response_bytes": 8192
+    },
+    {
+      "domain": "demo.local",
+      "action": "slow",
+      "mode": "service",
+      "service_binding": "SERVICE_SLOW",
+      "path": "/slow",
+      "timeout_ms": 75,
+      "max_response_bytes": 4096
+    },
+    {
+      "domain": "remote.example",
+      "action": "status",
+      "mode": "https",
+      "url": "https://remote.example/gateway/status",
+      "hmac_secret_env": "GATEWAY_HMAC_SECRET",
+      "timeout_ms": 1200,
+      "max_response_bytes": 4096
+    }
+  ]
+}

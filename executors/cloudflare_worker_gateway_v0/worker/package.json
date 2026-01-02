@@ -2,8 +2,8 @@
   "name": "mova-tool-gateway-v0-worker",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "dependencies": {
     "@cfworker/json-schema": "^1.12.2"
   }
 }
-
