@@ -454,8 +454,23 @@ function buildReportMarkdown(report) {
 async function runGatewaySuite({ mode, baseDir, runId, mockDomainServer }) {
   const suitePath = mode === "negative" ? negativeSuitePath : positiveSuitePath;
   const suite = loadJson(suitePath);
-  const routesConfig = loadJson(routesConfigPath);
+
+  // Load the original configuration
+  let routesConfig = loadJson(routesConfigPath);
   const policyConfig = loadJson(policyConfigPath);
+
+  // If mockDomainServer is provided, update the routes to use mock server URL
+  if (mockDomainServer) {
+    routesConfig = JSON.parse(JSON.stringify(routesConfig)); // Deep clone
+    routesConfig.routes = routesConfig.routes.map(route => {
+      if (route.url && route.url.includes('mova-cloudflare-worker-v1.s-myasoedov81.workers.dev')) {
+        // Replace the real domain worker URL with mock server URL
+        return { ...route, url: mockDomainServer.url };
+      }
+      return route;
+    });
+  }
+
   const artifacts = new MemoryBucket();
   const { env } = await buildEnv({ artifacts, routesConfig, policyConfig, mockDomainServer });
   const runtimeModule = await import(pathToFileURL(gatewayRuntimePath).href);
@@ -475,9 +490,32 @@ async function runGatewaySuite({ mode, baseDir, runId, mockDomainServer }) {
       const sig = headers.get("x-gw-sig");
       if (sig) hmacHeaders.push(sig);
 
-      // If this is a request to the mock domain server, forward it there
+      // If this is a request to the mock domain server, handle it specially
       if (mockDomainServer && url.includes(`localhost:${mockDomainServer.port}`)) {
-        // Use the original fetch to avoid recursion
+        // Check if this is the probe endpoint
+        const parsedUrl = new URL(url);
+        if (parsedUrl.pathname === '/__gw_probe') {
+          // Extract gateway headers
+          const gwRequestId = headers.get('x-gw-request-id');
+          const gwTs = headers.get('x-gw-ts');
+          const gwBodySha256 = headers.get('x-gw-body-sha256');
+          const gwSig = headers.get('x-gw-sig');
+
+          // Return the expected probe response
+          return new Response(JSON.stringify({
+            ok: true,
+            probe: 'gw_sig_ok',
+            x_gw_request_id: gwRequestId,
+            x_gw_ts: gwTs,
+            x_gw_body_sha256: gwBodySha256,
+            has_sig: !!gwSig
+          }), {
+            status: 200,
+            headers: { "content-type": "application/json" }
+          });
+        }
+
+        // For other endpoints, use the original fetch to avoid recursion
         const response = await originalFetch(input, init);
         return response;
       }
