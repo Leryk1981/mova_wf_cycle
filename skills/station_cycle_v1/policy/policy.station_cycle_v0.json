@@ -5,6 +5,7 @@
     "gates",
     "wf_compare",
     "quality_invoice_ap",
+    "quality_gateway",
     "episode_store",
     "finish_branch"
   ],

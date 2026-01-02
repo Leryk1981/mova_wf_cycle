@@ -3,14 +3,14 @@
   "cases": [
     {
       "name": "echo_service_binding",
-      "path": "/gw/demo.local/echo",
+      "path": "/api/demo.local/echo",
       "expect_status": 200,
       "expect_ok": true,
       "reason": "Service binding routes are reachable when allowed"
     },
     {
       "name": "remote_status",
-      "path": "/gw/remote.example/status",
+      "path": "/api/remote.example/status",
       "expect_status": 200,
       "expect_ok": true,
       "reason": "HTTPS + HMAC mode remains available when configured"

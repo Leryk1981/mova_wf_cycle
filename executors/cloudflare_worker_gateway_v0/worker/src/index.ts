@@ -75,6 +75,7 @@ interface GatewayRoute {
   action: string;
   mode: 'service' | 'https';
   service_binding?: string;
+  env_url_key?: string;
   path?: string;
   url?: string;
   hmac_secret_env?: string;
@@ -1452,9 +1453,10 @@ export default {
       );
     }
 
-    // Gateway universal route: /gw/:domain/:action
+    // Gateway universal route: /gw/:domain/:action or /api/:domain/:action
     const segments = url.pathname.split('/').filter(Boolean);
-    if (segments[0] === 'gw' && segments.length >= 3 && request.method === 'POST') {
+    const isGatewayRoute = ['gw', 'api'].includes(segments[0]);
+    if (isGatewayRoute && segments.length >= 3 && request.method === 'POST') {
       const domain = decodeURIComponent(segments[1]);
       const action = decodeURIComponent(segments[2]);
       return handleGatewayRoute(request, env, domain, action);

@@ -2,6 +2,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
+import { spawnSync } from "node:child_process";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const repoRoot = process.cwd();
@@ -13,6 +14,23 @@ const negativeSuitePath = path.join(repoRoot, "docs", "examples", "gateway_v0", 
 const routesConfigPath = path.join(repoRoot, "executors", "cloudflare_worker_gateway_v0", "worker", "config", "gateway_routes_v0.json");
 const policyConfigPath = path.join(repoRoot, "executors", "cloudflare_worker_gateway_v0", "worker", "config", "gateway_policy_v0.json");
 const gatewayRuntimePath = path.join(repoRoot, "executors", "cloudflare_worker_gateway_v0", "worker", "src", "gateway_runtime.js");
+
+const npmCmd = process.platform === "win32" ? "npm.cmd" : "npm";
+const npmCliPath = process.env.npm_execpath ? path.normalize(process.env.npm_execpath) : null;
+
+function parseArgs(argv) {
+  const parsed = { negative: false };
+  for (let i = 0; i < argv.length; i += 1) {
+    const arg = argv[i];
+    if (arg === "--negative") parsed.negative = true;
+    else if (arg === "--help" || arg === "-h") parsed.help = true;
+  }
+  return parsed;
+}
+
+function printHelp() {
+  console.log("Usage: node tools/quality_gateway_v0.mjs [--negative]");
+}
 
 function ensureDir(dir) {
   fs.mkdirSync(dir, { recursive: true });
@@ -137,7 +155,8 @@ function buildEnv({ artifacts, routesConfig, policyConfig }) {
       DEFAULT_POLICY_REF: "policy.default",
       SERVICE_ECHO: echoService,
       SERVICE_SLOW: slowService,
-      GATEWAY_HMAC_SECRET: "quality-secret"
+      GATEWAY_HMAC_SECRET: "quality-secret",
+      GATEWAY_REMOTE_STATUS_URL: "https://remote.example/gateway/status"
     }
   };
 }
@@ -156,19 +175,84 @@ function makeRequest(pathname, body, authToken = "gateway-test-token") {
 
 function parseGatewayPath(pathname) {
   const segments = pathname.split("/").filter(Boolean);
-  if (segments.length < 3) throw new Error(`Invalid gateway path: ${pathname}`);
+  if (segments.length < 3 || !["api", "gw"].includes(segments[0])) {
+    throw new Error(`Invalid gateway path: ${pathname}`);
+  }
   return { domain: segments[1], action: segments[2] };
+}
+
+function runCommand(command, args, logPath) {
+  ensureDir(path.dirname(logPath));
+  const started = Date.now();
+  let child;
+  try {
+    child = spawnSync(command, args, {
+      cwd: repoRoot,
+      encoding: "utf8"
+    });
+  } catch (err) {
+    child = { status: null, stdout: "", stderr: err.message, error: err };
+  }
+  const duration = Date.now() - started;
+  const combined = `${child.stdout ?? ""}${child.stderr ?? ""}`;
+  fs.writeFileSync(logPath, combined || "(no output)\n", "utf8");
+  return {
+    exit_code: child.status ?? 1,
+    status: child.status === 0 ? "pass" : "fail",
+    duration_ms: duration,
+    log: relRepo(logPath),
+    error: child.error?.message
+  };
+}
+
+function runNpmCommand(args, logPath) {
+  if (npmCliPath && fs.existsSync(npmCliPath)) {
+    return runCommand(process.execPath, [npmCliPath, ...args], logPath);
+  }
+  return runCommand(npmCmd, args, logPath);
+}
+
+function runGates(baseDir) {
+  ensureDir(baseDir);
+  const gateCommands = [
+    { label: "npm run validate", args: ["run", "validate"], log: path.join(baseDir, "npm_run_validate.log") },
+    { label: "npm run test", args: ["run", "test"], log: path.join(baseDir, "npm_test.log") },
+    { label: "npm run smoke:wf_cycle", args: ["run", "smoke:wf_cycle"], log: path.join(baseDir, "npm_run_smoke_wf_cycle.log") },
+    { label: "npm run codex:wrappers:check", args: ["run", "codex:wrappers:check"], log: path.join(baseDir, "npm_run_codex_wrappers_check.log") }
+  ];
+  return gateCommands.map((gate) => ({
+    label: gate.label,
+    ...runNpmCommand(gate.args, gate.log)
+  }));
 }
 
 function buildReportMarkdown(report) {
   const lines = [];
   lines.push(`# Gateway Quality Report (${report.mode})`);
   lines.push(`- Run: ${report.run_id}`);
-  lines.push(`- Cases: ${report.cases.length}`);
   lines.push(`- Status: ${report.status.toUpperCase()}`);
   lines.push("");
-  for (const entry of report.cases) {
-    lines.push(`- ${entry.name}: ${entry.pass ? "PASS" : "FAIL"} (status=${entry.status}, ok=${entry.body?.ok})`);
+  lines.push("## Gates");
+  if (!report.gates.length) {
+    lines.push("- (none run)");
+  } else {
+    for (const gate of report.gates) {
+      lines.push(`- ${gate.label}: ${gate.status.toUpperCase()} (exit=${gate.exit_code}) — log \`${gate.log}\``);
+    }
+  }
+  lines.push("");
+  lines.push("## Positive suite");
+  lines.push(`- Status: ${report.positive_suite.status.toUpperCase()}`);
+  for (const entry of report.positive_suite.cases) {
+    lines.push(`- ${entry.name}: ${entry.pass ? "PASS" : "FAIL"} (status=${entry.status}, ok=${entry.ok}) — log \`${entry.log}\``);
+  }
+  if (report.negative_suite) {
+    lines.push("");
+    lines.push("## Negative suite");
+    lines.push(`- Status: ${report.negative_suite.status.toUpperCase()}`);
+    for (const entry of report.negative_suite.cases) {
+      lines.push(`- ${entry.name}: ${entry.pass ? "PASS" : "FAIL"} (status=${entry.status}, ok=${entry.ok}) — log \`${entry.log}\``);
+    }
   }
   if (report.hmac_headers?.length) {
     lines.push("");
@@ -177,20 +261,21 @@ function buildReportMarkdown(report) {
   return lines.join("\n");
 }
 
-async function runSuite({ mode }) {
+async function runGatewaySuite({ mode, baseDir, runId }) {
+  const suitePath = mode === "negative" ? negativeSuitePath : positiveSuitePath;
+  const suite = loadJson(suitePath);
   const routesConfig = loadJson(routesConfigPath);
   const policyConfig = loadJson(policyConfigPath);
   const artifacts = new MemoryBucket();
   const { env } = buildEnv({ artifacts, routesConfig, policyConfig });
   const runtimeModule = await import(pathToFileURL(gatewayRuntimePath).href);
   const handleGatewayRoute = runtimeModule.handleGatewayRoute;
-  const suite = loadJson(mode === "negative" ? negativeSuitePath : positiveSuitePath);
-  const runId = new Date().toISOString().replace(/[:.]/g, "-");
-  const baseDir = path.join(repoRoot, "artifacts", "quality_gateway", runId);
-  ensureDir(baseDir);
-  const logsDir = path.join(baseDir, "logs");
+  const logsDir = path.join(baseDir, "logs", mode);
+  const artifactsDir = path.join(baseDir, "artifacts", mode);
   ensureDir(logsDir);
+  ensureDir(artifactsDir);
   const hmacHeaders = [];
+  const startedAt = new Date();
 
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async (input, init) => {
@@ -211,70 +296,137 @@ async function runSuite({ mode }) {
   try {
     for (const testCase of suite.cases) {
       const requestId = `${testCase.name}_${runId}`;
-      const body = { request_id: requestId, payload: { scenario: testCase.name } };
+      const payload = { scenario: testCase.reason || testCase.name };
+      if (typeof testCase.payload_bytes === "number" && testCase.payload_bytes > 0) {
+        payload.filler = "x".repeat(testCase.payload_bytes);
+      }
+      const body = { request_id: requestId, payload };
       const auth = testCase.name === "missing_auth" ? null : env.GATEWAY_AUTH_TOKEN;
       const request = makeRequest(testCase.path, body, auth);
       const { domain, action } = parseGatewayPath(testCase.path);
       const response = await handleGatewayRoute(request, env, domain, action);
       let json;
       try {
-        json = await response.json();
+        json = await response.clone().json();
       } catch (error) {
-        json = { ok: false, error: { message: error.message } };
+        const text = await response.text().catch(() => "");
+        json = { ok: false, error: { message: text || error.message } };
       }
       const pass = response.status === testCase.expect_status && (!!json.ok === !!testCase.expect_ok);
       const logPath = path.join(logsDir, `${testCase.name}.json`);
-      fs.writeFileSync(logPath, JSON.stringify({ response_status: response.status, body: json }, null, 2));
+      fs.writeFileSync(
+        logPath,
+        JSON.stringify({ response_status: response.status, body: json }, null, 2)
+      );
       cases.push({
         name: testCase.name,
         expect_status: testCase.expect_status,
         expect_ok: testCase.expect_ok,
         status: response.status,
-        body: json,
+        ok: !!json.ok,
         pass,
+        request_id: json.request_id || requestId,
         log: relRepo(logPath)
       });
-    }
-
-    if (mode === "positive") {
-      const remoteCase = cases.find((c) => c.name === "remote_status");
-      if (remoteCase && hmacHeaders.length === 0) {
-        remoteCase.pass = false;
-      }
     }
   } finally {
     globalThis.fetch = originalFetch;
   }
 
-  const artifactsDir = path.join(baseDir, "artifacts");
-  ensureDir(artifactsDir);
-  artifacts.dumpTo(artifactsDir);
+  const artifactsDirFinal = path.join(artifactsDir);
+  ensureDir(artifactsDirFinal);
+  artifacts.dumpTo(artifactsDirFinal);
 
-  const report = {
+  return {
     mode,
-    run_id: runId,
     status: cases.every((c) => c.pass) ? "pass" : "fail",
     cases,
     hmac_headers: hmacHeaders,
-    artifacts_dir: relRepo(artifactsDir)
+    artifacts_dir: relRepo(artifactsDirFinal),
+    logs_dir: relRepo(logsDir),
+    started_at: startedAt.toISOString(),
+    finished_at: new Date().toISOString()
+  };
+}
+
+async function runQuality(includeNegative) {
+  const runId = new Date().toISOString().replace(/[:.]/g, "-");
+  const baseDir = path.join(repoRoot, "artifacts", "quality_gateway", runId);
+  ensureDir(baseDir);
+  const startedAt = new Date();
+
+  const gatesDir = path.join(baseDir, "gates");
+  const gates = runGates(gatesDir);
+  const positiveSuite = await runGatewaySuite({ mode: "positive", baseDir, runId });
+  let negativeSuite = null;
+  if (includeNegative) {
+    negativeSuite = await runGatewaySuite({ mode: "negative", baseDir, runId });
+  }
+
+  const finishedAt = new Date();
+  const status = [
+    ...gates.map((g) => g.status),
+    positiveSuite.status,
+    ...(negativeSuite ? [negativeSuite.status] : [])
+  ].every((s) => s === "pass")
+    ? "pass"
+    : "fail";
+
+  const report = {
+    run_id: runId,
+    mode: includeNegative ? "positive+negative" : "positive",
+    started_at: startedAt.toISOString(),
+    finished_at: finishedAt.toISOString(),
+    status,
+    artifacts_dir: relRepo(baseDir),
+    gates,
+    positive_suite: positiveSuite,
+    negative_suite: negativeSuite,
+    hmac_headers: Array.from(
+      new Set([
+        ...(positiveSuite.hmac_headers || []),
+        ...(negativeSuite?.hmac_headers || [])
+      ])
+    )
   };
 
-  const reportJsonPath = path.join(baseDir, "report.json");
-  const reportMdPath = path.join(baseDir, "report.md");
+  const reportJsonPath = path.join(baseDir, "quality_report.json");
+  const reportMdPath = path.join(baseDir, "quality_report.md");
   fs.writeFileSync(reportJsonPath, JSON.stringify(report, null, 2));
   fs.writeFileSync(reportMdPath, buildReportMarkdown(report));
 
-  return { report, baseDir, reportJsonPath, reportMdPath };
+  if (negativeSuite) {
+    const negativeReport = {
+      run_id: runId,
+      mode: "negative",
+      status: negativeSuite.status,
+      started_at: negativeSuite.started_at,
+      finished_at: negativeSuite.finished_at,
+      cases: negativeSuite.cases,
+      artifacts_dir: negativeSuite.artifacts_dir,
+      hmac_headers: negativeSuite.hmac_headers
+    };
+    const negativeReportPath = path.join(baseDir, "quality_report_negative.json");
+    fs.writeFileSync(negativeReportPath, JSON.stringify(negativeReport, null, 2));
+  }
+
+  if (status !== "pass") {
+    console.error(`[quality_gateway] FAILED (${report.mode})`);
+  } else {
+    console.log(`[quality_gateway] PASS (${report.mode})`);
+  }
+
+  return { ok: status === "pass", baseDir, reportJsonPath, reportMdPath };
 }
 
 async function main() {
-  const negative = process.argv.includes("--negative");
-  const { report } = await runSuite({ mode: negative ? "negative" : "positive" });
-  if (report.status !== "pass") {
-    console.error(`[quality_gateway] FAILED (${report.mode})`);
-    process.exit(1);
+  const args = parseArgs(process.argv.slice(2));
+  if (args.help) {
+    printHelp();
+    return;
   }
-  console.log(`[quality_gateway] PASS (${report.mode})`);
+  const { ok } = await runQuality(args.negative);
+  if (!ok) process.exit(1);
 }
 
 main().catch((error) => {
