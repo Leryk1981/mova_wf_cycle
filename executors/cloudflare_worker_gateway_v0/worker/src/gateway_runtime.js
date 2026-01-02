@@ -1,8 +1,94 @@
 import gatewayPolicyConfig from "../config/gateway_policy_v0.json" with { type: "json" };
 import gatewayRoutesConfig from "../config/gateway_routes_v0.json" with { type: "json" };
+// Note: For Node.js runtime compatibility, the signature library functions are implemented directly in this file
+// The original import was: import { signRequest } from "./lib/gw_sig_v0.ts";
 
 const gatewayPolicyLocal = gatewayPolicyConfig;
 const gatewayRoutesLocal = (gatewayRoutesConfig.routes || []);
+
+// Signature library functions for gateway
+async function sha256Hex(input) {
+  // Use Node.js crypto for server-side execution
+  if (typeof require !== 'undefined') {
+    const crypto = require('crypto');
+    return crypto.createHash('sha256').update(input).digest('hex');
+  }
+  // Use Web Crypto API for browser/worker execution
+  const encoder = new TextEncoder();
+  const data = encoder.encode(input);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function signRequest(
+  method,
+  pathname,
+  body,
+  secretKey
+) {
+  const ts = Math.floor(Date.now() / 1000).toString();
+  const bodySha256 = await sha256Hex(body);
+
+  // Canonical string to sign
+  const stringToSign = `${method}\n${pathname}\n${ts}\n${bodySha256}`;
+
+  // Create HMAC signature
+  if (typeof require !== 'undefined') {
+    // Node.js implementation
+    const crypto = require('crypto');
+    const hmac = crypto.createHmac('sha256', secretKey);
+    hmac.update(stringToSign);
+    const signatureHex = hmac.digest('hex');
+
+    // Generate request ID
+    const requestId = crypto.randomUUID();
+
+    return {
+      headers: {
+        'x-gw-request-id': requestId,
+        'x-gw-ts': ts,
+        'x-gw-body-sha256': bodySha256,
+        'x-gw-sig': signatureHex,
+      },
+      body
+    };
+  } else {
+    // Web Crypto API implementation for Cloudflare Workers
+    const encoder = new TextEncoder();
+    const keyBuffer = encoder.encode(secretKey);
+    const signingKey = await crypto.subtle.importKey(
+      'raw',
+      keyBuffer,
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign']
+    );
+
+    const signatureBuffer = await crypto.subtle.sign(
+      'HMAC',
+      signingKey,
+      encoder.encode(stringToSign)
+    );
+
+    // Convert signature to hex
+    const signatureArray = Array.from(new Uint8Array(signatureBuffer));
+    const signatureHex = signatureArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+    // Generate request ID
+    const requestId = crypto.randomUUID();
+
+    return {
+      headers: {
+        'x-gw-request-id': requestId,
+        'x-gw-ts': ts,
+        'x-gw-body-sha256': bodySha256,
+        'x-gw-sig': signatureHex,
+      },
+      body
+    };
+  }
+}
 
 const DEFAULT_GATEWAY_TIMEOUT_MS = 1500;
 const DEFAULT_GATEWAY_RESPONSE_LIMIT = 64 * 1024;
@@ -272,6 +358,24 @@ async function invokeGatewayRoute(route, requestId, domain, action, body, env, l
       );
       const headers = new Headers(baseHeaders);
       Object.entries(body.headers || {}).forEach(([key, value]) => headers.set(key, value));
+
+      // Use the new signature library to sign the request for service binding
+      const secret = route.hmac_secret_env ? env[route.hmac_secret_env] : env.GW_SECRET_KEY;
+      if (secret) {
+        const { headers: sigHeaders } = await signRequest(
+          "POST",
+          new URL(targetUrl).pathname,
+          JSON.stringify(forwardPayload),
+          secret
+        );
+
+        // Add signature headers to the request
+        Object.entries(sigHeaders).forEach(([key, value]) => headers.set(key, value));
+      } else {
+        // If no secret is available, we still need to add the request ID header
+        headers.set("x-gw-request-id", requestId);
+      }
+
       invocationPromise = binding.fetch(
         new Request(targetUrl, {
           method: "POST",
@@ -307,14 +411,24 @@ async function invokeGatewayRoute(route, requestId, domain, action, body, env, l
       );
       const headers = new Headers(baseHeaders);
       Object.entries(body.headers || {}).forEach(([key, value]) => headers.set(key, value));
-      if (route.hmac_secret_env) {
-        const secret = env[route.hmac_secret_env];
-        if (secret) {
-          const signature = await hmacSha256(secret, JSON.stringify(forwardPayload));
-          headers.set("x-gw-sig", signature);
-          headers.set("x-gw-sig-ts", new Date().toISOString());
-        }
+
+      // Use the new signature library to sign the request
+      const secret = route.hmac_secret_env ? env[route.hmac_secret_env] : env.GW_SECRET_KEY;
+      if (secret) {
+        const { headers: sigHeaders } = await signRequest(
+          "POST",
+          new URL(targetUrl).pathname,
+          JSON.stringify(forwardPayload),
+          secret
+        );
+
+        // Add signature headers to the request
+        Object.entries(sigHeaders).forEach(([key, value]) => headers.set(key, value));
+      } else {
+        // If no secret is available, we still need to add the request ID header
+        headers.set("x-gw-request-id", requestId);
       }
+
       invocationPromise = fetch(targetUrl, {
         method: "POST",
         headers,
