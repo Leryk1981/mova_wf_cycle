@@ -4,6 +4,7 @@ import path from "node:path";
 import process from "node:process";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { createServer } from "node:http";
 
 const repoRoot = process.cwd();
 const __filename = fileURLToPath(import.meta.url);
@@ -17,6 +18,180 @@ const gatewayRuntimePath = path.join(repoRoot, "executors", "cloudflare_worker_g
 
 const npmCmd = process.platform === "win32" ? "npm.cmd" : "npm";
 const npmCliPath = process.env.npm_execpath ? path.normalize(process.env.npm_execpath) : null;
+
+// Import the signature verification function for mock domain server
+async function sha256Hex(input) {
+  const crypto = await import('node:crypto');
+  return crypto.createHash('sha256').update(input).digest('hex');
+}
+
+async function verifySignature(
+  method,
+  pathname,
+  ts,
+  bodySha256,
+  signature,
+  secretKey,
+  timeWindowSeconds = 60
+) {
+  // Check timestamp is within allowed window (±60 seconds by default)
+  const now = Math.floor(Date.now() / 1000);
+  const tsNum = parseInt(ts, 10);
+
+  if (isNaN(tsNum) || Math.abs(now - tsNum) > timeWindowSeconds) {
+    console.log(`Timestamp check failed: now=${now}, ts=${tsNum}, diff=${Math.abs(now - tsNum)}`);
+    return false;
+  }
+
+  // Recreate the canonical string to verify
+  const stringToVerify = `${method}\n${pathname}\n${ts}\n${bodySha256}`;
+
+  // Import the key for verification (Node.js crypto implementation)
+  const crypto = await import('node:crypto');
+  const hmac = crypto.createHmac('sha256', secretKey);
+  hmac.update(stringToVerify);
+  const expectedSignature = hmac.digest('hex');
+
+  // Constant-time comparison to prevent timing attacks
+  if (signature.length !== expectedSignature.length) {
+    return false;
+  }
+
+  let mismatch = 0;
+  for (let i = 0; i < signature.length; i++) {
+    mismatch |= signature.charCodeAt(i) ^ expectedSignature.charCodeAt(i);
+  }
+
+  return mismatch === 0;
+}
+
+function hexToBytes(hex) {
+  const bytes = new Uint8Array(Math.ceil(hex.length / 2));
+  for (let i = 0; i < bytes.length; i++) {
+    bytes[i] = parseInt(hex.substr(i * 2, 2), 16);
+  }
+  return bytes;
+}
+
+// Create a mock domain server that verifies signatures
+function createMockDomainServer(secretKey, port = 0) {
+  return new Promise((resolve, reject) => {
+    const server = createServer(async (req, res) => {
+      const url = new URL(`http://${req.headers.host}${req.url}`);
+      const method = req.method.toUpperCase();
+      const pathname = url.pathname;
+
+      // Extract required headers
+      const requestId = req.headers['x-gw-request-id'];
+      const ts = req.headers['x-gw-ts'];
+      const bodySha256 = req.headers['x-gw-body-sha256'];
+      const signature = req.headers['x-gw-sig'];
+
+      // Check if all required headers are present
+      if (!requestId || !ts || !bodySha256 || !signature) {
+        console.log('Mock domain: Missing required signature headers');
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+          error: {
+            code: 'unauthorized',
+            message: 'Missing required signature headers',
+            details: 'Direct access denied - gateway signature required'
+          }
+        }));
+        return;
+      }
+
+      // Get the request body for verification
+      let body = '';
+      req.on('data', chunk => {
+        body += chunk.toString();
+      });
+
+      req.on('end', async () => {
+        try {
+          const actualBodySha256 = await sha256Hex(body);
+
+          // Verify body hash matches
+          if (actualBodySha256 !== bodySha256) {
+            console.log('Mock domain: Body hash mismatch');
+            res.writeHead(403, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+              error: {
+                code: 'unauthorized',
+                message: 'Body hash mismatch',
+                details: 'Direct access denied - gateway signature required'
+              }
+            }));
+            return;
+          }
+
+          // Verify the signature
+          const isValid = await verifySignature(
+            method,
+            pathname,
+            ts,
+            bodySha256,
+            signature,
+            secretKey,
+            60
+          );
+
+          if (!isValid) {
+            console.log('Mock domain: Signature verification failed');
+            res.writeHead(403, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+              error: {
+                code: 'unauthorized',
+                message: 'Invalid signature',
+                details: 'Direct access denied - gateway signature required'
+              }
+            }));
+            return;
+          }
+
+          // Signature is valid, process the request
+          console.log('Mock domain: Signature verified successfully');
+          let requestBody;
+          try {
+            requestBody = JSON.parse(body);
+          } catch (e) {
+            requestBody = { raw: body };
+          }
+
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({
+            ok: true,
+            message: 'Request processed successfully',
+            request_id: requestBody.request_id || requestId,
+            domain: requestBody.domain || 'mock',
+            action: requestBody.action || 'test',
+            verified: true
+          }));
+        } catch (error) {
+          console.error('Mock domain error:', error);
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({
+            error: {
+              code: 'internal_error',
+              message: error.message
+            }
+          }));
+        }
+      });
+    });
+
+    server.listen(port, () => {
+      const address = server.address();
+      resolve({
+        server,
+        url: `http://localhost:${address.port}`,
+        port: address.port
+      });
+    });
+
+    server.on('error', reject);
+  });
+}
 
 function parseArgs(argv) {
   const parsed = { negative: false };
@@ -105,7 +280,7 @@ function loadJson(filePath) {
   return JSON.parse(fs.readFileSync(filePath, "utf8"));
 }
 
-function buildEnv({ artifacts, routesConfig, policyConfig }) {
+async function buildEnv({ artifacts, routesConfig, policyConfig, mockDomainServer }) {
   const kvSeed = {
     gateway_routes_v0: JSON.stringify(routesConfig),
     gateway_policy_v0: JSON.stringify(policyConfig)
@@ -156,7 +331,8 @@ function buildEnv({ artifacts, routesConfig, policyConfig }) {
       SERVICE_ECHO: echoService,
       SERVICE_SLOW: slowService,
       GATEWAY_HMAC_SECRET: "quality-secret",
-      GATEWAY_REMOTE_STATUS_URL: "https://remote.example/gateway/status"
+      GATEWAY_REMOTE_STATUS_URL: mockDomainServer ? `${mockDomainServer.url}/status` : "https://remote.example/gateway/status",
+      MOCK_DOMAIN_URL: mockDomainServer ? mockDomainServer.url : undefined
     }
   };
 }
@@ -261,13 +437,13 @@ function buildReportMarkdown(report) {
   return lines.join("\n");
 }
 
-async function runGatewaySuite({ mode, baseDir, runId }) {
+async function runGatewaySuite({ mode, baseDir, runId, mockDomainServer }) {
   const suitePath = mode === "negative" ? negativeSuitePath : positiveSuitePath;
   const suite = loadJson(suitePath);
   const routesConfig = loadJson(routesConfigPath);
   const policyConfig = loadJson(policyConfigPath);
   const artifacts = new MemoryBucket();
-  const { env } = buildEnv({ artifacts, routesConfig, policyConfig });
+  const { env } = await buildEnv({ artifacts, routesConfig, policyConfig, mockDomainServer });
   const runtimeModule = await import(pathToFileURL(gatewayRuntimePath).href);
   const handleGatewayRoute = runtimeModule.handleGatewayRoute;
   const logsDir = path.join(baseDir, "logs", mode);
@@ -280,10 +456,18 @@ async function runGatewaySuite({ mode, baseDir, runId }) {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async (input, init) => {
     const url = typeof input === "string" ? input : input.url;
-    if (url && url.includes("remote.example")) {
+    if (url && (url.includes("remote.example") || (mockDomainServer && url.includes(`localhost:${mockDomainServer.port}`)))) {
       const headers = new Headers(init?.headers || {});
       const sig = headers.get("x-gw-sig");
       if (sig) hmacHeaders.push(sig);
+
+      // If this is a request to the mock domain server, forward it there
+      if (mockDomainServer && url.includes(`localhost:${mockDomainServer.port}`)) {
+        // Use the original fetch to avoid recursion
+        const response = await originalFetch(input, init);
+        return response;
+      }
+
       return new Response(JSON.stringify({ upstream: "remote", ok: true }), {
         status: 200,
         headers: { "content-type": "application/json" }
@@ -355,13 +539,21 @@ async function runQuality(includeNegative) {
   ensureDir(baseDir);
   const startedAt = new Date();
 
+  // Create a mock domain server for testing signature verification
+  const mockDomainServer = await createMockDomainServer("quality-secret");
+  console.log(`[quality_gateway] Mock domain server started at ${mockDomainServer.url}`);
+
   const gatesDir = path.join(baseDir, "gates");
   const gates = runGates(gatesDir);
-  const positiveSuite = await runGatewaySuite({ mode: "positive", baseDir, runId });
+  const positiveSuite = await runGatewaySuite({ mode: "positive", baseDir, runId, mockDomainServer });
   let negativeSuite = null;
   if (includeNegative) {
-    negativeSuite = await runGatewaySuite({ mode: "negative", baseDir, runId });
+    negativeSuite = await runGatewaySuite({ mode: "negative", baseDir, runId, mockDomainServer });
   }
+
+  // Close the mock domain server
+  mockDomainServer.server.close();
+  console.log(`[quality_gateway] Mock domain server closed`);
 
   const finishedAt = new Date();
   const status = [
