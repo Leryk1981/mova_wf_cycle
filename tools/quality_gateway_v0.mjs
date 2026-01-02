@@ -149,24 +149,38 @@ function createMockDomainServer(secretKey, port = 0) {
             return;
           }
 
-          // Signature is valid, process the request
-          console.log('Mock domain: Signature verified successfully');
-          let requestBody;
-          try {
-            requestBody = JSON.parse(body);
-          } catch (e) {
-            requestBody = { raw: body };
-          }
+          // Check if this is the probe endpoint
+          if (pathname === '/__gw_probe') {
+            // Return the expected probe response
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+              ok: true,
+              probe: 'gw_sig_ok',
+              x_gw_request_id: requestId,
+              x_gw_ts: ts,
+              x_gw_body_sha256: bodySha256,
+              has_sig: true
+            }));
+          } else {
+            // Signature is valid, process the request
+            console.log('Mock domain: Signature verified successfully');
+            let requestBody;
+            try {
+              requestBody = JSON.parse(body);
+            } catch (e) {
+              requestBody = { raw: body };
+            }
 
-          res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({
-            ok: true,
-            message: 'Request processed successfully',
-            request_id: requestBody.request_id || requestId,
-            domain: requestBody.domain || 'mock',
-            action: requestBody.action || 'test',
-            verified: true
-          }));
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+              ok: true,
+              message: 'Request processed successfully',
+              request_id: requestBody.request_id || requestId,
+              domain: requestBody.domain || 'mock',
+              action: requestBody.action || 'test',
+              verified: true
+            }));
+          }
         } catch (error) {
           console.error('Mock domain error:', error);
           res.writeHead(500, { 'Content-Type': 'application/json' });

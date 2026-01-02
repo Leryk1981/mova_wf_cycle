@@ -5,7 +5,8 @@
   "name": "mova-tool-gateway-v0",
   "main": "src/index.ts",
   "compatibility_date": "2024-12-17",
-  
+  "compatibility_flags": ["nodejs_compat"],
+
   // Development server port
   "dev": {
     "port": 8787
