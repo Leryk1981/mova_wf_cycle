@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mova.sh/schemas/ds.gateway_request_v0.schema.json",
+  "title": "Gateway Request v0",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "request_id": {
+      "type": "string",
+      "maxLength": 128
+    },
+    "payload": {
+      "description": "Opaque payload forwarded to the destination domain/action",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "headers": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "query": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["service", "https"]
+    }
+  }
+}

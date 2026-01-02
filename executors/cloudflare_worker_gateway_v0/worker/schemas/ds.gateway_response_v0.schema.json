@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mova.sh/schemas/ds.gateway_response_v0.schema.json",
+  "title": "Gateway Response v0",
+  "type": "object",
+  "required": ["ok", "request_id", "domain", "action", "route_mode", "engine_ref"],
+  "additionalProperties": false,
+  "properties": {
+    "ok": { "type": "boolean" },
+    "request_id": { "type": "string", "maxLength": 128 },
+    "domain": { "type": "string", "maxLength": 256 },
+    "action": { "type": "string", "maxLength": 256 },
+    "route_mode": { "type": "string", "enum": ["service", "https", "unknown"] },
+    "engine_ref": { "type": "string" },
+    "result": {
+      "type": "object",
+      "properties": {
+        "status": { "type": "integer" },
+        "body": {},
+        "headers": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "error": {
+      "type": "object",
+      "required": ["code", "message"],
+      "properties": {
+        "code": { "type": "string" },
+        "message": { "type": "string" },
+        "details": { "type": "object", "additionalProperties": true }
+      },
+      "additionalProperties": false
+    },
+    "policy_check": {
+      "type": "object",
+      "properties": {
+        "decision": { "type": "string", "enum": ["allow", "deny"] },
+        "reason": { "type": "string" },
+        "rule_id": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "logs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "at": { "type": "string", "format": "date-time" },
+          "level": { "type": "string", "enum": ["info", "warn", "error"] },
+          "stage": { "type": "string" },
+          "message": { "type": "string" },
+          "data": { "type": "object", "additionalProperties": true }
+        },
+        "required": ["at", "level", "stage", "message"],
+        "additionalProperties": false
+      }
+    }
+  }
+}

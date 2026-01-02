@@ -24,12 +24,16 @@ jobs:
       - run: npm run codex:wrappers:check
       - run: npm run quality:invoice_ap
       - run: npm run quality:invoice_ap:neg
+      - run: npm run quality:gateway
+      - run: npm run quality:gateway:neg
       - run: npm run smoke:flashslot:experiment
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: quality-artifacts
-          path: artifacts/quality/**
+          path: |
+            artifacts/quality/**
+            artifacts/quality_gateway/**
 
   pult-smoke:
     runs-on: ubuntu-latest
