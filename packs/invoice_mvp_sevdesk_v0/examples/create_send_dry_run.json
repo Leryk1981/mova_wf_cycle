@@ -1,0 +1,1 @@
+{"$schema": "../ds/ds.invoice_mvp_create_send_request_v0.json","provider": "sevdesk","dry_run": true,"idempotency_key": "example_create_send_001","customer_id": "cust_67890","invoice_data": {"invoice_number": "INV-002","amount": 2500.00,"currency": "EUR","due_date": "2024-12-31","items": [{"description": "Development services","quantity": 20,"unit_price": 125.00}]}}
