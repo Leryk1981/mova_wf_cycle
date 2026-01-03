@@ -54,7 +54,14 @@
     "quality:invoice_ap": "node tools/quality_report_v0.mjs --scope invoice_ap",
     "quality:invoice_ap:neg": "node tools/quality_report_v0.mjs --scope invoice_ap --negative",
     "quality:gateway": "node tools/quality_gateway_v0.mjs",
-    "quality:gateway:neg": "node tools/quality_gateway_v0.mjs --negative"
+    "quality:gateway:neg": "node tools/quality_gateway_v0.mjs --negative",
+    "invoice_mvp:create_send:a": "node tools/attempt_run.mjs --config packs/invoice_mvp_sevdesk_v0/examples/create_send_dry_run.json --label ide",
+    "invoice_mvp:create_send:b": "node tools/attempt_run.mjs --config packs/invoice_mvp_sevdesk_v0/examples/create_send_dry_run.json --label cli",
+    "invoice_mvp:compare": "node tools/attempt_compare.mjs --a ide --b cli",
+    "quality:invoice_mvp_sevdesk": "node tools/quality_invoice_mvp_sevdesk_v0.mjs",
+    "quality:invoice_mvp_sevdesk:neg": "node tools/quality_invoice_mvp_sevdesk_v0.mjs negative",
+    "smoke:invoice_gateway_e2e": "node tools/smoke_invoice_gateway_e2e_v0.mjs",
+    "smoke:episode_store_e2e": "node tools/smoke_episode_store_e2e_v0.mjs"
   },
   "dependencies": {
     "sql.js": "^1.9.0"
