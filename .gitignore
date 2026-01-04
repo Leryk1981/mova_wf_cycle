@@ -52,5 +52,7 @@ skills/skill_ingest_run_with_skillseeker_basic/tests/tmp*/
 /artifacts/invoice_ap_**/
 /artifacts/attempts/**
 /artifacts/quality/**
+/artifacts/smoke/invoice_gateway_e2e/**
+/artifacts/smoke/episode_store_e2e/**
 docs/examples/flashslot_publish_offer_request_real.json
 tmp_station_cycle_request.json
