@@ -6,6 +6,7 @@
     "wf_compare",
     "quality_invoice_ap",
     "quality_gateway",
+    "quality_invoice_mvp_sevdesk",
     "episode_store",
     "finish_branch"
   ],
