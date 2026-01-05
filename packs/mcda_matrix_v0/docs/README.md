@@ -40,3 +40,10 @@ What is proven
 Stability promises
 - Stable: problem schema, score result schema, demo command (`npm run demo:mcda_matrix`).
 - May change: internal artifact layouts, Markdown report formatting.
+
+Pitch
+- Excel-style decision matrix, but engineered: versioned contracts + deterministic runtime + pos/neg test suite + auditable artifacts.
+- Матрица решений как в Excel, но как софт: контракты, детерминированный расчёт, тесты, регрессии и квитанции.
+- Deterministic WSM + MIN_MAX with explainable breakdown per criterion.
+- Proof via station_cycle receipts and vendored reports.
+- No TOPSIS/AHP or domain integrations in v0.
