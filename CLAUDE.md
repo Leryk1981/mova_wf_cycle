@@ -11,6 +11,12 @@
 - Never access secrets. Do not read .env, .env.*, secrets/**, or any private keys. If needed, ask the user to provide redacted values.
 - Keep outputs deterministic: request/result/totals must be stable. Run-specific details (timestamps, run ids, paths) belong only in env.json and artifacts.
 
+## Documentation & Execution Canon
+- Documentation: use /docs via Context7 MCP only (read-only).
+- Execution / side effects: run via station (npm scripts) and/or MOVA-controlled paths.
+- Do not call random MCP tools for side effects.
+- Never paste tokens; env-only.
+
 ## Repo Reality (how this project works)
 - This repo is a deterministic “station” for workflows.
 - Preferred verification gates (in this order):
