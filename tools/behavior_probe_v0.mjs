@@ -67,14 +67,61 @@ async function runCommand(command, args) {
   const stdoutCollector = createLimitedCollector(MAX_STREAM_BYTES);
   const stderrCollector = createLimitedCollector(MAX_STREAM_BYTES);
 
+  // For Windows, we might need to use shell: true for npm.cmd to work properly
+  const options = {
+    stdio: ["ignore", "pipe", "pipe"],
+    env: process.env,
+    cwd: process.cwd()
+  };
+
+  // On Windows, use shell: true for npm.cmd to avoid EINVAL errors
+  if (process.platform === "win32" && command.endsWith(".cmd")) {
+    options.shell = true;
+  }
+
   return await new Promise((resolve) => {
-    const child = spawn(command, args, {
-      stdio: ["ignore", "pipe", "pipe"],
-      env: process.env
-    });
+    let child;
+    try {
+      child = spawn(command, args, options);
+    } catch (spawnError) {
+      // Handle spawn errors directly
+      const durationMs = Date.now() - start;
+      resolve({
+        exit_code: -1,
+        status: "FAIL",
+        duration_ms: durationMs,
+        stdout_trunc: false,
+        stderr_trunc: false,
+        error_code: spawnError?.code || null,
+        syscall: spawnError?.syscall || null,
+        path: spawnError?.path || null,
+        cmd: command,
+        args: args,
+        reason: spawnError instanceof Error ? spawnError.message : String(spawnError)
+      });
+      return;
+    }
 
     child.stdout.on("data", (chunk) => stdoutCollector.onData(chunk));
     child.stderr.on("data", (chunk) => stderrCollector.onData(chunk));
+
+    child.on("error", (error) => {
+      // Handle process errors
+      const durationMs = Date.now() - start;
+      resolve({
+        exit_code: -1,
+        status: "FAIL",
+        duration_ms: durationMs,
+        stdout_trunc: stdoutCollector.truncated(),
+        stderr_trunc: stderrCollector.truncated(),
+        error_code: error?.code || null,
+        syscall: error?.syscall || null,
+        path: error?.path || null,
+        cmd: command,
+        args: args,
+        reason: error instanceof Error ? error.message : String(error)
+      });
+    });
 
     child.on("close", (code) => {
       const durationMs = Date.now() - start;
@@ -122,7 +169,7 @@ async function attemptEnvelope(runIdValue) {
 
   const transport = new StdioClientTransport({
     command: process.execPath,
-    args: ["tools/mova_mcp_server_v0/run.mjs"],
+    args: [path.resolve("tools/mova_mcp_server_v0/run.mjs")],
     env: filterEnv(env),
     stderr: "pipe"
   });
@@ -156,14 +203,23 @@ async function attemptEnvelope(runIdValue) {
       duration_ms: Date.now() - start
     };
   } catch (error) {
-    return {
+    // Add more diagnostic information for spawn errors
+    const errorInfo = {
       status: "FAIL",
       reason: error instanceof Error ? error.message : String(error),
+      error_code: error?.code || null,
+      syscall: error?.syscall || null,
+      path: error?.path || null,
       gw_request_id: null,
       duration_ms: Date.now() - start
     };
+    return errorInfo;
   } finally {
-    await client.close();
+    try {
+      await client.close();
+    } catch (closeError) {
+      // Ignore close errors
+    }
   }
 }
 
@@ -178,7 +234,7 @@ async function attemptMemorySearch(runIdValue) {
 
   const transport = new StdioClientTransport({
     command: process.execPath,
-    args: ["tools/mova_mcp_server_v0/run.mjs"],
+    args: [path.resolve("tools/mova_mcp_server_v0/run.mjs")],
     env: filterEnv(env),
     stderr: "pipe"
   });
@@ -208,13 +264,22 @@ async function attemptMemorySearch(runIdValue) {
       duration_ms: Date.now() - start
     };
   } catch (error) {
-    return {
+    // Add more diagnostic information for spawn errors
+    const errorInfo = {
       status: "FAIL",
       reason: error instanceof Error ? error.message : String(error),
+      error_code: error?.code || null,
+      syscall: error?.syscall || null,
+      path: error?.path || null,
       duration_ms: Date.now() - start
     };
+    return errorInfo;
   } finally {
-    await client.close();
+    try {
+      await client.close();
+    } catch (closeError) {
+      // Ignore close errors
+    }
   }
 }
 
@@ -230,6 +295,18 @@ async function main() {
   const memoryAttempt = await attemptMemorySearch(runId);
   const finishedAt = new Date().toISOString();
 
+  // Add diagnostic information
+  const env = process.env;
+  const debugInfo = {
+    node: process.version,
+    platform: process.platform,
+    cwd: process.cwd(),
+    argv0: process.argv0,
+    npm_bin: npmCmd,
+    has_gateway_env: !!(env.MOVA_GATEWAY_BASE_URL && env.MOVA_GATEWAY_AUTH_TOKEN),
+    has_memory_env: !!(env.MOVA_MEMORY_BASE_URL && env.MOVA_MEMORY_AUTH_TOKEN)
+  };
+
   const report = {
     run_id: runId,
     artifacts_dir: artifactsDir.replace(/\\/g, "/"),
@@ -242,6 +319,7 @@ async function main() {
       mcp_memory_search: memoryAttempt.status
     },
     docs_used: true,
+    debug: debugInfo,
     gates,
     envelope_attempt: envelopeAttempt,
     memory_search: memoryAttempt,
@@ -254,6 +332,20 @@ async function main() {
 
 main().catch(async (error) => {
   const fallbackStartedAt = new Date().toISOString();
+
+  // Add diagnostic information
+  const env = process.env;
+  const npmCmd = process.platform === "win32" ? "npm.cmd" : "npm";
+  const debugInfo = {
+    node: process.version,
+    platform: process.platform,
+    cwd: process.cwd(),
+    argv0: process.argv0,
+    npm_bin: npmCmd,
+    has_gateway_env: !!(env.MOVA_GATEWAY_BASE_URL && env.MOVA_GATEWAY_AUTH_TOKEN),
+    has_memory_env: !!(env.MOVA_MEMORY_BASE_URL && env.MOVA_MEMORY_AUTH_TOKEN)
+  };
+
   const report = {
     run_id: runId,
     artifacts_dir: artifactsDir.replace(/\\/g, "/"),
@@ -266,6 +358,7 @@ main().catch(async (error) => {
       mcp_memory_search: "FAIL"
     },
     docs_used: true,
+    debug: debugInfo,
     gates: {
       validate: { exit_code: -1, status: "FAIL", duration_ms: 0 },
       test: { exit_code: -1, status: "FAIL", duration_ms: 0 },
@@ -274,11 +367,17 @@ main().catch(async (error) => {
     envelope_attempt: {
       status: "FAIL",
       reason: error instanceof Error ? error.message : String(error),
+      error_code: error?.code || null,
+      syscall: error?.syscall || null,
+      path: error?.path || null,
       gw_request_id: null
     },
     memory_search: {
       status: "FAIL",
-      reason: error instanceof Error ? error.message : String(error)
+      reason: error instanceof Error ? error.message : String(error),
+      error_code: error?.code || null,
+      syscall: error?.syscall || null,
+      path: error?.path || null
     },
     notes: "Behavior probe report failed."
   };
