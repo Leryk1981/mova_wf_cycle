@@ -41,6 +41,7 @@
     "flashslot:publish": "node packs/flashslot_v0/runtime/impl/publish_offer_v0.mjs",
     "flashslot:experiment": "node tools/flashslot_experiment_cli.mjs",
     "demo:flashslot": "node tools/flashslot_demo.mjs",
+    "demo:mcda_matrix": "node tools/mcda_matrix_demo_v0.mjs",
     "smoke:flashslot:experiment": "node tools/flashslot_experiment_smoke_ci.mjs",
     "codex:wrappers:gen": "node tools/generate_codex_wrappers.mjs --skills skills --out .codex/skills --report docs/skills/CODEX_WRAPPERS_GENERATED.json --overwrite",
     "codex:wrappers:check": "node tools/generate_codex_wrappers.mjs --skills skills --out .codex/skills --report docs/skills/CODEX_WRAPPERS_GENERATED.json --check",
