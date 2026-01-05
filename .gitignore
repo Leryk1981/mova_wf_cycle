@@ -14,7 +14,6 @@ lab/memory/query_runs/
 # local-only (do not commit)
 /lab/memory/**
 /spec/**
-.claude/settings.local.json
 
 # OpenCode executor (local env)
 executors/opencode_server_v1/docker/.env
