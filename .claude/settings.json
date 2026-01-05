@@ -1,4 +1,8 @@
 {
+  "enabledMcpjsonServers": [
+    "context7",
+    "mova"
+  ],
   "permissions": {
     "defaultMode": "plan",
     "allow": [
