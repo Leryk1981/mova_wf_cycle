@@ -44,6 +44,7 @@
     "demo:mcda_matrix": "node tools/mcda_matrix_demo_v0.mjs",
     "smoke:flashslot:experiment": "node tools/flashslot_experiment_smoke_ci.mjs",
     "smoke:mova_mcp_v0": "node tools/smoke_mova_mcp_v0.mjs",
+    "probe:behavior": "node tools/behavior_probe_v0.mjs",
     "codex:wrappers:gen": "node tools/generate_codex_wrappers.mjs --skills skills --out .codex/skills --report docs/skills/CODEX_WRAPPERS_GENERATED.json --overwrite",
     "codex:wrappers:check": "node tools/generate_codex_wrappers.mjs --skills skills --out .codex/skills --report docs/skills/CODEX_WRAPPERS_GENERATED.json --check",
     "attempt:invoice:a": "node tools/attempt_run.mjs --config docs/examples/attempt_invoice_intake_a.json --label ide",
