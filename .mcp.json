@@ -11,7 +11,13 @@
       "command": "node",
       "args": [
         "tools/mova_mcp_server_v0/run.mjs"
-      ]
+      ],
+      "env": {
+        "MOVA_GATEWAY_BASE_URL": "${MOVA_GATEWAY_BASE_URL}",
+        "MOVA_GATEWAY_AUTH_TOKEN": "${MOVA_GATEWAY_AUTH_TOKEN}",
+        "MOVA_MEMORY_BASE_URL": "${MOVA_MEMORY_BASE_URL}",
+        "MOVA_MEMORY_AUTH_TOKEN": "${MOVA_MEMORY_AUTH_TOKEN}"
+      }
     }
   }
 }
