@@ -15,6 +15,26 @@
 
 All four commands must pass on every branch before asking Codex to continue.
 
+## Operator Quickstart (Claude Code)
+### What's wired
+- Project MCP servers from `.mcp.json`: `context7` + `mova`.
+- Project commands in `.claude/commands`.
+- Project skills in `.claude/skills`.
+
+### Minimal smoke
+```bash
+npm run smoke:mova_mcp_v0
+```
+- `ping` must PASS.
+- `envelope` may SKIP if gateway env is not set.
+
+### Env (do not commit)
+- `MOVA_GATEWAY_BASE_URL`
+- `MOVA_GATEWAY_AUTH_TOKEN`
+- `MOVA_MEMORY_BASE_URL` (optional)
+- `MOVA_MEMORY_AUTH_TOKEN` (optional)
+- Store secrets in env only; never commit.
+
 ## Codex wrappers
 - Generate or refresh wrappers after touching `skills/` or schema files:
   - `npm run codex:wrappers:gen`

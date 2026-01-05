@@ -12,3 +12,10 @@
 ## Safety and determinism
 - Do not paste tokens; use env vars only.
 - Keep run-specific data in env/meta; results go in payloads and artifacts.
+
+## MCP mapping
+| Intent | Tool |
+| --- | --- |
+| Action executed | mova_run_envelope_v0 |
+| Episode lookup | mova_search_episodes_v0 |
+| Local gates | npm run ... / mova_run_npm_v0 |

@@ -17,3 +17,9 @@ allowed-tools: Bash, Read, Grep, Glob
 - Documentation: use `/docs` via Context7 MCP only (read-only).
 - Execution and side effects: run via station (npm scripts) and/or MOVA-controlled paths.
 - No interactive branches; pick safe defaults and proceed.
+
+## Tool selection rules
+- If the user asks to run a workflow or do an action, use `mova_run_envelope_v0`.
+- If the user asks to inspect or pull episodes, use `mova_search_episodes_v0`.
+- If the user asks to run gates/quality/smoke, use `/gates`, `/station-quick`, or `mova_run_npm_v0` (allowlisted scripts only).
+- Docs only via `/docs` (Context7, read-only).

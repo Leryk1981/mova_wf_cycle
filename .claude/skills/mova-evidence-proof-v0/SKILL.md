@@ -15,3 +15,7 @@ allowed-tools: Bash, Read, Grep, Glob
 ## Evidence-first standard
 - Prefer artifacts and reports over narrative claims.
 - Always link to evidence paths in `artifacts/**`.
+
+## Evidence sources
+- Artifacts paths, `gw_request_id`, and episode ids/refs.
+- History lookup must use `mova_search_episodes_v0` (read-only).

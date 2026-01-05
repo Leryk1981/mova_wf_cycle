@@ -17,6 +17,13 @@
 - Do not call random MCP tools for side effects.
 - Never paste tokens; env-only.
 
+## Channels (docs vs execution vs evidence)
+- Docs: `/docs` (Context7 MCP, read-only).
+- Execution / side effects: `mova_run_envelope_v0` (MOVA MCP -> Gateway).
+- Evidence / history: `mova_search_episodes_v0` (MOVA MCP -> Memory).
+- Local verification: `/gates`, `/station-quick`, or allowlisted `npm run ...` (gates/quality/smoke only).
+- Do not call random MCP tools for side effects.
+
 ## Repo Reality (how this project works)
 - This repo is a deterministic “station” for workflows.
 - Preferred verification gates (in this order):

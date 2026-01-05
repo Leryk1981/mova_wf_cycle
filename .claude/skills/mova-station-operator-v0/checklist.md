@@ -5,3 +5,5 @@
 - Capture gate results and quality suite outputs.
 - Record artifacts path(s) from `artifacts/**`.
 - Finish with `git status -sb` and `git diff --stat` if changed.
+
+Order: docs -> plan -> gates -> run_envelope -> store/search episode -> summarize evidence.

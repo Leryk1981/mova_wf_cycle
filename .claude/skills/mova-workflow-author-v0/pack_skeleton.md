@@ -16,3 +16,7 @@
 ## Quality
 - Positive suite validates expected behavior.
 - Negative suite covers deny/unauthorized/invalid signatures/oversize/validation errors.
+
+## MCP hooks
+- smoke/e2e: prefer Gateway + MCP (run via `mova_run_envelope_v0`).
+- local scripts: only for verification (gates/quality), not business actions.
