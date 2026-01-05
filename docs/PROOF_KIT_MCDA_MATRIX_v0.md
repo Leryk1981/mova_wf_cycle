@@ -2,7 +2,6 @@
 
 What it is
 - Excel-style decision matrix, but engineered: versioned contracts + deterministic runtime + pos/neg test suite + auditable artifacts.
-- Матрица решений как в Excel, но как софт: контракты, детерминированный расчёт, тесты, регрессии и квитанции.
 
 One-command demo
 - `npm run demo:mcda_matrix`
