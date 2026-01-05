@@ -49,7 +49,8 @@ Decide which quality suite(s) to run:
 - Otherwise (auto): infer from changed files:
   - If paths include `packs/invoice`, `workers/mova-invoice`, `invoice_` -> invoice quality.
   - If paths include `gateway`, `gw_`, `mova-tool-gateway` -> gateway quality.
-  - If both match -> ask the user which one to run (default to both if user doesn’t answer).
+  - If both match -> run both sets.
+  - If nothing matches -> skip quality and report: "quality skipped: no matching changes".
 
 If a quality run fails:
 - If `fix` is present: minimal fix -> rerun failing suite -> rerun selected suites.

@@ -28,8 +28,7 @@ Rules:
   - Run: `npm run <script> -- $ARGUMENTS` if args supported, otherwise without args.
 - If NO_MATCH:
   - Do NOT invent.
-  - Suggest using the station orchestrator step that includes episode_store, if present in this repo (e.g. via /station).
-  - Otherwise ask the user which entrypoint should be used.
+  - SKIP with message: "episode store script not found; run via station_cycle or add npm script".
 
 Output:
 - Whether remote config is present (bool + token length).

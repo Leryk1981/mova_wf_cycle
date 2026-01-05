@@ -26,7 +26,7 @@ Rules:
   - Fallback: compute ahead/behind against the default remote branch if detectable:
     - try origin/main, then origin/master.
     - show `git rev-list --left-right --count <base>...HEAD`
-  - Then ask the user which script or wrapper should be used.
+  - Report the computed counts in the output.
 
 Output:
 - Selected script (or fallback base ref) + the key results.
