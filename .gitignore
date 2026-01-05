@@ -50,6 +50,7 @@ skills/skill_ingest_run_with_skillseeker_basic/tests/tmp*/
 /artifacts/cloudflare_memory_prod/**
 /artifacts/invoice_ap/**
 /artifacts/invoice_ap_**/
+/artifacts/mcda_matrix/**
 /artifacts/attempts/**
 /artifacts/quality/**
 /artifacts/smoke/invoice_gateway_e2e/**

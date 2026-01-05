@@ -1,0 +1,35 @@
+{
+  "request_id": "mcda_score_request_benefit_only_v0",
+  "problem": {
+    "problem_id": "mcda_problem_benefit_only_v0",
+    "label": "Benefit-only criteria",
+    "alternatives": [
+      { "alternative_id": "A1", "label": "Alt A1" },
+      { "alternative_id": "A2", "label": "Alt A2" },
+      { "alternative_id": "A3", "label": "Alt A3" }
+    ],
+    "criteria": [
+      { "criterion_id": "c1", "label": "Quality", "kind": "benefit", "weight": 0.5, "scale": "ratio" },
+      { "criterion_id": "c2", "label": "Speed", "kind": "benefit", "weight": 0.3, "scale": "ratio" },
+      { "criterion_id": "c3", "label": "Reliability", "kind": "benefit", "weight": 0.2, "scale": "ratio" }
+    ],
+    "evaluations": [
+      { "alternative_id": "A1", "criterion_id": "c1", "value": 90 },
+      { "alternative_id": "A2", "criterion_id": "c1", "value": 70 },
+      { "alternative_id": "A3", "criterion_id": "c1", "value": 80 },
+      { "alternative_id": "A1", "criterion_id": "c2", "value": 30 },
+      { "alternative_id": "A2", "criterion_id": "c2", "value": 40 },
+      { "alternative_id": "A3", "criterion_id": "c2", "value": 20 },
+      { "alternative_id": "A1", "criterion_id": "c3", "value": 10 },
+      { "alternative_id": "A2", "criterion_id": "c3", "value": 8 },
+      { "alternative_id": "A3", "criterion_id": "c3", "value": 9 }
+    ]
+  },
+  "method_config": {
+    "method_version": "v0",
+    "method": "WSM",
+    "normalization": "MIN_MAX",
+    "auto_normalize": true,
+    "score_precision": 3
+  }
+}

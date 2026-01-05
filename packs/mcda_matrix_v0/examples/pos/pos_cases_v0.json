@@ -1,0 +1,44 @@
+{
+  "cases": [
+    {
+      "id": "small_v0",
+      "problem_file": "packs/mcda_matrix_v0/examples/pos/mcda_problem_small_v0.json",
+      "env_file": "packs/mcda_matrix_v0/examples/pos/mcda_score_request_small_v0.json",
+      "expect_status": "OK",
+      "expect_top_ids": ["option_a"],
+      "expect_ranked_ids": ["option_a", "option_c"]
+    },
+    {
+      "id": "benefit_only_v0",
+      "problem_file": "packs/mcda_matrix_v0/examples/pos/mcda_problem_benefit_only_v0.json",
+      "env_file": "packs/mcda_matrix_v0/examples/pos/mcda_score_request_benefit_only_v0.json",
+      "expect_status": "OK",
+      "expect_top_ids": ["A1"],
+      "expect_ranked_ids": ["A1", "A3", "A2"]
+    },
+    {
+      "id": "cost_only_v0",
+      "problem_file": "packs/mcda_matrix_v0/examples/pos/mcda_problem_cost_only_v0.json",
+      "env_file": "packs/mcda_matrix_v0/examples/pos/mcda_score_request_cost_only_v0.json",
+      "expect_status": "OK",
+      "expect_top_ids": ["C2"],
+      "expect_ranked_ids": ["C2", "C1", "C3"]
+    },
+    {
+      "id": "tie_break_v0",
+      "problem_file": "packs/mcda_matrix_v0/examples/pos/mcda_problem_tie_break_v0.json",
+      "env_file": "packs/mcda_matrix_v0/examples/pos/mcda_score_request_tie_break_v0.json",
+      "expect_status": "OK",
+      "expect_top_ids": ["A1"],
+      "expect_ranked_ids": ["A1", "A2", "A3"]
+    },
+    {
+      "id": "flat_criterion_v0",
+      "problem_file": "packs/mcda_matrix_v0/examples/pos/mcda_problem_flat_criterion_v0.json",
+      "env_file": "packs/mcda_matrix_v0/examples/pos/mcda_score_request_flat_criterion_v0.json",
+      "expect_status": "OK",
+      "expect_top_ids": ["F2"],
+      "expect_ranked_ids": ["F2", "F3", "F1"]
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "problem_id": "mcda_problem_unknown_criterion_v0",
+  "label": "Unknown criterion id",
+  "alternatives": [
+    { "alternative_id": "U1", "label": "Alt U1" },
+    { "alternative_id": "U2", "label": "Alt U2" },
+    { "alternative_id": "U3", "label": "Alt U3" }
+  ],
+  "criteria": [
+    { "criterion_id": "c1", "label": "Crit 1", "kind": "benefit", "weight": 0.5, "scale": "ratio" },
+    { "criterion_id": "c2", "label": "Crit 2", "kind": "benefit", "weight": 0.5, "scale": "ratio" }
+  ],
+  "evaluations": [
+    { "alternative_id": "U1", "criterion_id": "c1", "value": 1 },
+    { "alternative_id": "U2", "criterion_id": "c1", "value": 2 },
+    { "alternative_id": "U3", "criterion_id": "c1", "value": 3 },
+    { "alternative_id": "U1", "criterion_id": "c2", "value": 3 },
+    { "alternative_id": "U2", "criterion_id": "c2", "value": 2 },
+    { "alternative_id": "U3", "criterion_id": "c_missing", "value": 1 }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mova.dev/packs/mcda_matrix_v0/ds.mcda_evaluation_v1.json",
+  "title": "MCDA Evaluation v1",
+  "description": "Observed value of an alternative against a criterion.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "alternative_id",
+    "criterion_id",
+    "value"
+  ],
+  "properties": {
+    "alternative_id": {
+      "type": "string",
+      "description": "Reference to the alternative being scored."
+    },
+    "criterion_id": {
+      "type": "string",
+      "description": "Reference to the criterion definition."
+    },
+    "value": {
+      "type": [
+        "number",
+        "string"
+      ],
+      "description": "Measured value, numeric or symbolic for mapped scales."
+    },
+    "notes": {
+      "type": "string",
+      "description": "Optional annotation about how the value was obtained.",
+      "default": ""
+    },
+    "meta": {
+      "type": "object",
+      "description": "Extra metadata (source, timestamp, sensor ids).",
+      "additionalProperties": true,
+      "default": {}
+    }
+  }
+}

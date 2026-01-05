@@ -14,6 +14,8 @@
         "gates": { "$ref": "#/definitions/step_toggle" },
         "episode_store": { "$ref": "#/definitions/episode_store_step" },
         "quality_invoice_ap": { "$ref": "#/definitions/quality_step" },
+        "quality_gateway": { "$ref": "#/definitions/quality_step" },
+        "quality_mcda_matrix": { "$ref": "#/definitions/quality_step" },
         "finish_branch": { "$ref": "#/definitions/finish_branch_step" },
         "wf_cycle": {
           "type": "object",

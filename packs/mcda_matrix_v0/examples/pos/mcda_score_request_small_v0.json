@@ -1,0 +1,46 @@
+{
+  "request_id": "mcda_score_request_small_v0",
+  "problem": {
+    "problem_id": "mcda_problem_small_v0",
+    "label": "Small vendor selection",
+    "description": "3 alternatives x 3 criteria with numeric evaluations.",
+    "alternatives": [
+      { "alternative_id": "option_a", "label": "Option A" },
+      { "alternative_id": "option_b", "label": "Option B" },
+      { "alternative_id": "option_c", "label": "Option C" }
+    ],
+    "criteria": [
+      { "criterion_id": "cost_total", "label": "Total cost", "kind": "cost", "weight": 0.4, "scale": "ratio" },
+      { "criterion_id": "quality_score", "label": "Quality score", "kind": "benefit", "weight": 0.35, "scale": "ratio" },
+      { "criterion_id": "delivery_speed", "label": "Delivery speed score", "kind": "benefit", "weight": 0.25, "scale": "ratio" }
+    ],
+    "evaluations": [
+      { "alternative_id": "option_a", "criterion_id": "cost_total", "value": 1100 },
+      { "alternative_id": "option_a", "criterion_id": "quality_score", "value": 82 },
+      { "alternative_id": "option_a", "criterion_id": "delivery_speed", "value": 6 },
+      { "alternative_id": "option_b", "criterion_id": "cost_total", "value": 1250 },
+      { "alternative_id": "option_b", "criterion_id": "quality_score", "value": 90 },
+      { "alternative_id": "option_b", "criterion_id": "delivery_speed", "value": 8 },
+      { "alternative_id": "option_c", "criterion_id": "cost_total", "value": 1000 },
+      { "alternative_id": "option_c", "criterion_id": "quality_score", "value": 75 },
+      { "alternative_id": "option_c", "criterion_id": "delivery_speed", "value": 5 }
+    ],
+    "constraints": [
+      {
+        "constraint_id": "max_cost",
+        "kind": "max",
+        "target_criterion_id": "cost_total",
+        "operator": "<=",
+        "threshold": 1200,
+        "description": "Exclude options above budget."
+      }
+    ]
+  },
+  "method_config": {
+    "method_version": "v0",
+    "method": "WSM",
+    "normalization": "MIN_MAX",
+    "auto_normalize": true,
+    "score_precision": 3
+  }
+}

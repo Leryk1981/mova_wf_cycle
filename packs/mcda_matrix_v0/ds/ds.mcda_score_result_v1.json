@@ -1,0 +1,193 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mova.dev/packs/mcda_matrix_v0/ds.mcda_score_result_v1.json",
+  "title": "MCDA Score Result v1",
+  "description": "Scores and ranking outputs produced by the MCDA method.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "status",
+    "method_config",
+    "eligible_count",
+    "scores"
+  ],
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": [
+        "OK",
+        "NO_ELIGIBLE",
+        "ERROR"
+      ],
+      "description": "High-level outcome status for the scoring run."
+    },
+    "problem_id": {
+      "type": "string",
+      "description": "Identifier of the scored problem when available."
+    },
+    "method_config": {
+      "$ref": "https://mova.dev/packs/mcda_matrix_v0/ds.mcda_method_config_v1.json"
+    },
+    "eligible_count": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of alternatives considered eligible for scoring."
+    },
+    "ineligible": {
+      "type": "array",
+      "description": "Alternatives excluded from scoring with reasons.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "alternative_id",
+          "reasons"
+        ],
+        "properties": {
+          "alternative_id": {
+            "type": "string",
+            "description": "Reference to the excluded alternative."
+          },
+          "reasons": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Human-readable reasons for exclusion."
+          }
+        }
+      },
+      "default": []
+    },
+    "normalization_summary": {
+      "type": "array",
+      "description": "Per-criterion normalization bounds used during scoring.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "criterion_id",
+          "min",
+          "max"
+        ],
+        "properties": {
+          "criterion_id": {
+            "type": "string"
+          },
+          "min": {
+            "type": "number"
+          },
+          "max": {
+            "type": "number"
+          }
+        }
+      },
+      "default": []
+    },
+    "scores": {
+      "type": "array",
+      "minItems": 0,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "alternative_id",
+          "score"
+        ],
+        "properties": {
+          "alternative_id": {
+            "type": "string",
+            "description": "Reference to the scored alternative."
+          },
+          "score": {
+            "type": "number",
+            "description": "Final aggregated score after normalization."
+          },
+          "breakdown": {
+            "type": "array",
+            "description": "Per-criterion contributions to the final score.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "criterion_id",
+                "raw_value",
+                "numeric_value",
+                "normalized_value",
+                "weight",
+                "weighted_contribution"
+              ],
+              "properties": {
+                "criterion_id": {
+                  "type": "string"
+                },
+                "raw_value": {
+                  "type": [
+                    "number",
+                    "string"
+                  ],
+                  "description": "Original value before mapping/normalization."
+                },
+                "numeric_value": {
+                  "type": "number",
+                  "description": "Numeric value after mapping (if any)."
+                },
+                "normalized_value": {
+                  "type": "number",
+                  "description": "Value after normalization."
+                },
+                "weight": {
+                  "type": "number",
+                  "description": "Criterion weight applied to the normalized value."
+                },
+                "weighted_contribution": {
+                  "type": "number",
+                  "description": "Contribution to the final score."
+                }
+              }
+            },
+            "default": []
+          },
+          "rank": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Optional rank position (1 is best)."
+          }
+        }
+      }
+    },
+    "error": {
+      "type": "object",
+      "description": "Standardized error payload when status=ERROR.",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "message"
+      ],
+      "properties": {
+        "code": {
+          "type": "string",
+          "description": "Stable error code for programmatic handling."
+        },
+        "message": {
+          "type": "string",
+          "description": "Human-readable error summary."
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Optional detail strings for debugging.",
+          "default": []
+        }
+      }
+    },
+    "meta": {
+      "type": "object",
+      "description": "Extra metadata (runtime, version, timestamps).",
+      "additionalProperties": true,
+      "default": {}
+    }
+  }
+}

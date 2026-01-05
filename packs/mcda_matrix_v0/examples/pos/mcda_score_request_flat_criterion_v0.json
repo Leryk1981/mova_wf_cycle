@@ -1,0 +1,35 @@
+{
+  "request_id": "mcda_score_request_flat_criterion_v0",
+  "problem": {
+    "problem_id": "mcda_problem_flat_criterion_v0",
+    "label": "Flat criterion normalization",
+    "alternatives": [
+      { "alternative_id": "F1", "label": "Alt F1" },
+      { "alternative_id": "F2", "label": "Alt F2" },
+      { "alternative_id": "F3", "label": "Alt F3" }
+    ],
+    "criteria": [
+      { "criterion_id": "c_flat", "label": "Flat", "kind": "benefit", "weight": 0.2, "scale": "ratio" },
+      { "criterion_id": "c_perf", "label": "Performance", "kind": "benefit", "weight": 0.5, "scale": "ratio" },
+      { "criterion_id": "c_cost", "label": "Cost", "kind": "cost", "weight": 0.3, "scale": "ratio" }
+    ],
+    "evaluations": [
+      { "alternative_id": "F1", "criterion_id": "c_flat", "value": 5 },
+      { "alternative_id": "F2", "criterion_id": "c_flat", "value": 5 },
+      { "alternative_id": "F3", "criterion_id": "c_flat", "value": 5 },
+      { "alternative_id": "F1", "criterion_id": "c_perf", "value": 1 },
+      { "alternative_id": "F2", "criterion_id": "c_perf", "value": 2 },
+      { "alternative_id": "F3", "criterion_id": "c_perf", "value": 3 },
+      { "alternative_id": "F1", "criterion_id": "c_cost", "value": 100 },
+      { "alternative_id": "F2", "criterion_id": "c_cost", "value": 90 },
+      { "alternative_id": "F3", "criterion_id": "c_cost", "value": 110 }
+    ]
+  },
+  "method_config": {
+    "method_version": "v0",
+    "method": "WSM",
+    "normalization": "MIN_MAX",
+    "auto_normalize": true,
+    "score_precision": 3
+  }
+}

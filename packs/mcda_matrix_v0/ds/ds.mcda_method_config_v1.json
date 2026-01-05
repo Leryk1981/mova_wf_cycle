@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mova.dev/packs/mcda_matrix_v0/ds.mcda_method_config_v1.json",
+  "title": "MCDA Method Config v1",
+  "description": "Configuration for the scoring method (WSM with min-max normalization).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "method_version",
+    "method",
+    "normalization",
+    "auto_normalize"
+  ],
+  "properties": {
+    "method_version": {
+      "type": "string",
+      "enum": [
+        "v0"
+      ],
+      "description": "Contract version of the method configuration."
+    },
+    "method": {
+      "type": "string",
+      "enum": [
+        "WSM"
+      ],
+      "description": "Weighted Sum Model (v0 only)."
+    },
+    "normalization": {
+      "type": "string",
+      "enum": [
+        "MIN_MAX"
+      ],
+      "description": "Normalization strategy applied before scoring (v0 only)."
+    },
+    "auto_normalize": {
+      "type": "boolean",
+      "description": "If true, normalize values automatically based on criterion kind (v0 only)."
+    },
+    "score_precision": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Optional rounding precision for final scores."
+    },
+    "notes": {
+      "type": "string",
+      "description": "Optional operator notes.",
+      "default": ""
+    }
+  }
+}

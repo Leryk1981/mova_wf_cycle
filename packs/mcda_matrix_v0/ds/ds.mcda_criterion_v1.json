@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mova.dev/packs/mcda_matrix_v0/ds.mcda_criterion_v1.json",
+  "title": "MCDA Criterion v1",
+  "description": "Single criterion definition including weight, type, and scale metadata.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "criterion_id",
+    "label",
+    "kind",
+    "weight",
+    "scale"
+  ],
+  "properties": {
+    "criterion_id": {
+      "type": "string",
+      "description": "Stable identifier for this criterion."
+    },
+    "label": {
+      "type": "string",
+      "description": "Human-readable label for the criterion."
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "benefit",
+        "cost"
+      ],
+      "description": "Benefit means higher is better, cost means lower is better."
+    },
+    "weight": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Relative weight used by the scoring method."
+    },
+    "scale": {
+      "type": "string",
+      "enum": [
+        "ratio",
+        "interval",
+        "ordinal",
+        "nominal"
+      ],
+      "description": "Measurement scale of the criterion values."
+    },
+    "value_mapping": {
+      "type": "object",
+      "description": "Optional mapping from symbolic values to numeric scores.",
+      "additionalProperties": {
+        "type": "number"
+      }
+    },
+    "description": {
+      "type": "string",
+      "description": "Optional guidance or notes for this criterion.",
+      "default": ""
+    },
+    "meta": {
+      "type": "object",
+      "description": "Extra metadata (owner, version, provenance).",
+      "additionalProperties": true,
+      "default": {}
+    },
+    "ext": {
+      "type": "object",
+      "description": "Extension space reserved for downstream systems.",
+      "additionalProperties": true,
+      "default": {}
+    }
+  }
+}

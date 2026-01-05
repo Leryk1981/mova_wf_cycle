@@ -1,0 +1,25 @@
+{
+  "problem_id": "mcda_problem_weights_sum_zero_v0",
+  "label": "Weights sum to zero",
+  "alternatives": [
+    { "alternative_id": "W1", "label": "Alt W1" },
+    { "alternative_id": "W2", "label": "Alt W2" },
+    { "alternative_id": "W3", "label": "Alt W3" }
+  ],
+  "criteria": [
+    { "criterion_id": "c1", "label": "Crit 1", "kind": "benefit", "weight": 0, "scale": "ratio" },
+    { "criterion_id": "c2", "label": "Crit 2", "kind": "benefit", "weight": 0, "scale": "ratio" },
+    { "criterion_id": "c3", "label": "Crit 3", "kind": "benefit", "weight": 0, "scale": "ratio" }
+  ],
+  "evaluations": [
+    { "alternative_id": "W1", "criterion_id": "c1", "value": 1 },
+    { "alternative_id": "W2", "criterion_id": "c1", "value": 2 },
+    { "alternative_id": "W3", "criterion_id": "c1", "value": 3 },
+    { "alternative_id": "W1", "criterion_id": "c2", "value": 3 },
+    { "alternative_id": "W2", "criterion_id": "c2", "value": 2 },
+    { "alternative_id": "W3", "criterion_id": "c2", "value": 1 },
+    { "alternative_id": "W1", "criterion_id": "c3", "value": 5 },
+    { "alternative_id": "W2", "criterion_id": "c3", "value": 4 },
+    { "alternative_id": "W3", "criterion_id": "c3", "value": 6 }
+  ]
+}

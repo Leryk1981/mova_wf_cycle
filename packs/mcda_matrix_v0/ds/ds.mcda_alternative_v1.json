@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mova.dev/packs/mcda_matrix_v0/ds.mcda_alternative_v1.json",
+  "title": "MCDA Alternative v1",
+  "description": "Single alternative (option) to be evaluated in an MCDA problem.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "alternative_id",
+    "label"
+  ],
+  "properties": {
+    "alternative_id": {
+      "type": "string",
+      "description": "Stable identifier for this alternative."
+    },
+    "label": {
+      "type": "string",
+      "description": "Human-readable name of the alternative."
+    },
+    "description": {
+      "type": "string",
+      "description": "Optional description for operators.",
+      "default": ""
+    },
+    "tags": {
+      "type": "array",
+      "description": "Optional labels for filtering or grouping.",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "meta": {
+      "type": "object",
+      "description": "Extra metadata (source, owner, timestamps).",
+      "additionalProperties": true,
+      "default": {}
+    },
+    "ext": {
+      "type": "object",
+      "description": "Extension space reserved for downstream systems.",
+      "additionalProperties": true,
+      "default": {}
+    }
+  }
+}

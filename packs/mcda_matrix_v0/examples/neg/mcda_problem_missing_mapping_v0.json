@@ -1,0 +1,27 @@
+{
+  "problem_id": "mcda_problem_missing_mapping_v0",
+  "label": "Missing mapping example",
+  "alternatives": [
+    {
+      "alternative_id": "option_alpha",
+      "label": "Option Alpha"
+    },
+    {
+      "alternative_id": "option_beta",
+      "label": "Option Beta"
+    }
+  ],
+  "criteria": [
+    {
+      "criterion_id": "risk_level",
+      "label": "Risk level",
+      "kind": "cost",
+      "weight": 1,
+      "scale": "ordinal"
+    }
+  ],
+  "evaluations": [
+    { "alternative_id": "option_alpha", "criterion_id": "risk_level", "value": "high" },
+    { "alternative_id": "option_beta", "criterion_id": "risk_level", "value": "low" }
+  ]
+}

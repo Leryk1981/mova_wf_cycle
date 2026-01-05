@@ -41,6 +41,7 @@ All four commands must pass on every branch before asking Codex to continue.
 - Outputs: `artifacts/station_cycle/<runId>/` with per-step logs, vendored finish_branch reports, `policy_events.jsonl`, and `episode_store_result.json` when remote storage succeeds.
 - Quality gates: enable `steps.quality_invoice_ap` to run `npm run quality:invoice_ap` (and `quality:invoice_ap:neg` when `run_negative=true`) inside the station cycle. The step copies the resulting `quality_report*.json/md` into the station artifacts so finish_branch and episode_store can cite the same evidence. See `docs/examples/station_cycle_request_quality_invoice_ap.json` for a sample request that turns on gates, quality, finish_branch, and episode_store.
 - Gateway quality: enable `steps.quality_gateway` to run `npm run quality:gateway` (and `quality:gateway:neg` when `run_negative=true`) inside the same cycle. Vendored reports land beside other artifacts so finish_branch and episode_store can reference them. Use `docs/examples/station_cycle_request_quality_gateway.json` as a template.
+- MCDA demo: run `npm run demo:mcda_matrix` to execute a self-contained station_cycle run with MCDA quality and vendored reports under `artifacts/station_cycle/<run_id>/` (see `packs/mcda_matrix_v0/docs/README.md`).
 
 ## Remote episode memory (Cloudflare Worker + D1)
 - Worker endpoints:  
