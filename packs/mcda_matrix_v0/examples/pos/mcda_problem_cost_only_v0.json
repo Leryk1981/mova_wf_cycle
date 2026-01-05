@@ -1,0 +1,25 @@
+{
+  "problem_id": "mcda_problem_cost_only_v0",
+  "label": "Cost-only criteria",
+  "alternatives": [
+    { "alternative_id": "C1", "label": "Alt C1" },
+    { "alternative_id": "C2", "label": "Alt C2" },
+    { "alternative_id": "C3", "label": "Alt C3" }
+  ],
+  "criteria": [
+    { "criterion_id": "c1", "label": "Cost A", "kind": "cost", "weight": 0.4, "scale": "ratio" },
+    { "criterion_id": "c2", "label": "Cost B", "kind": "cost", "weight": 0.35, "scale": "ratio" },
+    { "criterion_id": "c3", "label": "Cost C", "kind": "cost", "weight": 0.25, "scale": "ratio" }
+  ],
+  "evaluations": [
+    { "alternative_id": "C1", "criterion_id": "c1", "value": 100 },
+    { "alternative_id": "C2", "criterion_id": "c1", "value": 80 },
+    { "alternative_id": "C3", "criterion_id": "c1", "value": 120 },
+    { "alternative_id": "C1", "criterion_id": "c2", "value": 50 },
+    { "alternative_id": "C2", "criterion_id": "c2", "value": 40 },
+    { "alternative_id": "C3", "criterion_id": "c2", "value": 60 },
+    { "alternative_id": "C1", "criterion_id": "c3", "value": 10 },
+    { "alternative_id": "C2", "criterion_id": "c3", "value": 12 },
+    { "alternative_id": "C3", "criterion_id": "c3", "value": 8 }
+  ]
+}

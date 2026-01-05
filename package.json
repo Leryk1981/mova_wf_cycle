@@ -56,6 +56,8 @@
     "quality:invoice_ap:neg": "node tools/quality_report_v0.mjs --scope invoice_ap --negative",
     "quality:gateway": "node tools/quality_gateway_v0.mjs",
     "quality:gateway:neg": "node tools/quality_gateway_v0.mjs --negative",
+    "quality:mcda_matrix": "node tools/quality_mcda_matrix_v0.mjs",
+    "quality:mcda_matrix:neg": "node tools/quality_mcda_matrix_v0_neg.mjs",
     "invoice_mvp:create_send:a": "node tools/attempt_run.mjs --config packs/invoice_mvp_sevdesk_v0/examples/create_send_dry_run.json --label ide",
     "invoice_mvp:create_send:b": "node tools/attempt_run.mjs --config packs/invoice_mvp_sevdesk_v0/examples/create_send_dry_run.json --label cli",
     "invoice_mvp:compare": "node tools/attempt_compare.mjs --a ide --b cli",

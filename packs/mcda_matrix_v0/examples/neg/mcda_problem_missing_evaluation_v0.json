@@ -1,0 +1,20 @@
+{
+  "problem_id": "mcda_problem_missing_evaluation_v0",
+  "label": "Missing evaluation",
+  "alternatives": [
+    { "alternative_id": "M1", "label": "Alt M1" },
+    { "alternative_id": "M2", "label": "Alt M2" },
+    { "alternative_id": "M3", "label": "Alt M3" }
+  ],
+  "criteria": [
+    { "criterion_id": "c1", "label": "Crit 1", "kind": "benefit", "weight": 0.4, "scale": "ratio" },
+    { "criterion_id": "c2", "label": "Crit 2", "kind": "benefit", "weight": 0.6, "scale": "ratio" }
+  ],
+  "evaluations": [
+    { "alternative_id": "M1", "criterion_id": "c1", "value": 1 },
+    { "alternative_id": "M2", "criterion_id": "c1", "value": 2 },
+    { "alternative_id": "M3", "criterion_id": "c1", "value": 3 },
+    { "alternative_id": "M1", "criterion_id": "c2", "value": 3 },
+    { "alternative_id": "M2", "criterion_id": "c2", "value": 2 }
+  ]
+}

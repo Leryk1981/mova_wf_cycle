@@ -1,0 +1,21 @@
+{
+  "problem_id": "mcda_problem_bad_value_type_v0",
+  "label": "Bad value type without mapping",
+  "alternatives": [
+    { "alternative_id": "B1", "label": "Alt B1" },
+    { "alternative_id": "B2", "label": "Alt B2" },
+    { "alternative_id": "B3", "label": "Alt B3" }
+  ],
+  "criteria": [
+    { "criterion_id": "c1", "label": "Crit 1", "kind": "benefit", "weight": 0.5, "scale": "ordinal" },
+    { "criterion_id": "c2", "label": "Crit 2", "kind": "benefit", "weight": 0.5, "scale": "ratio" }
+  ],
+  "evaluations": [
+    { "alternative_id": "B1", "criterion_id": "c1", "value": true },
+    { "alternative_id": "B2", "criterion_id": "c1", "value": false },
+    { "alternative_id": "B3", "criterion_id": "c1", "value": true },
+    { "alternative_id": "B1", "criterion_id": "c2", "value": 1 },
+    { "alternative_id": "B2", "criterion_id": "c2", "value": 2 },
+    { "alternative_id": "B3", "criterion_id": "c2", "value": 3 }
+  ]
+}
