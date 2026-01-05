@@ -25,6 +25,19 @@ const RunNpmInputSchema = z.object({
   args: z.array(z.string()).optional()
 });
 
+const RunEnvelopeInputSchema = z.object({
+  path: z.string().min(1),
+  body: z.record(z.any()).default({}),
+  idempotency_key: z.string().min(1),
+  mode: z.enum(["dry_run", "live"]).default("dry_run"),
+  timeout_ms: z.number().int().positive().max(120000).default(30000)
+});
+
+const SearchEpisodesInputSchema = z.object({
+  filter: z.record(z.any()).default({}),
+  limit: z.number().int().positive().max(200).default(20)
+});
+
 const server = new Server(
   { name: "mova-mcp-server-v0", version: "0.1.0" },
   { capabilities: { tools: {} } }
@@ -52,6 +65,35 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
           args: { type: "array", items: { type: "string" } }
         },
         required: ["script"],
+        additionalProperties: false
+      }
+    },
+    {
+      name: "mova_run_envelope_v0",
+      description:
+        "POST a MOVA envelope to the gateway with idempotency protection.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          path: { type: "string" },
+          body: { type: "object", default: {} },
+          idempotency_key: { type: "string" },
+          mode: { type: "string", enum: ["dry_run", "live"], default: "dry_run" },
+          timeout_ms: { type: "number", default: 30000 }
+        },
+        required: ["path", "idempotency_key"],
+        additionalProperties: false
+      }
+    },
+    {
+      name: "mova_search_episodes_v0",
+      description: "Search episodes from the MOVA memory API (read-only).",
+      inputSchema: {
+        type: "object",
+        properties: {
+          filter: { type: "object", default: {} },
+          limit: { type: "number", default: 20 }
+        },
         additionalProperties: false
       }
     }
@@ -123,6 +165,46 @@ async function runNpmScript(script, args) {
   });
 }
 
+function requireEnv(name) {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(`DENY: missing env ${name}`);
+  }
+  return value;
+}
+
+function buildUrl(baseUrl, path) {
+  const trimmedBase = baseUrl.endsWith("/")
+    ? baseUrl.slice(0, -1)
+    : baseUrl;
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  return `${trimmedBase}${normalizedPath}`;
+}
+
+async function fetchJsonWithTimeout(url, options, timeoutMs) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  const start = Date.now();
+  try {
+    const response = await fetch(url, { ...options, signal: controller.signal });
+    const text = await response.text();
+    let json;
+    try {
+      json = text ? JSON.parse(text) : null;
+    } catch {
+      json = { raw: text };
+    }
+    return {
+      http_status: response.status,
+      headers: response.headers,
+      json,
+      duration_ms: Date.now() - start
+    };
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: rawArgs } = request.params;
 
@@ -138,6 +220,69 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     }
     const result = await runNpmScript(parsed.data.script, parsed.data.args);
     return { content: [{ type: "text", text: JSON.stringify(result) }] };
+  }
+
+  if (name === "mova_run_envelope_v0") {
+    const parsed = RunEnvelopeInputSchema.safeParse(rawArgs || {});
+    if (!parsed.success) {
+      throw new Error("DENY: invalid input");
+    }
+    const baseUrl = requireEnv("MOVA_GATEWAY_BASE_URL");
+    const token = requireEnv("MOVA_GATEWAY_AUTH_TOKEN");
+    const url = buildUrl(baseUrl, parsed.data.path);
+    const payload = { ...parsed.data.body, mode: parsed.data.mode };
+    const result = await fetchJsonWithTimeout(
+      url,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+          "x-idempotency-key": parsed.data.idempotency_key
+        },
+        body: JSON.stringify(payload)
+      },
+      parsed.data.timeout_ms
+    );
+    const gwRequestId = result.headers.get("x-gw-request-id");
+    const responsePayload = {
+      http_status: result.http_status,
+      gw_request_id: gwRequestId,
+      json: result.json,
+      duration_ms: result.duration_ms
+    };
+    return { content: [{ type: "text", text: JSON.stringify(responsePayload) }] };
+  }
+
+  if (name === "mova_search_episodes_v0") {
+    const parsed = SearchEpisodesInputSchema.safeParse(rawArgs || {});
+    if (!parsed.success) {
+      throw new Error("DENY: invalid input");
+    }
+    const baseUrl = requireEnv("MOVA_MEMORY_BASE_URL");
+    const token = requireEnv("MOVA_MEMORY_AUTH_TOKEN");
+    const url = buildUrl(baseUrl, "/episode/search");
+    const result = await fetchJsonWithTimeout(
+      url,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          filter: parsed.data.filter,
+          limit: parsed.data.limit
+        })
+      },
+      30000
+    );
+    const responsePayload = {
+      http_status: result.http_status,
+      json: result.json,
+      duration_ms: result.duration_ms
+    };
+    return { content: [{ type: "text", text: JSON.stringify(responsePayload) }] };
   }
 
   throw new Error(`Unknown tool: ${name}`);
