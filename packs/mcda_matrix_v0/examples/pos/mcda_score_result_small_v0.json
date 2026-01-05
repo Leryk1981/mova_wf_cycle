@@ -1,0 +1,91 @@
+{
+  "problem_id": "mcda_problem_small_v0",
+  "status": "OK",
+  "method_config": {
+    "method": "WSM",
+    "normalization": "MIN_MAX",
+    "auto_normalize": true,
+    "score_precision": 3
+  },
+  "eligible_count": 2,
+  "ineligible": [
+    {
+      "alternative_id": "option_b",
+      "reasons": [
+        "constraint:max_cost"
+      ]
+    }
+  ],
+  "normalization_summary": [
+    { "criterion_id": "cost_total", "min": 1000, "max": 1100 },
+    { "criterion_id": "quality_score", "min": 75, "max": 82 },
+    { "criterion_id": "delivery_speed", "min": 5, "max": 6 }
+  ],
+  "scores": [
+    {
+      "alternative_id": "option_a",
+      "score": 0.612,
+      "rank": 1,
+      "breakdown": [
+        {
+          "criterion_id": "cost_total",
+          "raw_value": 1100,
+          "numeric_value": 1100,
+          "normalized_value": 0,
+          "weight": 0.4,
+          "weighted_contribution": 0
+        },
+        {
+          "criterion_id": "quality_score",
+          "raw_value": 82,
+          "numeric_value": 82,
+          "normalized_value": 1,
+          "weight": 0.35,
+          "weighted_contribution": 0.35
+        },
+        {
+          "criterion_id": "delivery_speed",
+          "raw_value": 6,
+          "numeric_value": 6,
+          "normalized_value": 1,
+          "weight": 0.25,
+          "weighted_contribution": 0.25
+        }
+      ]
+    },
+    {
+      "alternative_id": "option_c",
+      "score": 0.45,
+      "rank": 2,
+      "breakdown": [
+        {
+          "criterion_id": "cost_total",
+          "raw_value": 1000,
+          "numeric_value": 1000,
+          "normalized_value": 1,
+          "weight": 0.4,
+          "weighted_contribution": 0.4
+        },
+        {
+          "criterion_id": "quality_score",
+          "raw_value": 75,
+          "numeric_value": 75,
+          "normalized_value": 0,
+          "weight": 0.35,
+          "weighted_contribution": 0
+        },
+        {
+          "criterion_id": "delivery_speed",
+          "raw_value": 5,
+          "numeric_value": 5,
+          "normalized_value": 0,
+          "weight": 0.25,
+          "weighted_contribution": 0
+        }
+      ]
+    }
+  ],
+  "meta": {
+    "note": "Example result payload with breakdown."
+  }
+}
