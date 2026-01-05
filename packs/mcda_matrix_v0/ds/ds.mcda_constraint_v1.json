@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mova.dev/packs/mcda_matrix_v0/ds.mcda_constraint_v1.json",
+  "title": "MCDA Constraint v1",
+  "description": "Constraint that filters or limits feasible alternatives.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "constraint_id",
+    "kind"
+  ],
+  "properties": {
+    "constraint_id": {
+      "type": "string",
+      "description": "Stable identifier for this constraint."
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "min",
+        "max",
+        "exclude",
+        "custom"
+      ],
+      "description": "Constraint kind applied to the problem or targets."
+    },
+    "target_criterion_id": {
+      "type": "string",
+      "description": "Criterion affected by this constraint (if applicable)."
+    },
+    "target_alternative_id": {
+      "type": "string",
+      "description": "Alternative affected by this constraint (if applicable)."
+    },
+    "operator": {
+      "type": "string",
+      "enum": [
+        "<",
+        "<=",
+        ">",
+        ">=",
+        "==",
+        "!="
+      ],
+      "description": "Comparison operator used with threshold constraints."
+    },
+    "threshold": {
+      "type": "number",
+      "description": "Numeric threshold used with the operator."
+    },
+    "description": {
+      "type": "string",
+      "description": "Human-readable explanation of the constraint.",
+      "default": ""
+    },
+    "meta": {
+      "type": "object",
+      "description": "Extra metadata (owner, scope, enforcement).",
+      "additionalProperties": true,
+      "default": {}
+    },
+    "ext": {
+      "type": "object",
+      "description": "Extension space reserved for downstream systems.",
+      "additionalProperties": true,
+      "default": {}
+    }
+  }
+}

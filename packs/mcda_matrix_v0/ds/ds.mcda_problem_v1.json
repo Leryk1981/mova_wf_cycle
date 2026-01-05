@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mova.dev/packs/mcda_matrix_v0/ds.mcda_problem_v1.json",
+  "title": "MCDA Problem v1",
+  "description": "Alternatives, criteria, evaluations, and optional constraints for an MCDA run.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "alternatives",
+    "criteria",
+    "evaluations"
+  ],
+  "properties": {
+    "problem_id": {
+      "type": "string",
+      "description": "Optional identifier for this MCDA problem."
+    },
+    "label": {
+      "type": "string",
+      "description": "Human-readable name for this problem.",
+      "default": ""
+    },
+    "description": {
+      "type": "string",
+      "description": "Optional description or business context.",
+      "default": ""
+    },
+    "alternatives": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "https://mova.dev/packs/mcda_matrix_v0/ds.mcda_alternative_v1.json"
+      }
+    },
+    "criteria": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "https://mova.dev/packs/mcda_matrix_v0/ds.mcda_criterion_v1.json"
+      }
+    },
+    "evaluations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "https://mova.dev/packs/mcda_matrix_v0/ds.mcda_evaluation_v1.json"
+      }
+    },
+    "constraints": {
+      "type": "array",
+      "description": "Optional feasibility constraints.",
+      "items": {
+        "$ref": "https://mova.dev/packs/mcda_matrix_v0/ds.mcda_constraint_v1.json"
+      },
+      "default": []
+    },
+    "meta": {
+      "type": "object",
+      "description": "Extra metadata (owner, scenario, timestamps).",
+      "additionalProperties": true,
+      "default": {}
+    },
+    "ext": {
+      "type": "object",
+      "description": "Extension space reserved for downstream systems.",
+      "additionalProperties": true,
+      "default": {}
+    }
+  }
+}

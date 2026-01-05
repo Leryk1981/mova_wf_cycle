@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mova.dev/packs/mcda_matrix_v0/ds.mcda_score_result_v1.json",
+  "title": "MCDA Score Result v1",
+  "description": "Scores and ranking outputs produced by the MCDA method.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "method_config",
+    "scores"
+  ],
+  "properties": {
+    "problem_id": {
+      "type": "string",
+      "description": "Identifier of the scored problem when available."
+    },
+    "method_config": {
+      "$ref": "https://mova.dev/packs/mcda_matrix_v0/ds.mcda_method_config_v1.json"
+    },
+    "scores": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "alternative_id",
+          "score"
+        ],
+        "properties": {
+          "alternative_id": {
+            "type": "string",
+            "description": "Reference to the scored alternative."
+          },
+          "score": {
+            "type": "number",
+            "description": "Final aggregated score after normalization."
+          },
+          "rank": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Optional rank position (1 is best)."
+          }
+        }
+      }
+    },
+    "meta": {
+      "type": "object",
+      "description": "Extra metadata (runtime, version, timestamps).",
+      "additionalProperties": true,
+      "default": {}
+    }
+  }
+}
