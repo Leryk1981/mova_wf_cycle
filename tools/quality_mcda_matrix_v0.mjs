@@ -144,25 +144,20 @@ function main() {
     const run2Dir = path.join(caseDir, "run2");
     ensureDir(caseDir);
 
-    const problem = readJson(testCase.problem_file);
-    const env = {
-      request_id: `mcda-quality-${runId}-${caseId}`,
-      problem,
-      method_config: {
-        method: "WSM",
-        normalization: "MIN_MAX",
-        auto_normalize: true,
-        score_precision: 3
-      }
-    };
+    if (!testCase.env_file) {
+      caseErrors.push("missing env_file in case");
+    }
 
+    const env = testCase.env_file ? readJson(testCase.env_file) : null;
     const envPath = path.join(baseDir, `case_${caseId}_env.json`);
-    fs.writeFileSync(envPath, JSON.stringify(env, null, 2));
+    if (env) {
+      fs.writeFileSync(envPath, JSON.stringify(env, null, 2));
+    }
 
     const log1 = path.join(caseDir, "run1.log");
     const log2 = path.join(caseDir, "run2.log");
-    const result1 = runRuntime(envPath, run1Dir, log1);
-    const result2 = runRuntime(envPath, run2Dir, log2);
+    const result1 = env ? runRuntime(envPath, run1Dir, log1) : { exit_code: 1 };
+    const result2 = env ? runRuntime(envPath, run2Dir, log2) : { exit_code: 1 };
 
     if (result1.exit_code !== 0 || result2.exit_code !== 0) {
       caseErrors.push("runtime failed");
@@ -224,10 +219,13 @@ function main() {
     report.cases.push({
       id: caseId,
       problem_file: testCase.problem_file,
+      env_file: testCase.env_file || null,
       pass: casePass,
       errors: caseErrors,
-      env: path.relative(repoRoot, envPath).replace(/\\/g, "/"),
-      result: payload1 ? path.relative(repoRoot, path.join(baseDir, `case_${caseId}_result.json`)).replace(/\\/g, "/") : null,
+      env: env ? path.relative(repoRoot, envPath).replace(/\\/g, "/") : null,
+      result: payload1
+        ? path.relative(repoRoot, path.join(baseDir, `case_${caseId}_result.json`)).replace(/\\/g, "/")
+        : null,
       logs: {
         run1: path.relative(repoRoot, log1).replace(/\\/g, "/"),
         run2: path.relative(repoRoot, log2).replace(/\\/g, "/")

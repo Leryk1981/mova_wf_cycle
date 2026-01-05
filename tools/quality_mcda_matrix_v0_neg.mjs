@@ -69,34 +69,30 @@ function main() {
     const caseDir = path.join(baseDir, "cases", caseId);
     ensureDir(caseDir);
 
-    const problem = readJson(testCase.problem_file);
-    const env = {
-      request_id: `mcda-quality-${runId}-${caseId}`,
-      problem,
-      method_config: {
-        method: "WSM",
-        normalization: "MIN_MAX",
-        auto_normalize: true,
-        score_precision: 3
-      }
-    };
+    if (!testCase.env_file) {
+      report.status = "fail";
+    }
 
+    const env = testCase.env_file ? readJson(testCase.env_file) : null;
     const envPath = path.join(baseDir, `case_${caseId}_env.json`);
-    fs.writeFileSync(envPath, JSON.stringify(env, null, 2));
+    if (env) {
+      fs.writeFileSync(envPath, JSON.stringify(env, null, 2));
+    }
 
     const logPath = path.join(caseDir, "run.log");
-    const result = runRuntime(envPath, caseDir, logPath);
+    const result = env ? runRuntime(envPath, caseDir, logPath) : { exit_code: 1, stderr: "missing env_file" };
     const expectedFail = testCase.expect_error === true;
     const pass = expectedFail ? result.exit_code !== 0 : result.exit_code === 0;
 
     report.cases.push({
       id: caseId,
       problem_file: testCase.problem_file,
+      env_file: testCase.env_file || null,
       expected_fail: expectedFail,
       exit_code: result.exit_code,
       pass,
       error: pass ? null : (result.stderr || result.stdout || "unknown error"),
-      env: path.relative(repoRoot, envPath).replace(/\\/g, "/"),
+      env: env ? path.relative(repoRoot, envPath).replace(/\\/g, "/") : null,
       log: path.relative(repoRoot, logPath).replace(/\\/g, "/")
     });
 

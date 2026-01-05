@@ -36,3 +36,7 @@ What is proven
 - Pos/neg quality suites with deterministic outputs.
 - Determinism (repeatable results for identical inputs).
 - Breakdown explainability (sum of weighted contributions equals score).
+
+Stability promises
+- Stable: problem schema, score result schema, demo command (`npm run demo:mcda_matrix`).
+- May change: internal artifact layouts, Markdown report formatting.

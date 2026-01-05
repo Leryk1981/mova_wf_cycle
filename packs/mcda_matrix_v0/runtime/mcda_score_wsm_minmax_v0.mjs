@@ -84,23 +84,41 @@ function ensureUnique(list, label) {
   }
 }
 
+function makeError(code, message) {
+  const err = new Error(message);
+  err.code = code;
+  return err;
+}
+
 function resolveValue(value, criterion) {
   if (typeof value === "number") return value;
   if (typeof value === "string" || typeof value === "boolean") {
     if (!criterion.value_mapping) {
-      throw new Error(`Missing value_mapping for criterion ${criterion.criterion_id}`);
+      throw makeError(
+        "missing_value_mapping",
+        `Missing value_mapping for criterion ${criterion.criterion_id}`
+      );
     }
     const key = String(value);
     if (!Object.prototype.hasOwnProperty.call(criterion.value_mapping, key)) {
-      throw new Error(`Missing value_mapping entry for ${criterion.criterion_id}: ${key}`);
+      throw makeError(
+        "missing_value_mapping_entry",
+        `Missing value_mapping entry for ${criterion.criterion_id}: ${key}`
+      );
     }
     const mapped = criterion.value_mapping[key];
     if (typeof mapped !== "number" || Number.isNaN(mapped)) {
-      throw new Error(`Invalid value_mapping for ${criterion.criterion_id}: ${key}`);
+      throw makeError(
+        "invalid_value_mapping",
+        `Invalid value_mapping for ${criterion.criterion_id}: ${key}`
+      );
     }
     return mapped;
   }
-  throw new Error(`Unsupported evaluation value type for ${criterion.criterion_id}`);
+  throw makeError(
+    "unsupported_value_type",
+    `Unsupported evaluation value type for ${criterion.criterion_id}`
+  );
 }
 
 async function main() {
@@ -134,16 +152,24 @@ async function main() {
   const requestSchema = loadJson(schemaPaths.request);
   const validateRequest = ajv.compile(requestSchema);
   if (!validateRequest(rawRequest)) {
-    throw new Error(`mcda_score_request invalid: ${formatAjvErrors(validateRequest.errors)}`);
+    throw makeError(
+      "invalid_request",
+      `mcda_score_request invalid: ${formatAjvErrors(validateRequest.errors)}`
+    );
   }
 
   const { problem, method_config: methodConfig } = rawRequest;
-  if (methodConfig.method !== "WSM") throw new Error("Unsupported method; expected WSM");
+  if (methodConfig.method_version !== "v0") {
+    throw makeError("unsupported_method_version", "Unsupported method_version; expected v0");
+  }
+  if (methodConfig.method !== "WSM") {
+    throw makeError("unsupported_method", "Unsupported method; expected WSM");
+  }
   if (methodConfig.normalization !== "MIN_MAX") {
-    throw new Error("Unsupported normalization; expected MIN_MAX");
+    throw makeError("unsupported_normalization", "Unsupported normalization; expected MIN_MAX");
   }
   if (methodConfig.auto_normalize !== true) {
-    throw new Error("auto_normalize must be true for v0");
+    throw makeError("invalid_auto_normalize", "auto_normalize must be true for v0");
   }
 
   const alternatives = problem.alternatives || [];
@@ -160,14 +186,23 @@ async function main() {
   const evalMap = new Map();
   for (const evaluation of evaluations) {
     if (!alternativeMap.has(evaluation.alternative_id)) {
-      throw new Error(`Unknown alternative_id in evaluation: ${evaluation.alternative_id}`);
+      throw makeError(
+        "unknown_alternative_id",
+        `Unknown alternative_id in evaluation: ${evaluation.alternative_id}`
+      );
     }
     if (!criterionMap.has(evaluation.criterion_id)) {
-      throw new Error(`Unknown criterion_id in evaluation: ${evaluation.criterion_id}`);
+      throw makeError(
+        "unknown_criterion_id",
+        `Unknown criterion_id in evaluation: ${evaluation.criterion_id}`
+      );
     }
     const key = `${evaluation.alternative_id}::${evaluation.criterion_id}`;
     if (evalMap.has(key)) {
-      throw new Error(`Duplicate evaluation for ${evaluation.alternative_id}/${evaluation.criterion_id}`);
+      throw makeError(
+        "duplicate_evaluation",
+        `Duplicate evaluation for ${evaluation.alternative_id}/${evaluation.criterion_id}`
+      );
     }
     evalMap.set(key, evaluation);
   }
@@ -178,7 +213,10 @@ async function main() {
       const key = `${alt.alternative_id}::${crit.criterion_id}`;
       const evaluation = evalMap.get(key);
       if (!evaluation) {
-        throw new Error(`Missing evaluation for ${alt.alternative_id}/${crit.criterion_id}`);
+        throw makeError(
+          "missing_evaluation",
+          `Missing evaluation for ${alt.alternative_id}/${crit.criterion_id}`
+        );
       }
       const numericValue = resolveValue(evaluation.value, crit);
       numericValues.set(key, {
@@ -199,10 +237,16 @@ async function main() {
     const reason = `constraint:${constraintId}`;
     if (constraint.kind === "exclude") {
       if (!constraint.target_alternative_id) {
-        throw new Error(`Constraint ${constraintId} missing target_alternative_id`);
+        throw makeError(
+          "invalid_constraint",
+          `Constraint ${constraintId} missing target_alternative_id`
+        );
       }
       if (!alternativeMap.has(constraint.target_alternative_id)) {
-        throw new Error(`Constraint ${constraintId} references unknown alternative`);
+        throw makeError(
+          "invalid_constraint",
+          `Constraint ${constraintId} references unknown alternative`
+        );
       }
       markIneligible(constraint.target_alternative_id, reason);
       continue;
@@ -213,21 +257,36 @@ async function main() {
         markIneligible(constraint.target_alternative_id, reason);
         continue;
       }
-      throw new Error(`Unsupported custom constraint ${constraintId}`);
+      throw makeError(
+        "unsupported_constraint",
+        `Unsupported custom constraint ${constraintId}`
+      );
     }
 
     if (constraint.kind !== "min" && constraint.kind !== "max") {
-      throw new Error(`Unsupported constraint kind ${constraint.kind}`);
+      throw makeError(
+        "unsupported_constraint",
+        `Unsupported constraint kind ${constraint.kind}`
+      );
     }
 
     if (!constraint.target_criterion_id) {
-      throw new Error(`Constraint ${constraintId} missing target_criterion_id`);
+      throw makeError(
+        "invalid_constraint",
+        `Constraint ${constraintId} missing target_criterion_id`
+      );
     }
     if (!criterionMap.has(constraint.target_criterion_id)) {
-      throw new Error(`Constraint ${constraintId} references unknown criterion`);
+      throw makeError(
+        "invalid_constraint",
+        `Constraint ${constraintId} references unknown criterion`
+      );
     }
     if (typeof constraint.threshold !== "number") {
-      throw new Error(`Constraint ${constraintId} missing numeric threshold`);
+      throw makeError(
+        "invalid_constraint",
+        `Constraint ${constraintId} missing numeric threshold`
+      );
     }
 
     const operator = constraint.operator || (constraint.kind === "min" ? ">=" : "<=");
@@ -241,7 +300,10 @@ async function main() {
       const key = `${alt.alternative_id}::${constraint.target_criterion_id}`;
       const numeric = numericValues.get(key);
       if (!numeric) {
-        throw new Error(`Missing evaluation for constraint ${constraintId} on ${alt.alternative_id}`);
+        throw makeError(
+          "missing_evaluation",
+          `Missing evaluation for constraint ${constraintId} on ${alt.alternative_id}`
+        );
       }
       const ok = compare(numeric.numeric, operator, constraint.threshold);
       if (!ok) markIneligible(alt.alternative_id, reason);
@@ -254,7 +316,9 @@ async function main() {
 
   const weights = criteria.map((crit) => crit.weight ?? 0);
   const weightSum = weights.reduce((sum, value) => sum + value, 0);
-  if (weightSum <= 0) throw new Error("Sum of criterion weights must be > 0");
+  if (weightSum <= 0) {
+    throw makeError("weights_sum_zero", "Sum of criterion weights must be > 0");
+  }
   const normalizedWeights = new Map(
     criteria.map((crit) => [crit.criterion_id, crit.weight / weightSum])
   );
@@ -348,7 +412,10 @@ async function main() {
   const resultSchema = loadJson(schemaPaths.result);
   const validateResult = ajv.compile(resultSchema);
   if (!validateResult(resultEnvelope)) {
-    throw new Error(`mcda_score_result invalid: ${formatAjvErrors(validateResult.errors)}`);
+    throw makeError(
+      "invalid_result",
+      `mcda_score_result invalid: ${formatAjvErrors(validateResult.errors)}`
+    );
   }
 
   fs.writeFileSync(path.join(outPath, "request.json"), JSON.stringify(rawRequest, null, 2));
@@ -360,6 +427,34 @@ async function main() {
 try {
   await main();
 } catch (err) {
+  try {
+    const outIdx = process.argv.indexOf("--out");
+    const outDir = outIdx !== -1 ? path.resolve(process.argv[outIdx + 1]) : null;
+    if (outDir) {
+      fs.mkdirSync(outDir, { recursive: true });
+      const fallbackRequest = process.argv.includes("--in")
+        ? loadJson(path.resolve(process.argv[process.argv.indexOf("--in") + 1]))
+        : null;
+      const methodConfig = fallbackRequest?.method_config;
+      const problemId = fallbackRequest?.problem?.problem_id;
+      const errorResult = {
+        status: "ERROR",
+        problem_id: problemId,
+        method_config: methodConfig,
+        eligible_count: 0,
+        ineligible: [],
+        normalization_summary: [],
+        scores: [],
+        error: {
+          code: err.code || "runtime_error",
+          message: err.message,
+        },
+      };
+      fs.writeFileSync(path.join(outDir, "result.json"), JSON.stringify(errorResult, null, 2));
+    }
+  } catch {
+    /* noop */
+  }
   console.error("[mcda_score_wsm_minmax_v0] FAIL:", err.message);
   process.exit(1);
 }

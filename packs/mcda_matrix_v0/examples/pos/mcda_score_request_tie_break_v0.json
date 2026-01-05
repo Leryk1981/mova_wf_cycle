@@ -1,0 +1,31 @@
+{
+  "request_id": "mcda_score_request_tie_break_v0",
+  "problem": {
+    "problem_id": "mcda_problem_tie_break_v0",
+    "label": "Tie break by alternative_id",
+    "alternatives": [
+      { "alternative_id": "A1", "label": "Alt A1" },
+      { "alternative_id": "A2", "label": "Alt A2" },
+      { "alternative_id": "A3", "label": "Alt A3" }
+    ],
+    "criteria": [
+      { "criterion_id": "c1", "label": "Benefit 1", "kind": "benefit", "weight": 0.6, "scale": "ratio" },
+      { "criterion_id": "c2", "label": "Benefit 2", "kind": "benefit", "weight": 0.4, "scale": "ratio" }
+    ],
+    "evaluations": [
+      { "alternative_id": "A1", "criterion_id": "c1", "value": 10 },
+      { "alternative_id": "A2", "criterion_id": "c1", "value": 10 },
+      { "alternative_id": "A3", "criterion_id": "c1", "value": 5 },
+      { "alternative_id": "A1", "criterion_id": "c2", "value": 20 },
+      { "alternative_id": "A2", "criterion_id": "c2", "value": 20 },
+      { "alternative_id": "A3", "criterion_id": "c2", "value": 10 }
+    ]
+  },
+  "method_config": {
+    "method_version": "v0",
+    "method": "WSM",
+    "normalization": "MIN_MAX",
+    "auto_normalize": true,
+    "score_precision": 3
+  }
+}

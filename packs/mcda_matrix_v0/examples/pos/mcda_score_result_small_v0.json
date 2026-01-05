@@ -2,6 +2,7 @@
   "problem_id": "mcda_problem_small_v0",
   "status": "OK",
   "method_config": {
+    "method_version": "v0",
     "method": "WSM",
     "normalization": "MIN_MAX",
     "auto_normalize": true,

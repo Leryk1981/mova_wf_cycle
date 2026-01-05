@@ -49,17 +49,7 @@ function main() {
   const artifactsDir = path.join(repoRoot, "artifacts", "mcda_matrix", runId);
   ensureDir(artifactsDir);
 
-  const problem = readJson("packs/mcda_matrix_v0/examples/pos/mcda_problem_small_v0.json");
-  const inputEnv = {
-    request_id: `mcda-smoke-${runId}`,
-    problem,
-    method_config: {
-      method: "WSM",
-      normalization: "MIN_MAX",
-      auto_normalize: true,
-      score_precision: 3
-    }
-  };
+  const inputEnv = readJson("packs/mcda_matrix_v0/examples/pos/mcda_score_request_small_v0.json");
 
   const inputPath = path.join(artifactsDir, "input_env.json");
   fs.writeFileSync(inputPath, JSON.stringify(inputEnv, null, 2));
