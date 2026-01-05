@@ -8,11 +8,19 @@ import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
 const runId = new Date().toISOString().replace(/[:.]/g, "-");
 const artifactsDir = path.join("artifacts", "behavior_probe", runId);
 const MAX_STREAM_BYTES = 20000;
+const MAX_JSON_BYTES = 20000;
 
 function getGatewayEnv() {
   return {
     MOVA_GATEWAY_BASE_URL: process.env.MOVA_GATEWAY_BASE_URL,
     MOVA_GATEWAY_AUTH_TOKEN: process.env.MOVA_GATEWAY_AUTH_TOKEN
+  };
+}
+
+function getMemoryEnv() {
+  return {
+    MOVA_MEMORY_BASE_URL: process.env.MOVA_MEMORY_BASE_URL,
+    MOVA_MEMORY_AUTH_TOKEN: process.env.MOVA_MEMORY_AUTH_TOKEN
   };
 }
 
@@ -89,6 +97,20 @@ async function writeReport(payload) {
   return reportPath;
 }
 
+async function writeJsonFile(fileName, payload) {
+  await fs.mkdir(artifactsDir, { recursive: true });
+  const output = JSON.stringify(payload, null, 2);
+  let truncated = false;
+  let data = output;
+  if (output.length > MAX_JSON_BYTES) {
+    truncated = true;
+    data = output.slice(0, MAX_JSON_BYTES);
+  }
+  const filePath = path.join(artifactsDir, fileName);
+  await fs.writeFile(filePath, data, "utf8");
+  return { filePath, truncated };
+}
+
 async function attemptEnvelope(runIdValue) {
   const env = getGatewayEnv();
   if (!env.MOVA_GATEWAY_BASE_URL || !env.MOVA_GATEWAY_AUTH_TOKEN) {
@@ -145,7 +167,59 @@ async function attemptEnvelope(runIdValue) {
   }
 }
 
+async function attemptMemorySearch(runIdValue) {
+  const env = getMemoryEnv();
+  if (!env.MOVA_MEMORY_BASE_URL || !env.MOVA_MEMORY_AUTH_TOKEN) {
+    return {
+      status: "SKIP",
+      reason: "missing MOVA_MEMORY_BASE_URL or MOVA_MEMORY_AUTH_TOKEN"
+    };
+  }
+
+  const transport = new StdioClientTransport({
+    command: process.execPath,
+    args: ["tools/mova_mcp_server_v0/run.mjs"],
+    env: filterEnv(env),
+    stderr: "pipe"
+  });
+  const client = new Client({ name: "behavior-probe", version: "0.1.0" });
+  const start = Date.now();
+  try {
+    await client.connect(transport);
+    const result = await client.callTool({
+      name: "mova_search_episodes_v0",
+      arguments: {
+        filter: {},
+        limit: 5
+      }
+    });
+    const json = parseToolJson(result);
+    await writeJsonFile("memory_search.json", json ?? result);
+    if (!json || json.http_status !== 200) {
+      return {
+        status: "FAIL",
+        reason: "memory search failed",
+        duration_ms: Date.now() - start
+      };
+    }
+    return {
+      status: "PASS",
+      reason: "ok",
+      duration_ms: Date.now() - start
+    };
+  } catch (error) {
+    return {
+      status: "FAIL",
+      reason: error instanceof Error ? error.message : String(error),
+      duration_ms: Date.now() - start
+    };
+  } finally {
+    await client.close();
+  }
+}
+
 async function main() {
+  const startedAt = new Date().toISOString();
   const npmCmd = process.platform === "win32" ? "npm.cmd" : "npm";
   const gates = {
     validate: await runCommand(npmCmd, ["run", "validate"]),
@@ -153,11 +227,24 @@ async function main() {
     smoke_mcp: await runCommand(npmCmd, ["run", "smoke:mova_mcp_v0"])
   };
   const envelopeAttempt = await attemptEnvelope(runId);
+  const memoryAttempt = await attemptMemorySearch(runId);
+  const finishedAt = new Date().toISOString();
 
   const report = {
+    run_id: runId,
+    artifacts_dir: artifactsDir.replace(/\\/g, "/"),
+    started_at: startedAt,
+    finished_at: finishedAt,
+    channels_used: {
+      docs_context7: true,
+      local_gates: true,
+      mcp_envelope: envelopeAttempt.status,
+      mcp_memory_search: memoryAttempt.status
+    },
     docs_used: true,
     gates,
     envelope_attempt: envelopeAttempt,
+    memory_search: memoryAttempt,
     notes: "Behavior probe report."
   };
 
@@ -166,7 +253,18 @@ async function main() {
 }
 
 main().catch(async (error) => {
+  const fallbackStartedAt = new Date().toISOString();
   const report = {
+    run_id: runId,
+    artifacts_dir: artifactsDir.replace(/\\/g, "/"),
+    started_at: fallbackStartedAt,
+    finished_at: new Date().toISOString(),
+    channels_used: {
+      docs_context7: true,
+      local_gates: true,
+      mcp_envelope: "FAIL",
+      mcp_memory_search: "FAIL"
+    },
     docs_used: true,
     gates: {
       validate: { exit_code: -1, status: "FAIL", duration_ms: 0 },
@@ -177,6 +275,10 @@ main().catch(async (error) => {
       status: "FAIL",
       reason: error instanceof Error ? error.message : String(error),
       gw_request_id: null
+    },
+    memory_search: {
+      status: "FAIL",
+      reason: error instanceof Error ? error.message : String(error)
     },
     notes: "Behavior probe report failed."
   };
