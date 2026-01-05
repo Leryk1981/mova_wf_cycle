@@ -11,6 +11,7 @@ allowed-tools: Bash, Read, Grep, Glob
 ## Integration
 - Add npm scripts for A/B runs, compare, and quality suites.
 - If a domain worker is added, include E2E smoke through gateway where applicable.
+- External actions in examples/demos must go through a Gateway path using `mova_run_envelope_v0`, not direct SDK/HTTP calls.
 
 ## Definition of Done
 - `npm run validate`
