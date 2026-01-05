@@ -8,6 +8,7 @@
     "smoke:wf_cycle": "node tools/wf_cycle_smoke_ci.mjs",
     "smoke:flashslot": "node tools/flashslot_smoke_ci.mjs",
     "smoke:flashslot:pack": "node tools/flashslot_pack_smoke_ci.mjs",
+    "smoke:mcda_matrix": "node tools/mcda_matrix_smoke_ci.mjs",
     "smoke:pult": "node tools/pult_inngest_smoke_ci.mjs",
     "opencode:up": "docker compose --env-file executors/opencode_server_v1/docker/.env -f executors/opencode_server_v1/docker/docker-compose.yml up -d",
     "opencode:down": "docker compose -f executors/opencode_server_v1/docker/docker-compose.yml down -v",
