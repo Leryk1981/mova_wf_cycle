@@ -26,6 +26,12 @@ const defaultPolicy = {
     strict: false,
     reason: "quality gateway disabled by default policy",
   },
+  quality_mcda_matrix: {
+    enabled: false,
+    run_negative: false,
+    strict: false,
+    reason: "quality mcda_matrix disabled by default policy",
+  },
   episode_store: { enabled: true, reason: "episode store enabled by default policy" },
   finish_branch: {
     enabled: true,
@@ -114,6 +120,10 @@ const normalizedRequest = {
       stepsReq.quality_gateway,
       defaultPolicy.quality_gateway
     ),
+    quality_mcda_matrix: mergeQualityStep(
+      stepsReq.quality_mcda_matrix,
+      defaultPolicy.quality_mcda_matrix
+    ),
     episode_store: mergeEpisodeStoreStep(stepsReq.episode_store, defaultPolicy.episode_store),
     finish_branch: mergeFinishBranchStep(stepsReq.finish_branch, defaultPolicy.finish_branch),
     wf_cycle: {
@@ -127,6 +137,7 @@ const normalizedRequest = {
 const repoRoot = path.resolve(__dirname, "../../../..");
 const qualityRoot = path.join(repoRoot, "artifacts", "quality");
 const qualityGatewayRoot = path.join(repoRoot, "artifacts", "quality_gateway");
+const qualityMcdaRoot = path.join(repoRoot, "artifacts", "quality", "mcda_matrix");
 const artifactsRoot = path.join(repoRoot, "artifacts", "station_cycle");
 fs.mkdirSync(artifactsRoot, { recursive: true });
 
@@ -251,6 +262,33 @@ function vendorQualityReports(label, info) {
     "report_negative_json",
     "report_negative_origin_json"
   );
+  return record;
+}
+
+function vendorMcdaQualityReports(label, info) {
+  if (!info) return null;
+  const record = {
+    label,
+    run_id: info.name,
+    origin_dir: relRepo(info.path),
+  };
+  function copyIfExists(sourceName, targetKey, originKey) {
+    const sourcePath = path.join(info.path, sourceName);
+    if (!fs.existsSync(sourcePath)) return;
+    const safeName = `${label}_${info.name}_${sourceName}`;
+    const destPath = path.join(runDir, safeName);
+    try {
+      fs.copyFileSync(sourcePath, destPath);
+      record[targetKey] = relRepo(destPath);
+      record[originKey] = relRepo(sourcePath);
+    } catch (err) {
+      record.errors = record.errors || [];
+      record.errors.push(`copy ${sourceName}: ${err.message}`);
+    }
+  }
+  copyIfExists("pos_report.json", "report_json", "report_origin_json");
+  copyIfExists("pos_report.md", "report_md", "report_origin_md");
+  copyIfExists("neg_report.json", "report_negative_json", "report_negative_origin_json");
   return record;
 }
 
@@ -753,6 +791,173 @@ function runQualityGatewayStep(config) {
   });
 }
 
+function runQualityMcdaMatrixStep(config) {
+  const name = "quality_mcda_matrix";
+  const logPath = path.join(runDir, `${name}.log`);
+  const policyEval = evaluatePolicy(name);
+  const policyRef = relRepo(policyPath);
+
+  if (!config.enabled) {
+    const reason = config.reason || "quality_mcda_matrix disabled";
+    fs.writeFileSync(logPath, `skipped: ${reason}\n`, "utf8");
+    appendPolicyEvent({
+      step: name,
+      enabled: false,
+      decision: "not_requested",
+      reason,
+      policy_ref: policyRef,
+    });
+    stepResults.push({
+      name,
+      enabled: false,
+      status: "skipped",
+      exit_code: null,
+      log: relRepo(logPath),
+      output: null,
+      reason,
+      policy: { decision: "not_requested", policy_ref: policyRef },
+    });
+    return;
+  }
+
+  let policyDecision = policyEval.decision;
+  let policyReason = policyEval.reason || `policy ${policy.version} denies step`;
+  if (policyDecision !== "allow") {
+    const canOverride =
+      policy.allow_overrides && policyOverride.allow_steps.includes(name);
+    if (canOverride) {
+      if (!overrideSaved && Object.keys(policyOverrideRaw).length) {
+        fs.writeFileSync(
+          path.join(runDir, "policy_override.json"),
+          JSON.stringify(policyOverride, null, 2)
+        );
+        overrideSaved = true;
+      }
+      policyDecision = "allow_override";
+      policyReason = policyOverride.reason || "manual override";
+      appendPolicyEvent({
+        step: name,
+        enabled: true,
+        decision: "allow_override",
+        reason: policyReason,
+        policy_ref: policyRef,
+      });
+    } else {
+      fs.writeFileSync(logPath, `skipped: ${policyReason}\n`, "utf8");
+      appendPolicyEvent({
+        step: name,
+        enabled: true,
+        decision: "deny",
+        reason: policyReason,
+        policy_ref: policyRef,
+      });
+      stepResults.push({
+        name,
+        enabled: true,
+        status: "skipped",
+        exit_code: null,
+        log: relRepo(logPath),
+        output: null,
+        reason: policyReason,
+        policy: { decision: "deny", policy_ref: policyRef },
+      });
+      return;
+    }
+  }
+
+  const logSections = [];
+  const qualityReports = [];
+
+  const posStart = Date.now();
+  const beforePos = captureQualityDirs(qualityMcdaRoot);
+  const posChild = runNpmCommand(["run", "quality:mcda_matrix"]);
+  const posText = `${posChild.stdout ?? ""}${posChild.stderr ?? ""}`;
+  logSections.push(`[quality:mcda_matrix]\n${posText}`.trimEnd());
+  if (posChild.error) {
+    logSections.push(`[quality:mcda_matrix error] ${posChild.error.message}`);
+  }
+  const posInfo = findNewQualityDir(beforePos, captureQualityDirs(qualityMcdaRoot), posStart);
+  const posVendor = posInfo ? vendorMcdaQualityReports("quality_mcda_matrix", posInfo) : null;
+  if (posVendor) qualityReports.push(posVendor);
+  else logSections.push("[quality:mcda_matrix] no quality artifacts detected");
+
+  let status = posChild.status === 0 ? "pass" : "fail";
+  let negVendor = null;
+  let negExit = null;
+
+  if (config.run_negative) {
+    const negStart = Date.now();
+    const beforeNeg = captureQualityDirs(qualityMcdaRoot);
+    const negChild = runNpmCommand(["run", "quality:mcda_matrix:neg"]);
+    negExit = negChild.status ?? 1;
+    const negText = `${negChild.stdout ?? ""}${negChild.stderr ?? ""}`;
+    logSections.push(`[quality:mcda_matrix:neg]\n${negText}`.trimEnd());
+    if (negChild.error) {
+      logSections.push(`[quality:mcda_matrix:neg error] ${negChild.error.message}`);
+    }
+    const negInfo = findNewQualityDir(beforeNeg, captureQualityDirs(qualityMcdaRoot), negStart);
+    negVendor = negInfo ? vendorMcdaQualityReports("quality_mcda_matrix_neg", negInfo) : null;
+    if (negVendor) qualityReports.push(negVendor);
+    else logSections.push("[quality:mcda_matrix:neg] no negative quality artifacts detected");
+    if (negChild.status !== 0) status = "fail";
+  }
+
+  if (posChild.status !== 0) status = "fail";
+  const fatal = status === "fail" && config.strict;
+  const failureReason =
+    status === "fail"
+      ? fatal
+        ? "quality mcda_matrix failed (strict)"
+        : "quality mcda_matrix reported failures"
+      : null;
+
+  fs.writeFileSync(logPath, `${logSections.filter(Boolean).join("\n\n")}\n`);
+
+  const exitCode =
+    status === "pass"
+      ? 0
+      : posChild.status ?? (config.run_negative ? negExit ?? 1 : 1);
+
+  stepResults.push({
+    name,
+    enabled: true,
+    status,
+    exit_code: exitCode,
+    log: relRepo(logPath),
+    output:
+      posVendor?.report_json ||
+      posVendor?.report_md ||
+      posVendor?.report_negative_json ||
+      null,
+    report_json: posVendor?.report_json || null,
+    report_md: posVendor?.report_md || null,
+    report_negative_json: negVendor?.report_negative_json || null,
+    quality_origin_json: posVendor?.report_origin_json || null,
+    quality_origin_md: posVendor?.report_origin_md || null,
+    quality_negative_origin_json: negVendor?.report_negative_origin_json || null,
+    negative_exit_code: typeof negExit === "number" ? negExit : undefined,
+    vendor_reports: qualityReports.map((r) => ({
+      label: r.label,
+      run_id: r.run_id,
+      report_json: r.report_json || null,
+      report_md: r.report_md || null,
+      report_negative_json: r.report_negative_json || null,
+      origin_dir: r.origin_dir,
+    })),
+    reason: failureReason || (policyDecision === "allow_override" ? policyReason : null),
+    policy: { decision: policyDecision, policy_ref: policyRef },
+    fatal,
+  });
+  appendPolicyEvent({
+    step: name,
+    enabled: true,
+    decision: policyDecision,
+    reason: failureReason || (policyDecision === "allow_override" ? policyReason : null),
+    policy_ref: policyRef,
+    exit_code: exitCode,
+  });
+}
+
 function runEpisodeStoreStep(config, baselineStatus) {
   const name = "episode_store";
   const logPath = path.join(runDir, `${name}.log`);
@@ -1172,6 +1377,7 @@ runWrapper("wf_compare", wfCycle.compare, wrappers.wf_compare);
 runWrapper("wf_winner_pack", wfCycle.winner_pack, wrappers.wf_winner_pack);
 runQualityInvoiceApStep(steps.quality_invoice_ap);
 runQualityGatewayStep(steps.quality_gateway);
+runQualityMcdaMatrixStep(steps.quality_mcda_matrix);
 runEpisodeStoreStep(steps.episode_store, hasFatalFailures(stepResults) ? "failed" : "success");
 runFinishBranchStep(steps.finish_branch);
 
