@@ -24,7 +24,9 @@
       "Bash(npm run codex:wrappers:check)",
       "Bash(npm run quality:*)",
       "Bash(ls:*)",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(vercel:*)",
+      "Bash(wrangler:*)"
     ],
     "ask": [
       "Bash(git push:*)",
