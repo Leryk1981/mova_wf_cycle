@@ -1,0 +1,28 @@
+{
+  "mova_version": "4.1.1",
+  "engine": "claude_code",
+  "roles": [
+    "planner",
+    "executor",
+    "qa",
+    "notary"
+  ],
+  "destinations": [
+    "station_cycle"
+  ],
+  "actions": [
+    {
+      "action_id": "wild_dest",
+      "driver_kind": "restricted_shell",
+      "driver_config": {
+        "command": "npm run validate"
+      },
+      "role_allowlist": [
+        "executor"
+      ],
+      "destinations": [
+        "station_*"
+      ]
+    }
+  ]
+}

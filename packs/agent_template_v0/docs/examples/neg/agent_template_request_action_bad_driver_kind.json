@@ -1,0 +1,28 @@
+{
+  "mova_version": "4.1.1",
+  "engine": "claude_code",
+  "roles": [
+    "planner",
+    "executor",
+    "qa",
+    "notary"
+  ],
+  "destinations": [
+    "station_cycle"
+  ],
+  "actions": [
+    {
+      "action_id": "bad_driver",
+      "driver_kind": "shell",
+      "driver_config": {
+        "command": "npm run test"
+      },
+      "role_allowlist": [
+        "planner"
+      ],
+      "destinations": [
+        "station_cycle"
+      ]
+    }
+  ]
+}

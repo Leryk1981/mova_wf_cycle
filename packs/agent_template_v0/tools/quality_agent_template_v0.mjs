@@ -6,7 +6,8 @@ import { spawnSync } from "node:child_process";
 
 const repoRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
 const generatorScript = path.join(repoRoot, "packs", "agent_template_v0", "tools", "agent_template_generate_v0.mjs");
-const positiveRequest = path.join(repoRoot, "packs", "agent_template_v0", "docs", "examples", "pos", "agent_template_request_min.json");
+const defaultPositiveRequest = path.join(repoRoot, "packs", "agent_template_v0", "docs", "examples", "pos", "agent_template_request_min.json");
+const actionsRequest = path.join(repoRoot, "packs", "agent_template_v0", "docs", "examples", "pos", "agent_template_request_with_actions.json");
 const negativeSuitePath = path.join(repoRoot, "packs", "agent_template_v0", "docs", "agent_template_negative_suite_v0.json");
 const qualityRoot = path.join(repoRoot, "artifacts", "quality", "agent_template");
 const shipScript = path.join(repoRoot, "packs", "agent_template_v0", "tools", "ship_agent_template_v0.mjs");
@@ -24,6 +25,17 @@ function ensureDir(dirPath) {
 function rel(p) {
   return path.relative(repoRoot, p).replace(/\\/g, "/");
 }
+
+const allowedHttpMethods = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"];
+
+function resolveRequestPath(value) {
+  if (!value) return null;
+  if (path.isAbsolute(value)) return value;
+  return path.join(repoRoot, value);
+}
+
+const positiveRequestOverride = getArg("--request") || process.env.AGENT_TEMPLATE_REQUEST || null;
+const positiveRequestPath = positiveRequestOverride ? resolveRequestPath(positiveRequestOverride) : defaultPositiveRequest;
 
 function runGenerator(requestPath) {
   const child = spawnSync(process.execPath, [generatorScript, "--request", requestPath], {
@@ -115,7 +127,7 @@ function writeReportDir(runId, suffix) {
 
 function runPositive() {
   const runId = new Date().toISOString().replace(/[:.]/g, "-");
-  const child = runGenerator(positiveRequest);
+  const child = runGenerator(positiveRequestPath);
   if (child.status !== 0) {
     throw new Error("agent_template generator failed for positive request");
   }
@@ -207,7 +219,7 @@ function runPositive() {
   });
 
   const commandDir = path.join(bundleDir, ".claude", "commands");
-  const commandFiles = ["gates.md", "quality.md", "station.md"];
+  const commandFiles = ["gates.md", "quality.md", "station.md", "ship.md"];
   const commandDetails = [];
   for (const filename of commandFiles) {
     const targetPath = path.join(commandDir, filename);
@@ -226,7 +238,7 @@ function runPositive() {
     details: commandDetails
   });
 
-  const shipChild = spawnSync(process.execPath, [shipScript, "--request", positiveRequest], {
+  const shipChild = spawnSync(process.execPath, [shipScript, "--request", positiveRequestPath], {
     cwd: repoRoot,
     encoding: "utf8"
   });
@@ -268,6 +280,9 @@ function runPositive() {
     details: manifestErrors
   });
 
+  const actionChecks = runActionsChecks();
+  checks.push(...actionChecks);
+
   const reportStatus = checks.every((check) => check.status === "pass") ? "pass" : "fail";
   const report = {
     run_id: runId,
@@ -286,6 +301,104 @@ function runPositive() {
   fs.writeFileSync(reportPath, JSON.stringify(report, null, 2) + "\n", "utf8");
   fs.writeFileSync(writeReportDir(runId, "quality_report.md"), makeMd(report), "utf8");
   return report;
+}
+
+function runActionsChecks() {
+  const child = runGenerator(actionsRequest);
+  if (child.status !== 0) {
+    throw new Error("agent_template generator failed for actions request");
+  }
+  const result = (() => {
+    try {
+      return JSON.parse(child.stdout || "{}");
+    } catch (err) {
+      throw new Error("unable to parse actions generator output");
+    }
+  })();
+
+  const bundleDir = path.join(repoRoot, result.bundle_dir || "");
+  if (!bundleDir || !fs.existsSync(bundleDir)) {
+    throw new Error("actions bundle directory missing after generation");
+  }
+
+  const policyPath = path.join(bundleDir, "mova", "policy", "policy.v0.json");
+  const registryPath = path.join(bundleDir, "mova", "registry", "registry.jsonl");
+  const actionsPolicy = readJson(policyPath);
+  if (!fs.existsSync(registryPath)) {
+    throw new Error("actions registry missing");
+  }
+  const registryLines = fs
+    .readFileSync(registryPath, "utf8")
+    .split(/\r?\n/)
+    .filter((line) => line.trim())
+    .map((line) => JSON.parse(line));
+  const actionEntries = registryLines.filter((entry) => entry.type === "action");
+  const actionIds = actionEntries.map((entry) => entry.entry_id);
+
+  const checks = [];
+  const allowList = Array.isArray(actionsPolicy.allow_actions) ? actionsPolicy.allow_actions : [];
+  const allowSet = new Set(allowList);
+  const registrySet = new Set(actionIds);
+  const allowDetails = [];
+  const missingFromPolicy = actionIds.filter((id) => !allowSet.has(id));
+  if (missingFromPolicy.length) {
+    allowDetails.push(`policy missing action_ids: ${missingFromPolicy.join(", ")}`);
+  }
+  const extraInPolicy = allowList.filter((id) => !registrySet.has(id));
+  if (extraInPolicy.length) {
+    allowDetails.push(`policy allows unknown action_ids: ${extraInPolicy.join(", ")}`);
+  }
+  checks.push({
+    name: "actions_allowlist_registry",
+    status: allowDetails.length ? "fail" : "pass",
+    details: allowDetails
+  });
+
+  const policyDestinations = Array.isArray(actionsPolicy.destinations) ? actionsPolicy.destinations : [];
+  const wildcardDetails = policyDestinations.filter((dest) => typeof dest === "string" && dest.includes("*"));
+  checks.push({
+    name: "actions_policy_destinations",
+    status: wildcardDetails.length ? "fail" : "pass",
+    details: wildcardDetails.map((dest) => `wildcard destination: ${dest}`)
+  });
+
+  const driverDetails = [];
+  for (const entry of actionEntries) {
+    const config = entry.driver_config && typeof entry.driver_config === "object" ? entry.driver_config : {};
+    if (entry.driver_kind === "restricted_shell") {
+      if (!config.command) {
+        driverDetails.push(`${entry.entry_id}: missing restricted shell command`);
+      }
+    } else if (entry.driver_kind === "http") {
+      if (!config.base_url) {
+        driverDetails.push(`${entry.entry_id}: missing http base_url`);
+      }
+      if (!config.path) {
+        driverDetails.push(`${entry.entry_id}: missing http path`);
+      }
+      if (!config.method) {
+        driverDetails.push(`${entry.entry_id}: missing http method`);
+      } else if (!allowedHttpMethods.includes(String(config.method).toUpperCase())) {
+        driverDetails.push(`${entry.entry_id}: invalid http method ${config.method}`);
+      }
+    } else if (entry.driver_kind === "mcp_proxy") {
+      if (!config.server_id) {
+        driverDetails.push(`${entry.entry_id}: missing mcp_proxy server_id`);
+      }
+      if (!config.tool_name) {
+        driverDetails.push(`${entry.entry_id}: missing mcp_proxy tool_name`);
+      }
+    } else {
+      driverDetails.push(`${entry.entry_id}: unsupported driver_kind ${entry.driver_kind}`);
+    }
+  }
+  checks.push({
+    name: "actions_driver_config",
+    status: driverDetails.length ? "fail" : "pass",
+    details: driverDetails
+  });
+
+  return checks;
 }
 
 function runNegative() {

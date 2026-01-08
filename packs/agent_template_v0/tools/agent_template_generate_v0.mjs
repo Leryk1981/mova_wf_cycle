@@ -66,6 +66,21 @@ function run() {
     fail("ERR_WILDCARD_DESTINATION", "destinations must not contain wildcard tokens");
   }
 
+  const actions = Array.isArray(request.actions) ? request.actions : [];
+  const actionIds = actions.map((action) => action.action_id);
+  const destinationAllowlist = Array.from(
+    new Set([
+      ...(Array.isArray(request.destinations) ? request.destinations : []),
+      ...actions.flatMap((action) => action.destinations || []),
+    ].filter((dest) => typeof dest === "string" && !dest.includes("*")))
+  );
+  const roleActionMap = allowedRoles.reduce((acc, role) => {
+    acc[role] = actions
+      .filter((action) => Array.isArray(action.role_allowlist) && action.role_allowlist.includes(role))
+      .map((action) => action.action_id);
+    return acc;
+  }, {});
+
   const runId = new Date().toISOString().replace(/[:.]/g, "-");
   const baseDir = path.join(repoRoot, "artifacts", "agent_template", runId);
   const bundleDir = path.join(baseDir, "bundle");
@@ -94,8 +109,11 @@ function run() {
   const policy = {
     version: "v0",
     default: "deny",
-    allow_actions: [],
+    allow_actions: actionIds,
     deny_actions: [],
+    destinations: destinationAllowlist,
+    policy_overrides: request.policy_overrides ?? {},
+    pipeline_enabled: request.pipeline_enabled !== false,
     limits: {
       max_plan_iterations: 3,
       max_executor_rounds: 2,
@@ -105,24 +123,17 @@ function run() {
   };
   writeJson(path.join("mova", "policy", "policy.v0.json"), policy);
 
-  const registryEntries = [
-    {
-      entry_id: "noop",
-      type: "action",
-      category: "safety",
-      description: "No-op placeholder action",
-      command: "echo NO-OP",
-      allow: false
-    },
-    {
-      entry_id: "wf_cycle_probe",
-      type: "action",
-      category: "station",
-      description: "Station cycle probe helper",
-      command: "npm run smoke:wf_cycle",
-      allow: true
-    }
-  ];
+  const registryEntries = actions.map((action) => ({
+    entry_id: action.action_id,
+    type: "action",
+    category: action.driver_kind,
+    driver_kind: action.driver_kind,
+    description: `Parameterized ${action.driver_kind} action ${action.action_id}`,
+    driver_config: action.driver_config,
+    role_allowlist: action.role_allowlist,
+    destinations: Array.isArray(action.destinations) ? action.destinations : [],
+    allow: true
+  }));
   const registryDir = path.join(bundleDir, "mova", "registry");
   fs.mkdirSync(registryDir, { recursive: true });
   const registryFile = path.join(registryDir, "registry.jsonl");
@@ -143,20 +154,22 @@ function run() {
           ? "verify"
           : "notarize"
       ],
-      multiplex: false
+      multiplex: false,
+      allowed_actions: roleActionMap[role]
     }))
   };
   writeJson(path.join("mova", "roles", "role_bundles_v0.json"), roleBundles);
 
-  const roleMatrix = {
-    version: "v0",
-    transitions: [
-      { from_role: "planner", to_role: "executor" },
-      { from_role: "executor", to_role: "qa" },
-      { from_role: "qa", to_role: "notary" }
-    ],
-    note: "Linear planner → executor → qa → notary flow"
-  };
+const roleMatrix = {
+  version: "v0",
+  transitions: [
+    { from_role: "planner", to_role: "executor" },
+    { from_role: "executor", to_role: "qa" },
+    { from_role: "qa", to_role: "notary" }
+  ],
+  note: "Linear planner → executor → qa → notary flow",
+  role_action_map: roleActionMap
+};
   writeJson(path.join("mova", "roles", "role_matrix_v0.json"), roleMatrix);
 
   const instructionProfiles = {
@@ -199,7 +212,8 @@ function run() {
   const claudeCommandFiles = {
     "gates.md": "# Gates Command Reference\n\n1. `npm run smoke:wf_cycle` - exercise the wf_cycle smoke suite.\n2. `npm run validate` - verify all schemas and manifests stay valid.\n",
     "quality.md": "# Quality Command Reference\n\n1. `npm run quality:agent_template` - run the positive quality checks for agent_template bundles.\n2. `npm run quality:agent_template:neg` - ensure negatives fail as expected.\n",
-    "station.md": "# Station Command Reference\n\n1. `node skills/station_cycle_v1/impl/bindings/run_station_cycle.js` - drive the station_cycle workflow with optional quality/ship steps.\n2. Use `tmp_station_cycle_agent_template_request.json` samples to toggle steps.\n"
+    "station.md": "# Station Command Reference\n\n1. `node skills/station_cycle_v1/impl/bindings/run_station_cycle.js` - drive the station_cycle workflow with optional quality/ship steps.\n2. Use `tmp_station_cycle_agent_template_request.json` samples to toggle steps.\n",
+    "ship.md": "# Ship Command Reference\n\n1. `npm run ship:agent_template` - package the agent template bundle and emit manifest metadata (pass `--request` or set `AGENT_TEMPLATE_REQUEST`).\n"
   };
   for (const [filename, content] of Object.entries(claudeCommandFiles)) {
     writeText(path.join(".claude", "commands", filename), content.trim() + "\n");
