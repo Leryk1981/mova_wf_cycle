@@ -32,6 +32,12 @@ const defaultPolicy = {
     strict: false,
     reason: "quality mcda_matrix disabled by default policy",
   },
+  quality_agent_template: {
+    enabled: false,
+    run_negative: false,
+    strict: false,
+    reason: "quality agent_template disabled by default policy",
+  },
   episode_store: { enabled: true, reason: "episode store enabled by default policy" },
   finish_branch: {
     enabled: true,
@@ -120,11 +126,15 @@ const normalizedRequest = {
       stepsReq.quality_gateway,
       defaultPolicy.quality_gateway
     ),
-    quality_mcda_matrix: mergeQualityStep(
-      stepsReq.quality_mcda_matrix,
-      defaultPolicy.quality_mcda_matrix
-    ),
-    episode_store: mergeEpisodeStoreStep(stepsReq.episode_store, defaultPolicy.episode_store),
+      quality_mcda_matrix: mergeQualityStep(
+        stepsReq.quality_mcda_matrix,
+        defaultPolicy.quality_mcda_matrix
+      ),
+      quality_agent_template: mergeQualityStep(
+        stepsReq.quality_agent_template,
+        defaultPolicy.quality_agent_template
+      ),
+      episode_store: mergeEpisodeStoreStep(stepsReq.episode_store, defaultPolicy.episode_store),
     finish_branch: mergeFinishBranchStep(stepsReq.finish_branch, defaultPolicy.finish_branch),
     wf_cycle: {
       scaffold: mergeStep(wfReq.scaffold, defaultPolicy.wf_cycle.scaffold),
@@ -948,6 +958,174 @@ function runQualityMcdaMatrixStep(config) {
     policy: { decision: policyDecision, policy_ref: policyRef },
     fatal,
   });
+    appendPolicyEvent({
+      step: name,
+      enabled: true,
+      decision: policyDecision,
+      reason: failureReason || (policyDecision === "allow_override" ? policyReason : null),
+      policy_ref: policyRef,
+      exit_code: exitCode,
+    });
+  }
+  
+function runQualityAgentTemplateStep(config) {
+  const name = "quality_agent_template";
+  const logPath = path.join(runDir, `${name}.log`);
+  const policyEval = evaluatePolicy(name);
+  const policyRef = relRepo(policyPath);
+
+  if (!config.enabled) {
+    const reason = config.reason || "quality_agent_template disabled";
+    fs.writeFileSync(logPath, `skipped: ${reason}\n`, "utf8");
+    appendPolicyEvent({
+      step: name,
+      enabled: false,
+      decision: "not_requested",
+      reason,
+      policy_ref: policyRef,
+    });
+    stepResults.push({
+      name,
+      enabled: false,
+      status: "skipped",
+      exit_code: null,
+      log: relRepo(logPath),
+      output: null,
+      reason,
+      policy: { decision: "not_requested", policy_ref: policyRef },
+    });
+    return;
+  }
+
+  let policyDecision = policyEval.decision;
+  let policyReason = policyEval.reason || `policy ${policy.version} denies step`;
+  if (policyDecision !== "allow") {
+    const canOverride = policy.allow_overrides && policyOverride.allow_steps.includes(name);
+    if (canOverride) {
+      if (!overrideSaved && Object.keys(policyOverrideRaw).length) {
+        fs.writeFileSync(path.join(runDir, "policy_override.json"), JSON.stringify(policyOverride, null, 2));
+        overrideSaved = true;
+      }
+      policyDecision = "allow_override";
+      policyReason = policyOverride.reason || "manual override";
+      appendPolicyEvent({
+        step: name,
+        enabled: true,
+        decision: "allow_override",
+        reason: policyReason,
+        policy_ref: policyRef,
+      });
+    } else {
+      fs.writeFileSync(logPath, `skipped: ${policyReason}\n`, "utf8");
+      appendPolicyEvent({
+        step: name,
+        enabled: true,
+        decision: "deny",
+        reason: policyReason,
+        policy_ref: policyRef,
+      });
+      stepResults.push({
+        name,
+        enabled: true,
+        status: "skipped",
+        exit_code: null,
+        log: relRepo(logPath),
+        output: null,
+        reason: policyReason,
+        policy: { decision: "deny", policy_ref: policyRef },
+      });
+      return;
+    }
+  }
+
+  const logSections = [];
+  const qualityReports = [];
+  const positiveStart = Date.now();
+  const beforePositive = captureQualityDirs();
+  const positiveChild = runNpmCommand(["run", "quality:agent_template"]);
+  const positiveText = `${positiveChild.stdout ?? ""}${positiveChild.stderr ?? ""}`;
+  logSections.push(`[quality:agent_template]\n${positiveText}`.trimEnd());
+  if (positiveChild.error) {
+    logSections.push(`[quality:agent_template error] ${positiveChild.error.message}`);
+  }
+  const positiveInfo = findNewQualityDir(beforePositive, captureQualityDirs(), positiveStart);
+  const positiveVendor = positiveInfo ? vendorQualityReports("quality_agent_template", positiveInfo) : null;
+  if (positiveVendor) {
+    qualityReports.push(positiveVendor);
+  } else {
+    logSections.push("[quality:agent_template] no quality artifacts detected");
+  }
+
+  let status = positiveChild.status === 0 ? "pass" : "fail";
+  let negativeVendor = null;
+  let negativeExit = null;
+  if (config.run_negative) {
+    const negativeStart = Date.now();
+    const beforeNegative = captureQualityDirs();
+    const negativeChild = runNpmCommand(["run", "quality:agent_template:neg"]);
+    negativeExit = negativeChild.status ?? 1;
+    const negativeText = `${negativeChild.stdout ?? ""}${negativeChild.stderr ?? ""}`;
+    logSections.push(`[quality:agent_template:neg]\n${negativeText}`.trimEnd());
+    if (negativeChild.error) {
+      logSections.push(`[quality:agent_template:neg error] ${negativeChild.error.message}`);
+    }
+    const negativeInfo = findNewQualityDir(beforeNegative, captureQualityDirs(), negativeStart);
+    negativeVendor = negativeInfo ? vendorQualityReports("quality_agent_template_neg", negativeInfo) : null;
+    if (negativeVendor) {
+      qualityReports.push(negativeVendor);
+    } else {
+      logSections.push("[quality:agent_template:neg] no negative quality artifacts detected");
+    }
+    if (negativeChild.status !== 0) {
+      status = "fail";
+    }
+  }
+
+  const fatal = status === "fail" && config.strict;
+  const failureReason =
+    status === "fail"
+      ? fatal
+        ? "quality agent_template failed (strict)"
+        : "quality agent_template reported failures"
+      : null;
+  fs.writeFileSync(logPath, `${logSections.filter(Boolean).join("\n\n")}\n`);
+
+  const exitCode =
+    status === "pass"
+      ? 0
+      : positiveChild.status ?? (config.run_negative ? negativeExit ?? 1 : 1);
+
+  stepResults.push({
+    name,
+    enabled: true,
+    status,
+    exit_code: exitCode,
+    log: relRepo(logPath),
+    output:
+      positiveVendor?.report_json ||
+      positiveVendor?.report_md ||
+      positiveVendor?.report_negative_json ||
+      null,
+    report_json: positiveVendor?.report_json || null,
+    report_md: positiveVendor?.report_md || null,
+    report_negative_json:
+      negativeVendor?.report_negative_json || positiveVendor?.report_negative_json || null,
+    quality_origin_json: positiveVendor?.report_origin_json || null,
+    quality_origin_md: positiveVendor?.report_origin_md || null,
+    quality_negative_origin_json: negativeVendor?.report_negative_origin_json || null,
+    negative_exit_code: typeof negativeExit === "number" ? negativeExit : undefined,
+    vendor_reports: qualityReports.map((r) => ({
+      label: r.label,
+      run_id: r.run_id,
+      report_json: r.report_json || null,
+      report_md: r.report_md || null,
+      report_negative_json: r.report_negative_json || null,
+      origin_dir: r.origin_dir,
+    })),
+    reason: failureReason || (policyDecision === "allow_override" ? policyReason : null),
+    policy: { decision: policyDecision, policy_ref: policyRef },
+    fatal,
+  });
   appendPolicyEvent({
     step: name,
     enabled: true,
@@ -1378,6 +1556,7 @@ runWrapper("wf_winner_pack", wfCycle.winner_pack, wrappers.wf_winner_pack);
 runQualityInvoiceApStep(steps.quality_invoice_ap);
 runQualityGatewayStep(steps.quality_gateway);
 runQualityMcdaMatrixStep(steps.quality_mcda_matrix);
+runQualityAgentTemplateStep(steps.quality_agent_template);
 runEpisodeStoreStep(steps.episode_store, hasFatalFailures(stepResults) ? "failed" : "success");
 runFinishBranchStep(steps.finish_branch);
 
