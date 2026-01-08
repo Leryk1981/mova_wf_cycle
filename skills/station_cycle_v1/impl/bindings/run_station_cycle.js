@@ -32,6 +32,10 @@ const defaultPolicy = {
     strict: false,
     reason: "quality mcda_matrix disabled by default policy",
   },
+  ship_agent_template: {
+    enabled: false,
+    reason: "ship_agent_template disabled by default policy",
+  },
   quality_agent_template: {
     enabled: false,
     run_negative: false,
@@ -122,13 +126,17 @@ const normalizedRequest = {
       stepsReq.quality_invoice_ap,
       defaultPolicy.quality_invoice_ap
     ),
-    quality_gateway: mergeQualityStep(
-      stepsReq.quality_gateway,
-      defaultPolicy.quality_gateway
-    ),
+      quality_gateway: mergeQualityStep(
+        stepsReq.quality_gateway,
+        defaultPolicy.quality_gateway
+      ),
       quality_mcda_matrix: mergeQualityStep(
         stepsReq.quality_mcda_matrix,
         defaultPolicy.quality_mcda_matrix
+      ),
+      ship_agent_template: mergeStep(
+        stepsReq.ship_agent_template,
+        defaultPolicy.ship_agent_template
       ),
       quality_agent_template: mergeQualityStep(
         stepsReq.quality_agent_template,
@@ -148,6 +156,7 @@ const repoRoot = path.resolve(__dirname, "../../../..");
 const qualityRoot = path.join(repoRoot, "artifacts", "quality");
 const qualityGatewayRoot = path.join(repoRoot, "artifacts", "quality_gateway");
 const qualityMcdaRoot = path.join(repoRoot, "artifacts", "quality", "mcda_matrix");
+const shipRoot = path.join(repoRoot, "artifacts", "agent_ship");
 const artifactsRoot = path.join(repoRoot, "artifacts", "station_cycle");
 fs.mkdirSync(artifactsRoot, { recursive: true });
 
@@ -302,6 +311,53 @@ function vendorMcdaQualityReports(label, info) {
   return record;
 }
 
+function captureShipDirs(root = shipRoot) {
+  if (!fs.existsSync(root)) return [];
+  return fs
+    .readdirSync(root, { withFileTypes: true })
+    .filter((d) => d.isDirectory())
+    .map((d) => {
+      const full = path.join(root, d.name);
+      const stat = fs.statSync(full);
+      return { name: d.name, path: full, mtimeMs: stat.mtimeMs };
+    })
+    .sort((a, b) => a.mtimeMs - b.mtimeMs);
+}
+
+function findNewShipDir(before, after, sinceMs) {
+  const beforeNames = new Set(before.map((d) => d.name));
+  const threshold = typeof sinceMs === "number" ? sinceMs - 2000 : 0;
+  const candidates = after.filter(
+    (info) =>
+      info.mtimeMs >= threshold &&
+      (!beforeNames.has(info.name) || info.mtimeMs > threshold || before.length === 0)
+  );
+  if (candidates.length) return candidates[candidates.length - 1];
+  return null;
+}
+
+function vendorShipArtifacts(label, info) {
+  if (!info) return null;
+  const record = {
+    label,
+    run_id: info.name,
+    origin_dir: relRepo(info.path),
+  };
+  const manifestSrc = path.join(info.path, "manifest.json");
+  if (fs.existsSync(manifestSrc)) {
+    const destPath = path.join(runDir, `${label}_${info.name}_manifest.json`);
+    try {
+      fs.copyFileSync(manifestSrc, destPath);
+      record.manifest = relRepo(destPath);
+      record.manifest_origin = relRepo(manifestSrc);
+    } catch (err) {
+      record.errors = record.errors || [];
+      record.errors.push(`copy manifest: ${err.message}`);
+    }
+  }
+  return record;
+}
+
 const finishBranchWrapperScript = path.resolve(
   repoRoot,
   ".codex",
@@ -340,13 +396,15 @@ function collectEvidencePaths(extra = []) {
     if (step.report_json) set.add(step.report_json);
      if (step.report_negative_json) set.add(step.report_negative_json);
     if (step.result_json) set.add(step.result_json);
-     if (Array.isArray(step.vendor_reports)) {
-       for (const record of step.vendor_reports) {
-         if (record.report_json) set.add(record.report_json);
-         if (record.report_md) set.add(record.report_md);
-         if (record.report_negative_json) set.add(record.report_negative_json);
-       }
-     }
+    if (Array.isArray(step.vendor_reports)) {
+      for (const record of step.vendor_reports) {
+        if (record.report_json) set.add(record.report_json);
+        if (record.report_md) set.add(record.report_md);
+        if (record.report_negative_json) set.add(record.report_negative_json);
+        if (record.manifest) set.add(record.manifest);
+        if (record.manifest_origin) set.add(record.manifest_origin);
+      }
+    }
   }
   for (const item of extra) if (item) set.add(relRepo(item));
   return Array.from(set);
@@ -1136,6 +1194,119 @@ function runQualityAgentTemplateStep(config) {
   });
 }
 
+function runShipAgentTemplateStep(config) {
+  const name = "ship_agent_template";
+  const logPath = path.join(runDir, `${name}.log`);
+  const policyEval = evaluatePolicy(name);
+  const policyRef = relRepo(policyPath);
+ 
+  if (!config.enabled) {
+    const reason = config.reason || "ship_agent_template disabled";
+    fs.writeFileSync(logPath, `skipped: ${reason}\n`, "utf8");
+    appendPolicyEvent({
+      step: name,
+      enabled: false,
+      decision: "not_requested",
+      reason,
+      policy_ref: policyRef,
+    });
+    stepResults.push({
+      name,
+      enabled: false,
+      status: "skipped",
+      exit_code: null,
+      log: relRepo(logPath),
+      output: null,
+      reason,
+      policy: { decision: "not_requested", policy_ref: policyRef },
+    });
+    return;
+  }
+
+  let policyDecision = policyEval.decision;
+  let policyReason = policyEval.reason || `policy ${policy.version} denies step`;
+  if (policyDecision !== "allow") {
+    const canOverride = policy.allow_overrides && policyOverride.allow_steps.includes(name);
+    if (canOverride) {
+      if (!overrideSaved && Object.keys(policyOverrideRaw).length) {
+        fs.writeFileSync(path.join(runDir, "policy_override.json"), JSON.stringify(policyOverride, null, 2));
+        overrideSaved = true;
+      }
+      policyDecision = "allow_override";
+      policyReason = policyOverride.reason || "manual override";
+      appendPolicyEvent({
+        step: name,
+        enabled: true,
+        decision: "allow_override",
+        reason: policyReason,
+        policy_ref: policyRef,
+      });
+    } else {
+      fs.writeFileSync(logPath, `skipped: ${policyReason}\n`, "utf8");
+      appendPolicyEvent({
+        step: name,
+        enabled: true,
+        decision: "deny",
+        reason: policyReason,
+        policy_ref: policyRef,
+      });
+      stepResults.push({
+        name,
+        enabled: true,
+        status: "skipped",
+        exit_code: null,
+        log: relRepo(logPath),
+        output: null,
+        reason: policyReason,
+        policy: { decision: "deny", policy_ref: policyRef },
+      });
+      return;
+    }
+  }
+
+  const logSections = [];
+  const beforeShip = captureShipDirs();
+  const shipStart = Date.now();
+  const child = runNpmCommand(["run", "ship:agent_template"]);
+  const combinedText = `${child.stdout ?? ""}${child.stderr ?? ""}`;
+  logSections.push(`[ship:agent_template]\n${combinedText}`.trimEnd());
+  if (child.error) {
+    logSections.push(`[ship:agent_template error] ${child.error.message}`);
+  }
+  const shipInfo = findNewShipDir(beforeShip, captureShipDirs(), shipStart);
+  const shipVendor = shipInfo ? vendorShipArtifacts("ship_agent_template", shipInfo) : null;
+  if (!shipVendor) {
+    logSections.push("[ship:agent_template] no ship artifacts detected");
+  }
+
+  const status = child.status === 0 ? "pass" : "fail";
+  const exitCode = child.status ?? 1;
+  const fatal = status === "fail" && config.strict;
+  const reason = status === "fail" ? (fatal ? "ship_agent_template failed (strict)" : "ship_agent_template reported failures") : null;
+  fs.writeFileSync(logPath, `${logSections.filter(Boolean).join("\n\n")}\n`);
+
+  stepResults.push({
+    name,
+    enabled: true,
+    status,
+    exit_code: exitCode,
+    log: relRepo(logPath),
+    output: shipVendor?.manifest || null,
+    vendor_reports: shipVendor ? [shipVendor] : [],
+    reason: reason || (policyDecision === "allow_override" ? policyReason : null),
+    policy: { decision: policyDecision, policy_ref: policyRef },
+    fatal,
+  });
+  appendPolicyEvent({
+    step: name,
+    enabled: true,
+    decision: policyDecision,
+    reason: config.strict && status === "fail" ? "fatal failure" : null,
+    policy_ref: policyRef,
+    exit_code: exitCode,
+  });
+}
+
 function runEpisodeStoreStep(config, baselineStatus) {
   const name = "episode_store";
   const logPath = path.join(runDir, `${name}.log`);
@@ -1557,6 +1728,7 @@ runQualityInvoiceApStep(steps.quality_invoice_ap);
 runQualityGatewayStep(steps.quality_gateway);
 runQualityMcdaMatrixStep(steps.quality_mcda_matrix);
 runQualityAgentTemplateStep(steps.quality_agent_template);
+runShipAgentTemplateStep(steps.ship_agent_template);
 runEpisodeStoreStep(steps.episode_store, hasFatalFailures(stepResults) ? "failed" : "success");
 runFinishBranchStep(steps.finish_branch);
 

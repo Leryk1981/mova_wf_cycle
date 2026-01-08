@@ -196,6 +196,15 @@ function run() {
   };
   writeJson(path.join(".claude", "settings.json"), claudeSettings);
 
+  const claudeCommandFiles = {
+    "gates.md": "# Gates Command Reference\n\n1. `npm run smoke:wf_cycle` - exercise the wf_cycle smoke suite.\n2. `npm run validate` - verify all schemas and manifests stay valid.\n",
+    "quality.md": "# Quality Command Reference\n\n1. `npm run quality:agent_template` - run the positive quality checks for agent_template bundles.\n2. `npm run quality:agent_template:neg` - ensure negatives fail as expected.\n",
+    "station.md": "# Station Command Reference\n\n1. `node skills/station_cycle_v1/impl/bindings/run_station_cycle.js` - drive the station_cycle workflow with optional quality/ship steps.\n2. Use `tmp_station_cycle_agent_template_request.json` samples to toggle steps.\n"
+  };
+  for (const [filename, content] of Object.entries(claudeCommandFiles)) {
+    writeText(path.join(".claude", "commands", filename), content.trim() + "\n");
+  }
+
   const claudeMd = `# Agent template operator rules\n\n- Operate in evidence-first mode; cite data before assertions.\n- Never disclose secrets or credentials.\n- Use only the allowlisted station commands for exploratory probes.\n- Escalate any unexpected signals to the engineering team before continuing.\n`;
   writeText("CLAUDE.md", claudeMd);
 

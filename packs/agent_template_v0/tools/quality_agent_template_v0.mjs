@@ -9,6 +9,7 @@ const generatorScript = path.join(repoRoot, "packs", "agent_template_v0", "tools
 const positiveRequest = path.join(repoRoot, "packs", "agent_template_v0", "docs", "examples", "pos", "agent_template_request_min.json");
 const negativeSuitePath = path.join(repoRoot, "packs", "agent_template_v0", "docs", "agent_template_negative_suite_v0.json");
 const qualityRoot = path.join(repoRoot, "artifacts", "quality", "agent_template");
+const shipScript = path.join(repoRoot, "packs", "agent_template_v0", "tools", "ship_agent_template_v0.mjs");
 
 function getArg(key) {
   const idx = process.argv.indexOf(key);
@@ -31,6 +32,7 @@ function runGenerator(requestPath) {
   });
   return child;
 }
+
 
 function collectJsonPaths(rootDir) {
   const collected = [];
@@ -204,6 +206,68 @@ function runPositive() {
     details: matrixDetails
   });
 
+  const commandDir = path.join(bundleDir, ".claude", "commands");
+  const commandFiles = ["gates.md", "quality.md", "station.md"];
+  const commandDetails = [];
+  for (const filename of commandFiles) {
+    const targetPath = path.join(commandDir, filename);
+    if (!fs.existsSync(targetPath)) {
+      commandDetails.push(`missing ${filename}`);
+      continue;
+    }
+    const size = fs.statSync(targetPath).size;
+    if (size === 0) {
+      commandDetails.push(`${filename} is empty`);
+    }
+  }
+  checks.push({
+    name: "claude_commands",
+    status: commandDetails.length ? "fail" : "pass",
+    details: commandDetails
+  });
+
+  const shipChild = spawnSync(process.execPath, [shipScript, "--request", positiveRequest], {
+    cwd: repoRoot,
+    encoding: "utf8"
+  });
+  if (shipChild.status !== 0) {
+    throw new Error(
+      `[quality_agent_template] ship tool failed (exit ${shipChild.status ?? "unknown"}): ${shipChild.stderr?.trim() || shipChild.stdout?.trim() || "(no output)"}`
+    );
+  }
+  let shipResult;
+  try {
+    shipResult = JSON.parse(shipChild.stdout || "{}");
+  } catch (err) {
+    throw new Error(`ship tool output invalid JSON: ${err.message}`);
+  }
+  const manifestPath = path.join(repoRoot, shipResult.manifest || "");
+  if (!manifestPath || !fs.existsSync(manifestPath)) {
+    throw new Error("ship manifest missing");
+  }
+  const manifest = readJson(manifestPath);
+  const manifestErrors = [];
+  const manifestFiles = Array.isArray(manifest.files) ? manifest.files : [];
+  if (!manifestFiles.length) {
+    manifestErrors.push("manifest.files empty");
+  }
+  for (const entry of manifestFiles) {
+    if (typeof entry.rel_path !== "string" || !entry.rel_path) {
+      manifestErrors.push("file entry missing rel_path");
+    }
+    if (typeof entry.bytes !== "number") {
+      manifestErrors.push(`file ${entry.rel_path || "(unknown)"} missing bytes`);
+    }
+    if (typeof entry.sha256 !== "string" || !entry.sha256) {
+      manifestErrors.push(`file ${entry.rel_path || "(unknown)"} missing sha256`);
+    }
+  }
+  checks.push({
+    name: "ship_manifest",
+    status: manifestErrors.length ? "fail" : "pass",
+    details: manifestErrors
+  });
+
   const reportStatus = checks.every((check) => check.status === "pass") ? "pass" : "fail";
   const report = {
     run_id: runId,
@@ -212,6 +276,9 @@ function runPositive() {
     bundle_dir: rel(bundleDir),
     generator_stdout: child.stdout?.trim() || "",
     generator_stderr: child.stderr?.trim() || "",
+    ship_stdout: shipChild.stdout?.trim() || "",
+    ship_stderr: shipChild.stderr?.trim() || "",
+    ship_manifest: rel(manifestPath),
     checks,
     created_at: new Date().toISOString()
   };
