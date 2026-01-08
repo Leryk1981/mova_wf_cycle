@@ -157,8 +157,27 @@ const qualityRoot = path.join(repoRoot, "artifacts", "quality");
 const qualityGatewayRoot = path.join(repoRoot, "artifacts", "quality_gateway");
 const qualityMcdaRoot = path.join(repoRoot, "artifacts", "quality", "mcda_matrix");
 const shipRoot = path.join(repoRoot, "artifacts", "agent_ship");
+const defaultAgentTemplateRequestPath = path.join(
+  repoRoot,
+  "packs",
+  "agent_template_v0",
+  "docs",
+  "examples",
+  "pos",
+  "agent_template_request_min.json"
+);
 const artifactsRoot = path.join(repoRoot, "artifacts", "station_cycle");
 fs.mkdirSync(artifactsRoot, { recursive: true });
+
+const requestedAgentTemplateRequest =
+  typeof requestRaw.agent_template_request_path === "string" && requestRaw.agent_template_request_path.trim()
+    ? resolveRepoPath(requestRaw.agent_template_request_path)
+    : null;
+const agentTemplateRequestPath = requestedAgentTemplateRequest || defaultAgentTemplateRequestPath;
+if (!fs.existsSync(agentTemplateRequestPath)) {
+  console.error("agent_template request file missing:", agentTemplateRequestPath);
+  process.exit(1);
+}
 
 const runId = new Date().toISOString().replace(/[:.]/g, "-");
 const runDir = path.join(artifactsRoot, runId);
@@ -218,14 +237,20 @@ const wrappers = {
   },
 };
 
-function runNpmCommand(args) {
+function resolveRepoPath(value) {
+  if (!value || typeof value !== "string") return null;
+  if (path.isAbsolute(value)) return value;
+  return path.join(repoRoot, value);
+}
+
+function runNpmCommand(args, options = {}) {
+  const envOverrides = options.env || {};
+  const env = { ...process.env, ...envOverrides };
+  const spawnOptions = { cwd: repoRoot, encoding: "utf8", env };
   if (npmCliPath && fs.existsSync(npmCliPath)) {
-    return spawnSync(process.execPath, [npmCliPath, ...args], {
-      cwd: repoRoot,
-      encoding: "utf8",
-    });
+    return spawnSync(process.execPath, [npmCliPath, ...args], spawnOptions);
   }
-  return spawnSync(npmCmd, args, { cwd: repoRoot, encoding: "utf8", shell: true });
+  return spawnSync(npmCmd, args, { ...spawnOptions, shell: true });
 }
 
 function captureQualityDirs(root = qualityRoot) {
@@ -1098,9 +1123,10 @@ function runQualityAgentTemplateStep(config) {
 
   const logSections = [];
   const qualityReports = [];
+  const agentTemplateEnv = { AGENT_TEMPLATE_REQUEST: agentTemplateRequestPath };
   const positiveStart = Date.now();
   const beforePositive = captureQualityDirs();
-  const positiveChild = runNpmCommand(["run", "quality:agent_template"]);
+  const positiveChild = runNpmCommand(["run", "quality:agent_template"], { env: agentTemplateEnv });
   const positiveText = `${positiveChild.stdout ?? ""}${positiveChild.stderr ?? ""}`;
   logSections.push(`[quality:agent_template]\n${positiveText}`.trimEnd());
   if (positiveChild.error) {
@@ -1120,7 +1146,7 @@ function runQualityAgentTemplateStep(config) {
   if (config.run_negative) {
     const negativeStart = Date.now();
     const beforeNegative = captureQualityDirs();
-    const negativeChild = runNpmCommand(["run", "quality:agent_template:neg"]);
+    const negativeChild = runNpmCommand(["run", "quality:agent_template:neg"], { env: agentTemplateEnv });
     negativeExit = negativeChild.status ?? 1;
     const negativeText = `${negativeChild.stdout ?? ""}${negativeChild.stderr ?? ""}`;
     logSections.push(`[quality:agent_template:neg]\n${negativeText}`.trimEnd());
@@ -1265,9 +1291,10 @@ function runShipAgentTemplateStep(config) {
   }
 
   const logSections = [];
+  const agentTemplateEnv = { AGENT_TEMPLATE_REQUEST: agentTemplateRequestPath };
   const beforeShip = captureShipDirs();
   const shipStart = Date.now();
-  const child = runNpmCommand(["run", "ship:agent_template"]);
+  const child = runNpmCommand(["run", "ship:agent_template"], { env: agentTemplateEnv });
   const combinedText = `${child.stdout ?? ""}${child.stderr ?? ""}`;
   logSections.push(`[ship:agent_template]\n${combinedText}`.trimEnd());
   if (child.error) {

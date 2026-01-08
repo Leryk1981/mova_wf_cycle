@@ -7,6 +7,10 @@
       "type": "string",
       "description": "Free-form operator notes for this station cycle."
     },
+    "agent_template_request_path": {
+      "type": "string",
+      "description": "Optional path to the agent_template request JSON used by quality/ship steps."
+    },
     "steps": {
       "type": "object",
       "properties": {
@@ -16,6 +20,8 @@
         "quality_invoice_ap": { "$ref": "#/definitions/quality_step" },
         "quality_gateway": { "$ref": "#/definitions/quality_step" },
         "quality_mcda_matrix": { "$ref": "#/definitions/quality_step" },
+        "quality_agent_template": { "$ref": "#/definitions/quality_step" },
+        "ship_agent_template": { "$ref": "#/definitions/step_toggle" },
         "finish_branch": { "$ref": "#/definitions/finish_branch_step" },
         "wf_cycle": {
           "type": "object",

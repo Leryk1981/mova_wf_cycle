@@ -23,7 +23,23 @@
       "request": "packs/agent_template_v0/docs/examples/neg/agent_template_request_wildcard_destinations.json",
       "expect": {
         "code": "ERR_WILDCARD_DESTINATION",
-        "message_contains": "wildcard" 
+        "message_contains": "wildcard"
+      }
+    },
+    {
+      "id": "action_bad_driver_kind",
+      "request": "packs/agent_template_v0/docs/examples/neg/agent_template_request_action_bad_driver_kind.json",
+      "expect": {
+        "code": "ERR_SCHEMA_VALIDATION",
+        "message_contains": "driver_kind"
+      }
+    },
+    {
+      "id": "action_wildcard_destination",
+      "request": "packs/agent_template_v0/docs/examples/neg/agent_template_request_action_wildcard_destination.json",
+      "expect": {
+        "code": "ERR_SCHEMA_VALIDATION",
+        "message_contains": "destinations"
       }
     }
   ]
