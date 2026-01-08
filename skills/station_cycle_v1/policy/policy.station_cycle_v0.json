@@ -8,6 +8,7 @@
     "quality_gateway",
     "quality_mcda_matrix",
     "quality_agent_template",
+    "ship_agent_template",
     "quality_invoice_mvp_sevdesk",
     "episode_store",
     "finish_branch"
