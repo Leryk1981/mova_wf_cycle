@@ -1,0 +1,39 @@
+{
+  "status": "pass|fail",
+  "checks": [
+    {
+      "check": "structure_has_ds_dir",
+      "result": "pass|fail"
+    },
+    {
+      "check": "structure_has_pos_examples",
+      "result": "pass|fail",
+      "details": {
+        "count": 1,
+        "required": 1
+      }
+    },
+    {
+      "check": "structure_has_neg_examples",
+      "result": "pass|fail",
+      "details": {
+        "count": 2,
+        "required": 2
+      }
+    },
+    {
+      "check": "registry_exists",
+      "result": "pass|fail"
+    },
+    {
+      "check": "security_no_wildcards",
+      "result": "pass|fail"
+    },
+    {
+      "check": "registry_control_action_type_valid",
+      "result": "pass|fail"
+    }
+  ],
+  "evidence_dir_ref": "artifacts/domain_pack_quality/run_12345",
+  "summary": "Package passed all quality checks"
+}
