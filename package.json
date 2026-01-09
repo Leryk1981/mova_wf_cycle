@@ -79,7 +79,10 @@
     "smoke:episode_store_e2e": "node tools/smoke_episode_store_e2e_v0.mjs",
     "demo:agent_profile": "node packs/agent_profile_v0/tools/demo_agent_profile_v0.mjs",
     "quality:agent_profile": "node packs/agent_profile_v0/tools/quality_agent_profile_v0.mjs",
-    "quality:agent_profile:neg": "node packs/agent_profile_v0/tools/quality_agent_profile_v0.mjs --neg"
+    "quality:agent_profile:neg": "node packs/agent_profile_v0/tools/quality_agent_profile_v0.mjs --neg",
+    "demo:domain_pack_scaffold": "node packs/domain_pack_scaffold_v0/tools/demo_domain_pack_scaffold_v0.mjs",
+    "quality:domain_pack_scaffold": "node packs/domain_pack_scaffold_v0/tools/quality_domain_pack_scaffold_v0.mjs",
+    "quality:domain_pack_scaffold:neg": "node packs/domain_pack_scaffold_v0/tools/quality_domain_pack_scaffold_v0.mjs --neg"
   },
   "dependencies": {
     "sql.js": "^1.9.0"

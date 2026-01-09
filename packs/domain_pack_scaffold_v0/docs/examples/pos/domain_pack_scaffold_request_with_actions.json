@@ -1,0 +1,34 @@
+{
+  "mova_version": "4.1.1",
+  "engine": "claude_code",
+  "roles": [
+    "planner",
+    "executor",
+    "qa",
+    "notary"
+  ],
+  "destinations": [
+    "station_cycle"
+  ],
+  "actions": [
+    {
+      "action_id": "run_validate",
+      "driver_kind": "restricted_shell",
+      "driver_config": {
+        "command": "npm run validate"
+      },
+      "role_allowlist": [
+        "planner",
+        "executor"
+      ],
+      "destinations": [
+        "station_cycle"
+      ],
+      "limits": {
+        "max_plan_iterations": 1
+      }
+    }
+  ],
+  "policy_overrides": {},
+  "pipeline_enabled": true
+}

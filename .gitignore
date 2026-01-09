@@ -66,3 +66,6 @@ tmp_station_cycle_*.json
 artifacts/agent_template/
 artifacts/agent_runner/
 artifacts/agent_profile/
+
+# Domain pack artifacts
+artifacts/domain_pack_scaffold/

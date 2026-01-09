@@ -1,0 +1,46 @@
+{
+  "suite_version": "v0",
+  "description": "Negative validation suite for agent_template generator",
+  "cases": [
+    {
+      "id": "bad_version",
+      "request": "packs/agent_template_v0/docs/examples/neg/agent_template_request_bad_version.json",
+      "expect": {
+        "code": "ERR_INVALID_MOVA_VERSION",
+        "message_contains": "mova_version must be 4.1.1"
+      }
+    },
+    {
+      "id": "unknown_role",
+      "request": "packs/agent_template_v0/docs/examples/neg/agent_template_request_unknown_role.json",
+      "expect": {
+        "code": "ERR_UNKNOWN_ROLE",
+        "message_contains": "unknown roles"
+      }
+    },
+    {
+      "id": "wildcard_destinations",
+      "request": "packs/agent_template_v0/docs/examples/neg/agent_template_request_wildcard_destinations.json",
+      "expect": {
+        "code": "ERR_WILDCARD_DESTINATION",
+        "message_contains": "wildcard"
+      }
+    },
+    {
+      "id": "action_bad_driver_kind",
+      "request": "packs/agent_template_v0/docs/examples/neg/agent_template_request_action_bad_driver_kind.json",
+      "expect": {
+        "code": "ERR_SCHEMA_VALIDATION",
+        "message_contains": "driver_kind"
+      }
+    },
+    {
+      "id": "action_wildcard_destination",
+      "request": "packs/agent_template_v0/docs/examples/neg/agent_template_request_action_wildcard_destination.json",
+      "expect": {
+        "code": "ERR_SCHEMA_VALIDATION",
+        "message_contains": "destinations"
+      }
+    }
+  ]
+}
