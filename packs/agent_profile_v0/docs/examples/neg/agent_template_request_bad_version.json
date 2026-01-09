@@ -1,0 +1,13 @@
+{
+  "mova_version": "4.0.0",
+  "engine": "claude_code",
+  "roles": [
+    "planner",
+    "executor",
+    "qa",
+    "notary"
+  ],
+  "destinations": [
+    "station_cycle"
+  ]
+}

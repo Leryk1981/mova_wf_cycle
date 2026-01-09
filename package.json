@@ -76,7 +76,10 @@
     "quality:invoice_mvp_sevdesk": "node tools/quality_invoice_mvp_sevdesk_v0.mjs",
     "quality:invoice_mvp_sevdesk:neg": "node tools/quality_invoice_mvp_sevdesk_v0.mjs negative",
     "smoke:invoice_gateway_e2e": "node tools/smoke_invoice_gateway_e2e_v0.mjs",
-    "smoke:episode_store_e2e": "node tools/smoke_episode_store_e2e_v0.mjs"
+    "smoke:episode_store_e2e": "node tools/smoke_episode_store_e2e_v0.mjs",
+    "demo:agent_profile": "node packs/agent_profile_v0/tools/demo_agent_profile_v0.mjs",
+    "quality:agent_profile": "node packs/agent_profile_v0/tools/quality_agent_profile_v0.mjs",
+    "quality:agent_profile:neg": "node packs/agent_profile_v0/tools/quality_agent_profile_v0.mjs --neg"
   },
   "dependencies": {
     "sql.js": "^1.9.0"

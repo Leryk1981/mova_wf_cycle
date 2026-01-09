@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ds.agent_profile_bundle_v0",
+  "title": "Agent template bundle metadata v0",
+  "type": "object",
+  "required": [
+    "mova_version",
+    "bundle_path",
+    "bundle_files"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "mova_version": {
+      "const": "4.1.1"
+    },
+    "bundle_path": {
+      "type": "string",
+      "description": "Relative path to the generated bundle directory"
+    },
+    "bundle_files": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of files written inside the bundle"
+    }
+  }
+}
