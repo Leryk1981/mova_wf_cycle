@@ -1,0 +1,24 @@
+{
+  "mova_version": "4.1.1",
+  "agent_bundle_dir": "artifacts/agent_ship/2026-01-09T09-03-18-302Z/bundle",
+  "role_id": "planner",
+  "pipeline_stage": "plan",
+  "task": {
+    "action_id": "run_validate",
+    "input": {}
+  },
+  "control_mcp": {
+    "mode": "stdio",
+    "command": "node tools/mova_mcp_server_v0/run.mjs",
+    "env_allowlist": [
+      "MOVA_GATEWAY_BASE_URL",
+      "MOVA_GATEWAY_AUTH_TOKEN",
+      "MOVA_MEMORY_BASE_URL",
+      "MOVA_MEMORY_AUTH_TOKEN"
+    ]
+  },
+  "limits": {
+    "timeout_ms": 60000,
+    "max_json_bytes": 50000
+  }
+}
