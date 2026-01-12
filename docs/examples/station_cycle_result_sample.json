@@ -44,11 +44,11 @@
       }
     },
     {
-      "name": "wf_compare",
+      "name": "proof_of_invariance",
       "enabled": false,
       "status": "skipped",
       "exit_code": null,
-      "log": "artifacts/station_cycle/2025-12-29T20-15-04-348Z/wf_compare.log",
+      "log": "artifacts/station_cycle/2025-12-29T20-15-04-348Z/proof_of_invariance.log",
       "output": null,
       "reason": "wf compare disabled by default policy",
       "policy": {

@@ -79,11 +79,11 @@ npm run lab:run -- --env lab/examples/env.dpp_passport_normalize_run_v1.dpp_lab.
 npm run lab:run -- --skill skill.repo_code_change_plan_basic --case skills/repo_code_change_plan_basic/cases/repo_code_change_plan_basic_case_01.json
 ```
 
-## COMPARE & WINNER PACK
+## PROOF OF INVARIANCE & WINNER PACK
 
 - Skills:
   - `skill.wf_cycle_scaffold_basic` — sets up experiment context.
-  - `skill.wf_cycle_compute_compare_basic` — deterministic compare; expects event logs + artifacts.
+  - `skill.wf_cycle_compute_compare_basic` — deterministic Proof of Invariance compare; focuses on the `result_core` outputs and canonical artifacts.
   - `skill.wf_cycle_winner_pack_basic` — bundles artifacts, bindings, replay evidence.
 - Smoke entrypoint: `tools/wf_cycle_smoke_ci.mjs`.
 - Outputs live inside `lab/experiments/WF_EX_*` (private) until curated.

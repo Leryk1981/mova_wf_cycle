@@ -131,31 +131,31 @@ function main() {
       throw new Error(`driver_probes: status=${driverProbeResult.status}`);
     }
 
-    // Step 3: compare (existing case)
-    const compareCasePath =
+    // Step 3: proof of invariance compare (existing case)
+    const proofCasePath =
       "skills/wf_cycle_compute_compare_basic/cases/case_WF_EX_WF_BUILD_WORKFLOW_001_B_topdown.json";
-    const compareResult = ensureJsonResult(
+    const proofResult = ensureJsonResult(
       runNodeScript("skills/wf_cycle_compute_compare_basic/impl/bindings/node/compute_compare.mjs", [
         "--request-file",
-        compareCasePath
+        proofCasePath
       ]),
-      "compare"
+      "proof_of_invariance"
     );
-    if (compareResult.status !== "ok") {
-      throw new Error(`compare: status=${compareResult.status} notes=${compareResult.notes}`);
+    if (proofResult.status !== "ok") {
+      throw new Error(`proof_of_invariance: status=${proofResult.status} notes=${proofResult.notes}`);
     }
-    if (!compareResult.winner_label) {
-      throw new Error("compare: winner_label is empty");
+    if (!proofResult.winner_label) {
+      throw new Error("proof_of_invariance: winner_label is empty");
     }
-    if (!Array.isArray(compareResult.paths_written) || compareResult.paths_written.length < 6) {
-      throw new Error("compare: expected at least 6 paths_written");
+    if (!Array.isArray(proofResult.paths_written) || proofResult.paths_written.length < 6) {
+      throw new Error("proof_of_invariance: expected at least 6 paths_written");
     }
     const compareOutputDir = path.join(
       repoRoot,
       "lab",
       "examples",
       "wf_cycle_public_fixture",
-      "compare",
+      "proof_of_invariance", 
       "B_topdown_skill"
     );
     createdPaths.push(compareOutputDir);
@@ -185,7 +185,7 @@ function main() {
       restoreBackup(winnerBackup);
     }
 
-    console.log("[wf_cycle_smoke_ci] PASS: scaffold, driver_probes, compare, winner_pack");
+    console.log("[wf_cycle_smoke_ci] PASS: scaffold, driver_probes, proof_of_invariance, winner_pack");
   } finally {
     for (const p of createdPaths) {
       deleteDirIfExists(p);

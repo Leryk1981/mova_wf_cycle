@@ -21,7 +21,7 @@ artifacts_snapshot/    # copied inputs/outputs used for metrics
 ```
 
 Compare outputs (fixture): `lab/examples/wf_cycle_public_fixture/compare/B_topdown_skill/`
-- Contains metrics comparison, diffs, and `paths_written` from `compute_compare`.
+- Contains the Proof of Invariance artifacts: metrics comparison, `result_core` diffs, and `paths_written` from `compute_compare`.
 
 Winner pack (fixture): `lab/examples/wf_cycle_public_fixture/outputs/winner_pack_skill/`
 - Bundles the winning attempt’s event_log, metrics, scorecard, compare summary, and evidence snapshot.

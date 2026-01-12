@@ -51,7 +51,10 @@ const defaultPolicy = {
   },
   wf_cycle: {
     scaffold: { enabled: false, reason: "wf scaffold disabled by default policy" },
-    compare: { enabled: false, reason: "wf compare disabled by default policy" },
+    proof_of_invariance: {
+      enabled: false,
+      reason: "proof of invariance disabled by default policy",
+    },
     winner_pack: { enabled: false, reason: "wf winner pack disabled by default policy" },
   },
 };
@@ -146,7 +149,10 @@ const normalizedRequest = {
     finish_branch: mergeFinishBranchStep(stepsReq.finish_branch, defaultPolicy.finish_branch),
     wf_cycle: {
       scaffold: mergeStep(wfReq.scaffold, defaultPolicy.wf_cycle.scaffold),
-      compare: mergeStep(wfReq.compare, defaultPolicy.wf_cycle.compare),
+      proof_of_invariance: mergeStep(
+        wfReq.proof_of_invariance ?? wfReq.compare,
+        defaultPolicy.wf_cycle.proof_of_invariance
+      ),
       winner_pack: mergeStep(wfReq.winner_pack, defaultPolicy.wf_cycle.winner_pack),
     },
   },
@@ -227,7 +233,7 @@ const wrappers = {
     script: ".codex/skills/mova_wf_cycle_scaffold_basic/scripts/run.mjs",
     needsRequest: true,
   },
-  wf_compare: {
+  proof_of_invariance: {
     script: ".codex/skills/mova_wf_cycle_compute_compare_basic/scripts/run.mjs",
     needsRequest: true,
   },
@@ -1749,7 +1755,7 @@ const wfCycle = steps.wf_cycle;
 runWrapper("snapshot", steps.snapshot, wrappers.snapshot);
 runWrapper("gates", steps.gates, wrappers.gates);
 runWrapper("wf_scaffold", wfCycle.scaffold, wrappers.wf_scaffold);
-runWrapper("wf_compare", wfCycle.compare, wrappers.wf_compare);
+runWrapper("proof_of_invariance", wfCycle.proof_of_invariance, wrappers.proof_of_invariance);
 runWrapper("wf_winner_pack", wfCycle.winner_pack, wrappers.wf_winner_pack);
 runQualityInvoiceApStep(steps.quality_invoice_ap);
 runQualityGatewayStep(steps.quality_gateway);

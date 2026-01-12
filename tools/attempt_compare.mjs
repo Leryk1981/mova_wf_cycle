@@ -7,9 +7,9 @@ const repoRoot = process.cwd();
 
 function parseArgs(argv) {
   const parsed = {
-    labelA: "ide",
-    labelB: "cli",
-    files: ["run/request.json", "run/result.json", "run/evidence/totals.json"],
+    labelA: "primary",
+    labelB: "repeat",
+    files: ["run/result_core.json"],
     out: path.join("artifacts", "attempts", "compare_latest.json"),
   };
   for (let i = 0; i < argv.length; i += 1) {
@@ -26,8 +26,69 @@ function parseArgs(argv) {
 
 function printHelp() {
   console.log(
-    "Usage: node tools/attempt_compare.mjs [--label-a ide --label-b cli --files file1,file2 --out path --skill <name>]"
+    "Usage: node tools/attempt_compare.mjs [--label-a primary --label-b repeat --files run/result_core.json --out path --skill <name>]"
   );
+}
+
+const RESULT_METADATA_KEYS = new Set(["metadata", "meta"]);
+
+function stripResultMetadata(item) {
+  if (Array.isArray(item)) {
+    return item.map(stripResultMetadata);
+  }
+  if (item && typeof item === "object") {
+    const cleaned = {};
+    for (const [key, value] of Object.entries(item)) {
+      if (RESULT_METADATA_KEYS.has(key)) continue;
+      cleaned[key] = stripResultMetadata(value);
+    }
+    return cleaned;
+  }
+  return item;
+}
+
+function buildResultCore(result) {
+  if (!result || typeof result !== "object") return result;
+  return stripResultMetadata(result);
+}
+
+function canonicalStringify(value) {
+  if (value === null) return "null";
+  if (Array.isArray(value)) {
+    return `[${value.map(canonicalStringify).join(",")}]`;
+  }
+  if (typeof value === "object") {
+    const keys = Object.keys(value).sort();
+    const entries = keys.map((key) => `${JSON.stringify(key)}:${canonicalStringify(value[key])}`);
+    return `{${entries.join(",")}}`;
+  }
+  return JSON.stringify(value);
+}
+
+function loadResultCoreCandidate(attemptDir, relPath) {
+  const normalizedRel = relPath.replace(/\\/g, "/");
+  const corePath = path.join(attemptDir, normalizedRel);
+  if (fs.existsSync(corePath)) {
+    try {
+      const parsed = JSON.parse(fs.readFileSync(corePath, "utf8"));
+      return { obj: parsed, source: corePath, reason: "core" };
+    } catch (err) {
+      return { error: `failed to parse result_core (${err.message})`, source: corePath };
+    }
+  }
+  if (normalizedRel.endsWith("result_core.json")) {
+    const fallbackRel = normalizedRel.replace(/result_core\.json$/, "result.json");
+    const fallbackPath = path.join(attemptDir, fallbackRel);
+    if (fs.existsSync(fallbackPath)) {
+      try {
+        const raw = JSON.parse(fs.readFileSync(fallbackPath, "utf8"));
+        return { obj: buildResultCore(raw), source: fallbackPath, reason: "fallback" };
+      } catch (err) {
+        return { error: `failed to parse result (${err.message})`, source: fallbackPath };
+      }
+    }
+  }
+  return null;
 }
 
 function findLatestAttempt(label) {
@@ -54,6 +115,47 @@ function findLatestAttempt(label) {
 }
 
 function compareFiles(baseA, baseB, relPath) {
+  const normalizedRel = relPath.replace(/\\/g, "/");
+  if (normalizedRel.endsWith("result_core.json")) {
+    const left = loadResultCoreCandidate(baseA.dir, normalizedRel);
+    const right = loadResultCoreCandidate(baseB.dir, normalizedRel);
+    const reasonParts = [];
+    if (!left) {
+      reasonParts.push("a missing result_core/result.json");
+    } else if (left.error) {
+      reasonParts.push(`a error: ${left.error}`);
+    }
+    if (!right) {
+      reasonParts.push("b missing result_core/result.json");
+    } else if (right.error) {
+      reasonParts.push(`b error: ${right.error}`);
+    }
+    const pathA = left?.source ?? path.join(baseA.dir, normalizedRel);
+    const pathB = right?.source ?? path.join(baseB.dir, normalizedRel);
+    if (reasonParts.length) {
+      return {
+        file: relPath,
+        equal: false,
+        reason: reasonParts.join(" ; "),
+        paths: {
+          a: path.relative(repoRoot, pathA).replace(/\\/g, "/"),
+          b: path.relative(repoRoot, pathB).replace(/\\/g, "/"),
+        },
+      };
+    }
+    const leftStr = canonicalStringify(left.obj);
+    const rightStr = canonicalStringify(right.obj);
+    const equal = leftStr === rightStr;
+    return {
+      file: relPath,
+      equal,
+      paths: {
+        a: path.relative(repoRoot, pathA).replace(/\\/g, "/"),
+        b: path.relative(repoRoot, pathB).replace(/\\/g, "/"),
+      },
+      ...(equal ? {} : { reason: "result_core differs (business output mismatch)" }),
+    };
+  }
   const fileA = path.join(baseA.dir, relPath);
   const fileB = path.join(baseB.dir, relPath);
   const existsA = fs.existsSync(fileA);
@@ -89,16 +191,17 @@ async function main() {
     printHelp();
     return;
   }
-  const attemptA = findLatestAttempt(args.labelA);
-  const attemptB = findLatestAttempt(args.labelB);
+  const primaryAttempt = findLatestAttempt(args.labelA);
+  const repeatAttempt = findLatestAttempt(args.labelB);
 
-  const comparisons = args.files.map((file) => compareFiles(attemptA, attemptB, file));
+  const comparisons = args.files.map((file) => compareFiles(primaryAttempt, repeatAttempt, file));
   const mismatches = comparisons.filter((c) => !c.equal).map((c) => c.file);
   const report = {
     ...(args.skill ? { skill: args.skill } : {}),
-    labels: { a: args.labelA, b: args.labelB },
-    attempt_a: attemptA,
-    attempt_b: attemptB,
+    participants: { primary: args.labelA, repeat: args.labelB },
+    labels: { primary: args.labelA, repeat: args.labelB },
+    primary_attempt: primaryAttempt,
+    repeat_attempt: repeatAttempt,
     files: comparisons,
     summary: {
       identical: mismatches.length === 0,
@@ -111,9 +214,9 @@ async function main() {
   fs.mkdirSync(path.dirname(outPath), { recursive: true });
   fs.writeFileSync(outPath, JSON.stringify(report, null, 2));
 
-  const banner = args.skill ? `[attempt_compare:${args.skill}]` : "[attempt_compare]";
+  const banner = args.skill ? `[proof_of_invariance:${args.skill}]` : "[proof_of_invariance]";
   if (report.summary.identical) {
-    console.log(`${banner} OK – files identical (${args.files.join(", ")})`);
+    console.log(`${banner} OK – result_core matches (${args.files.join(", ")})`);
   } else {
     console.log(
       `${banner} DIFF – mismatched files: ${report.summary.mismatched_files.join(", ") || "(none)"}`

@@ -143,9 +143,15 @@ function writeMarkdown(report, outPath) {
   if (report.workflows?.length) {
     for (const wf of report.workflows) {
       lines.push(`## Workflow ${wf.name} – ${wf.status.toUpperCase()}`);
-      lines.push(`- Attempt A: ${wf.attempts.a.status} (${wf.attempts.a.log})`);
-      lines.push(`- Attempt B: ${wf.attempts.b.status} (${wf.attempts.b.log})`);
-      lines.push(`- Compare: ${wf.compare.status} (${wf.compare.log})`);
+      lines.push(
+        `- Double-run primary: ${wf.double_run.primary.status} (${wf.double_run.primary.log})`
+      );
+      lines.push(
+        `- Double-run repeat: ${wf.double_run.repeat.status} (${wf.double_run.repeat.log})`
+      );
+      lines.push(
+        `- Proof of Invariance (result_core): ${wf.proof_of_invariance.status} (${wf.proof_of_invariance.log})`
+      );
       if (wf.invariants) {
         lines.push(`- Invariants: ${wf.invariants.status} (${wf.invariants.log})`);
       }
@@ -305,15 +311,21 @@ function runPositive(scope) {
     const entry = {
       name: workflow.base,
       slug,
-      attempts: {},
+      double_run: {},
     };
     const labelA = extractLabel(workflow.scriptA.script) || "ide";
     const labelB = extractLabel(workflow.scriptB.script) || "cli";
-    entry.attempts.a = runNpmCommand(["run", workflow.scriptA.name], path.join(wfDir, `${slug}_a.log`));
-    entry.attempts.b = runNpmCommand(["run", workflow.scriptB.name], path.join(wfDir, `${slug}_b.log`));
-    const compareLog = path.join(wfDir, `${slug}_compare.log`);
-    const compareOut = path.join(wfDir, `${slug}_compare.json`);
-    const compare = runCommand(process.execPath, [
+    entry.double_run.primary = runNpmCommand(
+      ["run", workflow.scriptA.name],
+      path.join(wfDir, `${slug}_primary.log`)
+    );
+    entry.double_run.repeat = runNpmCommand(
+      ["run", workflow.scriptB.name],
+      path.join(wfDir, `${slug}_repeat.log`)
+    );
+    const proofLog = path.join(wfDir, `${slug}_proof_of_invariance.log`);
+    const proofOut = path.join(wfDir, `${slug}_proof_of_invariance.json`);
+    const proof = runCommand(process.execPath, [
       "tools/attempt_compare.mjs",
       "--label-a",
       labelA,
@@ -322,10 +334,10 @@ function runPositive(scope) {
       "--skill",
       workflow.base,
       "--out",
-      compareOut,
-    ], compareLog);
-    compare.report_path = relRepo(compareOut);
-    entry.compare = compare;
+      proofOut,
+    ], proofLog);
+    proof.report_path = relRepo(proofOut);
+    entry.proof_of_invariance = proof;
 
     let invariants = { status: "fail", log: "" };
     try {
@@ -345,9 +357,9 @@ function runPositive(scope) {
     entry.invariants = invariants;
 
     entry.status =
-      entry.attempts.a.status === "pass" &&
-      entry.attempts.b.status === "pass" &&
-      entry.compare.status === "pass" &&
+      entry.double_run.primary.status === "pass" &&
+      entry.double_run.repeat.status === "pass" &&
+      entry.proof_of_invariance.status === "pass" &&
       entry.invariants.status === "pass"
         ? "pass"
         : "fail";
@@ -356,7 +368,12 @@ function runPositive(scope) {
 
   report.status = [
     ...report.gates,
-    ...workflows.flatMap((wf) => [wf.attempts.a, wf.attempts.b, wf.compare, wf.invariants]),
+    ...workflows.flatMap((wf) => [
+      wf.double_run.primary,
+      wf.double_run.repeat,
+      wf.proof_of_invariance,
+      wf.invariants,
+    ]),
   ].every((item) => item.status === "pass")
     ? "pass"
     : "fail";

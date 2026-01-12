@@ -107,13 +107,15 @@ npm run smoke:mova_mcp_v0
 3. The runtime writes `request.json`, `result.json`, and `evidence/totals.json`.
 4. Store and search the run through the Cloudflare worker using `mova_skill_ingest_store_episode_basic` and `/episode/search` exactly as described above (reuse PROD env vars).
 
-## Attempt protocol (single-branch)
-- IDE vs CLI comparisons stay on one branch; every run drops evidence under `artifacts/attempts/<label>/<run_id>/`.
-- Run Attempt A for invoice intake (IDE path):  
+## Proof of Invariance (single-branch)
+- Proof of Invariance = double-run the same workflow input and compare only `result_core`; evidence and other metadata may differ between runs.
+- Each run drops artifacts beneath `artifacts/attempts/<label>/<run_id>/` so you can keep the workspace on a single branch.
+- Launch the primary and repeat runs:
   ```bash
   npm run attempt:invoice:a
+  npm run attempt:invoice:b
   ```
-- The helper (`tools/attempt_run.mjs`) captures stdout/stderr, normalized request/result/totals, and the config snapshot so both IDE/CLI attempts can be diffed without juggling branches.
+- `tools/attempt_run.mjs` captures stdout/stderr, normalized request/result/totals, and the config snapshot so the two result cores can be diffed without juggling branches.
 
 ## Reference docs
 - FlashSlot operator guides: `docs/flashslot/OPERATOR_CHECKLIST_v0.md`, `docs/flashslot/OPERATOR_DEMO_v0.md`.

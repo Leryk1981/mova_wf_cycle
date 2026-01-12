@@ -51,6 +51,28 @@ function expand(value, map) {
   return value;
 }
 
+const RESULT_METADATA_KEYS = new Set(["metadata", "meta"]);
+
+function stripResultMetadata(item) {
+  if (Array.isArray(item)) {
+    return item.map(stripResultMetadata);
+  }
+  if (item && typeof item === "object") {
+    const cleaned = {};
+    for (const [key, value] of Object.entries(item)) {
+      if (RESULT_METADATA_KEYS.has(key)) continue;
+      cleaned[key] = stripResultMetadata(value);
+    }
+    return cleaned;
+  }
+  return item;
+}
+
+function buildResultCore(result) {
+  if (!result || typeof result !== "object") return result;
+  return stripResultMetadata(result);
+}
+
 function gitCommitSha() {
   try {
     const res = spawnSync("git", ["rev-parse", "HEAD"], {
@@ -99,6 +121,7 @@ async function main() {
   fs.writeFileSync(path.join(attemptDir, "stderr.log"), result.stderr ?? "", "utf8");
 
   const copySummary = [];
+  const resultCaptures = [];
   for (const capturePath of captures) {
     const absPath = path.isAbsolute(capturePath)
       ? capturePath
@@ -111,11 +134,28 @@ async function main() {
         fs.copyFileSync(absPath, destPath);
         record.destination = path.relative(repoRoot, destPath).replace(/\\/g, "/");
         record.copied = true;
+        if (path.basename(absPath) === "result.json") {
+          resultCaptures.push({ runDir: path.dirname(absPath), destPath });
+        }
       }
     } catch (err) {
       record.error = err.message;
     }
     copySummary.push(record);
+  }
+
+  const rootResultCorePath = path.join(attemptDir, "result_core.json");
+  for (const info of resultCaptures) {
+    try {
+      const rawResult = JSON.parse(fs.readFileSync(info.destPath, "utf8"));
+      const core = buildResultCore(rawResult);
+      const serialized = JSON.stringify(core, null, 2);
+      const runCorePath = path.join(info.runDir, "result_core.json");
+      fs.writeFileSync(runCorePath, serialized, "utf8");
+      fs.writeFileSync(rootResultCorePath, serialized, "utf8");
+    } catch {
+      /* ignore result_core on parse failure */
+    }
   }
 
   const finishedAt = new Date();
