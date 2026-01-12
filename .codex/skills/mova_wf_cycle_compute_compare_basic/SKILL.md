@@ -1,6 +1,6 @@
 ---
 name: "MOVA: wf_cycle_compute_compare_basic (wrapper)"
-description: "Deterministically compare two wf_cycle v1.1 runs (IDE vs CLI): compute metrics, compute score, pick winner, and write a compare folder with canonical artifacts."
+description: "Deterministically compare wf_cycle runs as a Proof of Invariance step: compute metrics, score the double-run, and write canonical compare artifacts for the result_core outputs."
 when_to_use:
   - "Use when \"WF cycle compute+compare (basic)\" must run through Codex automation"
 inputs:
