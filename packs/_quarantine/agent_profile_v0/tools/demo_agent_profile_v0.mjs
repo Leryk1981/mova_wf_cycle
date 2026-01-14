@@ -2,17 +2,20 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
+import { loadStationRegistry, resolvePackPathAbs } from "../../../../tools/station_registry_helpers_v0.mjs";
 
-const repoRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
-const generator = path.join(repoRoot, "packs", "agent_template_v0", "tools", "agent_template_generate_v0.mjs");
-const requestPath = path.join(repoRoot, "packs", "agent_template_v0", "docs", "examples", "pos", "agent_template_request_min.json");
+const repoRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "..");
+const registry = loadStationRegistry(repoRoot);
+const packDir = resolvePackPathAbs(repoRoot, "agent_profile_v0", registry);
+const generator = path.join(packDir, "tools", "agent_profile_generate_v0.mjs");
+const requestPath = path.join(packDir, "docs", "examples", "pos", "agent_profile_request_min.json");
 
 const child = spawnSync(process.execPath, [generator, "--request", requestPath], {
   cwd: repoRoot,
   encoding: "utf8"
 });
 if (child.status !== 0) {
-  console.error(child.stderr || child.stdout || "agent_template generator failed");
+  console.error(child.stderr || child.stdout || "agent_profile generator failed");
   process.exit(child.status ?? 1);
 }
 let result;

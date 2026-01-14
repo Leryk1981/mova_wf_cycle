@@ -2,7 +2,7 @@
   "label": "invoice_approve_schedule_a",
   "command": "node",
   "args": [
-    "packs/invoice_ap_v0/runtime/impl/invoice_approve_schedule_v0.mjs",
+    "packs/_quarantine/invoice_ap_v0/runtime/impl/invoice_approve_schedule_v0.mjs",
     "--in",
     "docs/examples/invoice_approve_schedule_request_sample.json",
     "--out",
@@ -15,7 +15,7 @@
     "{{ATTEMPT_DIR}}/run/evidence/totals.json"
   ],
   "env": {
-    "schema": "packs/invoice_ap_v0/env/env.invoice_approve_schedule_run_v0.schema.json",
+    "schema": "packs/_quarantine/invoice_ap_v0/env/env.invoice_approve_schedule_run_v0.schema.json",
     "artifacts_dir": "{{ATTEMPT_DIR}}/run",
     "request_ref": "{{ATTEMPT_DIR}}/run/request.json",
     "result_ref": "{{ATTEMPT_DIR}}/run/result.json",
@@ -28,3 +28,4 @@
     }
   }
 }
+

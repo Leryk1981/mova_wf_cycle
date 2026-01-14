@@ -4,10 +4,13 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import Ajv2020 from "ajv/dist/2020.js";
 import addFormats from "ajv-formats";
+import { loadStationRegistry, resolvePackPathAbs } from "../../../../tools/station_registry_helpers_v0.mjs";
 
-const repoRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
-const schemaPath = path.join(repoRoot, "packs", "domain_pack_scaffold_v0", "ds", "env.domain_pack_scaffold_generate_request_v0.json");
-const defaultRequest = path.join(repoRoot, "packs", "domain_pack_scaffold_v0", "docs", "examples", "pos", "domain_pack_scaffold_request_min.json");
+const repoRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "..");
+const registry = loadStationRegistry(repoRoot);
+const packDir = resolvePackPathAbs(repoRoot, "domain_pack_scaffold_v0", registry);
+const schemaPath = path.join(packDir, "ds", "env.domain_pack_scaffold_generate_request_v0.json");
+const defaultRequest = path.join(packDir, "docs", "examples", "pos", "domain_pack_scaffold_request_min.json");
 const allowedRoles = ["planner", "executor", "qa", "notary"];
 
 function readJson(filePath) {

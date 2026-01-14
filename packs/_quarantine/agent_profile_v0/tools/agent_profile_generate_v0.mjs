@@ -4,10 +4,13 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import Ajv2020 from "ajv/dist/2020.js";
 import addFormats from "ajv-formats";
+import { loadStationRegistry, resolvePackPathAbs } from "../../../../tools/station_registry_helpers_v0.mjs";
 
-const repoRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
-const schemaPath = path.join(repoRoot, "packs", "agent_template_v0", "ds", "env.agent_template_generate_request_v0.json");
-const defaultRequest = path.join(repoRoot, "packs", "agent_template_v0", "docs", "examples", "pos", "agent_template_request_min.json");
+const repoRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "..");
+const registry = loadStationRegistry(repoRoot);
+const packDir = resolvePackPathAbs(repoRoot, "agent_profile_v0", registry);
+const schemaPath = path.join(packDir, "ds", "env.agent_profile_generate_request_v0.json");
+const defaultRequest = path.join(packDir, "docs", "examples", "pos", "agent_profile_request_min.json");
 const allowedRoles = ["planner", "executor", "qa", "notary"];
 
 function readJson(filePath) {
@@ -82,7 +85,7 @@ function run() {
   }, {});
 
   const runId = new Date().toISOString().replace(/[:.]/g, "-");
-  const baseDir = path.join(repoRoot, "artifacts", "agent_template", runId);
+  const baseDir = path.join(repoRoot, "artifacts", "agent_profile", runId);
   const bundleDir = path.join(baseDir, "bundle");
   fs.mkdirSync(bundleDir, { recursive: true });
   const filesCreated = [];
@@ -119,7 +122,7 @@ function run() {
       max_executor_rounds: 2,
       max_observed_commands: 5
     },
-    notes: "deny-by-default policy for agent_template bundles"
+    notes: "deny-by-default policy for agent_profile bundles"
   };
   writeJson(path.join("mova", "policy", "policy.v0.json"), policy);
 
@@ -144,7 +147,7 @@ function run() {
     version: "v0",
     roles: allowedRoles.map((role) => ({
       role_id: role,
-      description: `Canonical ${role} role for agent_template bundles`,
+      description: `Canonical ${role} role for agent_profile bundles`,
       capabilities: [
         role === "planner"
           ? "plan"
@@ -211,9 +214,9 @@ const roleMatrix = {
 
   const claudeCommandFiles = {
     "gates.md": "# Gates Command Reference\n\n1. `npm run smoke:wf_cycle` - exercise the wf_cycle smoke suite.\n2. `npm run validate` - verify all schemas and manifests stay valid.\n",
-    "quality.md": "# Quality Command Reference\n\n1. `npm run quality:agent_template` - run the positive quality checks for agent_template bundles.\n2. `npm run quality:agent_template:neg` - ensure negatives fail as expected.\n",
-    "station.md": "# Station Command Reference\n\n1. `node skills/station_cycle_v1/impl/bindings/run_station_cycle.js` - drive the station_cycle workflow with optional quality/ship steps.\n2. Use `tmp_station_cycle_agent_template_request.json` samples to toggle steps.\n",
-    "ship.md": "# Ship Command Reference\n\n1. `npm run ship:agent_template` - package the agent template bundle and emit manifest metadata (pass `--request` or set `AGENT_TEMPLATE_REQUEST`).\n"
+    "quality.md": "# Quality Command Reference\n\n1. `npm run quality:agent_profile` - run the positive quality checks for agent_profile bundles.\n2. `npm run quality:agent_profile:neg` - ensure negatives fail as expected.\n",
+    "station.md": "# Station Command Reference\n\n1. `node skills/station_cycle_v1/impl/bindings/run_station_cycle.js` - drive the station_cycle workflow with optional quality/ship steps.\n2. Use `tmp_station_cycle_agent_profile_request.json` samples to toggle steps.\n",
+    "ship.md": "# Ship Command Reference\n\n1. `npm run ship:agent_profile` - package the agent template bundle and emit manifest metadata (pass `--request` or set `AGENT_TEMPLATE_REQUEST`).\n"
   };
   for (const [filename, content] of Object.entries(claudeCommandFiles)) {
     writeText(path.join(".claude", "commands", filename), content.trim() + "\n");
@@ -254,6 +257,6 @@ try {
   run();
 } catch (error) {
   const code = error.code || "ERR_AGENT_TEMPLATE_GENERATE";
-  console.error(`[agent_template_generate] ${code} ${error.message}`);
+  console.error(`[agent_profile_generate] ${code} ${error.message}`);
   process.exit(1);
 }

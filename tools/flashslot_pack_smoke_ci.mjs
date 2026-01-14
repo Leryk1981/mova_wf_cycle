@@ -4,8 +4,11 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import Ajv2020 from "ajv/dist/2020.js";
 import addFormats from "ajv-formats";
+import { loadStationRegistry, resolvePackPathAbs } from "./station_registry_helpers_v0.mjs";
 
 const repoRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
+const registry = loadStationRegistry(repoRoot);
+const flashslotPackRoot = resolvePackPathAbs(repoRoot, "flashslot_v0", registry);
 
 function readJson(relPath) {
   const absPath = path.isAbsolute(relPath) ? relPath : path.join(repoRoot, relPath);
@@ -20,13 +23,13 @@ function main() {
   const ajv = new Ajv2020({ allErrors: true, strict: false });
   addFormats(ajv);
 
-  const offerSchema = readJson("packs/flashslot_v0/ds/ds.flashslot_offer_v1.json");
-  const publishRequestSchema = readJson("packs/flashslot_v0/env/env.flashslot_offer_publish_request_v1.json");
-  const publishResultSchema = readJson("packs/flashslot_v0/env/env.flashslot_offer_publish_result_v1.json");
+  const offerSchema = readJson(path.join(flashslotPackRoot, "ds", "ds.flashslot_offer_v1.json"));
+  const publishRequestSchema = readJson(path.join(flashslotPackRoot, "env", "env.flashslot_offer_publish_request_v1.json"));
+  const publishResultSchema = readJson(path.join(flashslotPackRoot, "env", "env.flashslot_offer_publish_result_v1.json"));
 
   ajv.addSchema(offerSchema, offerSchema.$id);
 
-  const example = readJson("packs/flashslot_v0/examples/hypothesis_001_dentist.json");
+  const example = readJson(path.join(flashslotPackRoot, "examples", "hypothesis_001_dentist.json"));
   const offerValid = ajv.validate(offerSchema.$id, example.offer);
   if (!offerValid) {
     throw new Error(`offer example failed validation: ${formatErrors(ajv.errors)}`);

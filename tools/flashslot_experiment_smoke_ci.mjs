@@ -3,13 +3,16 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawn } from "node:child_process";
+import { loadStationRegistry, resolvePackPathAbs } from "./station_registry_helpers_v0.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.join(__dirname, "..");
+const registry = loadStationRegistry(repoRoot);
+const flashslotPackDir = resolvePackPathAbs(repoRoot, "flashslot_v0", registry);
 const cliScript = path.join(repoRoot, "tools", "flashslot_experiment_cli.mjs");
 const setPaths = [
-  path.join(repoRoot, "packs", "flashslot_v0", "examples", "hypothesis_set_001_dentist_abc.json"),
-  path.join(repoRoot, "packs", "flashslot_v0", "examples", "hypothesis_set_002_barbershop_abc.json"),
+  path.join(flashslotPackDir, "examples", "hypothesis_set_001_dentist_abc.json"),
+  path.join(flashslotPackDir, "examples", "hypothesis_set_002_barbershop_abc.json"),
 ];
 const runsRoot = path.join(repoRoot, "lab", "flashslot_runs");
 

@@ -52,7 +52,7 @@
 1. Використовуйте зразок `docs/examples/flashslot_publish_offer_request_sample.json`.
 2. Запуск:
    ```bash
-   node packs/flashslot_v0/runtime/impl/publish_offer_v0.mjs \
+   node packs/_quarantine/flashslot_v0/runtime/impl/publish_offer_v0.mjs \
      --in docs/examples/flashslot_publish_offer_request_sample.json \
      --out artifacts/flashslot_publish/sample_run \
      --driver noop

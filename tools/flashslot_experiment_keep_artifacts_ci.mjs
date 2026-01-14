@@ -5,9 +5,13 @@ import path from "node:path";
 import crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
+import { loadStationRegistry, resolvePackPathAbs } from "./station_registry_helpers_v0.mjs";
 
 const repoRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
-const publishScript = path.join(repoRoot, "packs", "flashslot_v0", "runtime", "impl", "publish_offer_v0.mjs");
+const registry = loadStationRegistry(repoRoot);
+const flashslotPackDir = resolvePackPathAbs(repoRoot, "flashslot_v0", registry);
+const publishScript = path.join(flashslotPackDir, "runtime", "impl", "publish_offer_v0.mjs");
+const flashslotPrefix = "packs/flashslot_v0/";
 
 function parseArgs(argv) {
   const args = { driver: "noop", dryRun: true };
@@ -70,7 +74,12 @@ function buildDeterministicId(setId, attemptId) {
 }
 
 function validateSet(setPath) {
-  const absPath = path.resolve(repoRoot, setPath);
+  const normalized = setPath.replace(/\\/g, "/");
+  const absPath = path.isAbsolute(normalized)
+    ? normalized
+    : (normalized.startsWith(flashslotPrefix)
+        ? path.join(flashslotPackDir, normalized.slice(flashslotPrefix.length))
+        : path.resolve(repoRoot, setPath));
   if (!fs.existsSync(absPath)) {
     throw new Error(`hypothesis set not found: ${setPath}`);
   }

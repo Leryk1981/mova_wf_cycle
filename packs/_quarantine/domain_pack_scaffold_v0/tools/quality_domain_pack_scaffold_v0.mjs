@@ -3,14 +3,17 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
+import { loadStationRegistry, resolvePackPathAbs } from "../../../../tools/station_registry_helpers_v0.mjs";
 
-const repoRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
-const generatorScript = path.join(repoRoot, "packs", "domain_pack_scaffold_v0", "tools", "domain_pack_scaffold_generate_v0.mjs");
-const defaultPositiveRequest = path.join(repoRoot, "packs", "domain_pack_scaffold_v0", "docs", "examples", "pos", "domain_pack_scaffold_request_min.json");
-const actionsRequest = path.join(repoRoot, "packs", "domain_pack_scaffold_v0", "docs", "examples", "pos", "domain_pack_scaffold_request_with_actions.json");
-const negativeSuitePath = path.join(repoRoot, "packs", "domain_pack_scaffold_v0", "docs", "domain_pack_scaffold_negative_suite_v0.json");
+const repoRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "..");
+const registry = loadStationRegistry(repoRoot);
+const packDir = resolvePackPathAbs(repoRoot, "domain_pack_scaffold_v0", registry);
+const generatorScript = path.join(packDir, "tools", "domain_pack_scaffold_generate_v0.mjs");
+const defaultPositiveRequest = path.join(packDir, "docs", "examples", "pos", "domain_pack_scaffold_request_min.json");
+const actionsRequest = path.join(packDir, "docs", "examples", "pos", "domain_pack_scaffold_request_with_actions.json");
+const negativeSuitePath = path.join(packDir, "docs", "domain_pack_scaffold_negative_suite_v0.json");
 const qualityRoot = path.join(repoRoot, "artifacts", "quality", "domain_pack_scaffold");
-const shipScript = path.join(repoRoot, "packs", "domain_pack_scaffold_v0", "tools", "ship_domain_pack_scaffold_v0.mjs");
+const shipScript = path.join(packDir, "tools", "ship_domain_pack_scaffold_v0.mjs");
 
 function getArg(key) {
   const idx = process.argv.indexOf(key);

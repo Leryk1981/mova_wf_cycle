@@ -3,14 +3,17 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
+import { loadStationRegistry, resolvePackPathAbs } from "../../../../tools/station_registry_helpers_v0.mjs";
 
-const repoRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
-const generatorScript = path.join(repoRoot, "packs", "agent_profile_v0", "tools", "agent_profile_generate_v0.mjs");
-const defaultPositiveRequest = path.join(repoRoot, "packs", "agent_profile_v0", "docs", "examples", "pos", "agent_profile_request_min.json");
-const actionsRequest = path.join(repoRoot, "packs", "agent_profile_v0", "docs", "examples", "pos", "agent_profile_request_with_actions.json");
-const negativeSuitePath = path.join(repoRoot, "packs", "agent_profile_v0", "docs", "agent_profile_negative_suite_v0.json");
-const qualityRoot = path.join(repoRoot, "artifacts", "quality", "agent_profile");
-const shipScript = path.join(repoRoot, "packs", "agent_profile_v0", "tools", "ship_agent_profile_v0.mjs");
+const repoRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "..");
+const registry = loadStationRegistry(repoRoot);
+const packDir = resolvePackPathAbs(repoRoot, "agent_template_v0", registry);
+const generatorScript = path.join(packDir, "tools", "agent_template_generate_v0.mjs");
+const defaultPositiveRequest = path.join(packDir, "docs", "examples", "pos", "agent_template_request_min.json");
+const actionsRequest = path.join(packDir, "docs", "examples", "pos", "agent_template_request_with_actions.json");
+const negativeSuitePath = path.join(packDir, "docs", "agent_template_negative_suite_v0.json");
+const qualityRoot = path.join(repoRoot, "artifacts", "quality", "agent_template");
+const shipScript = path.join(packDir, "tools", "ship_agent_template_v0.mjs");
 
 function getArg(key) {
   const idx = process.argv.indexOf(key);
@@ -129,7 +132,7 @@ function runPositive() {
   const runId = new Date().toISOString().replace(/[:.]/g, "-");
   const child = runGenerator(positiveRequestPath);
   if (child.status !== 0) {
-    throw new Error("agent_profile generator failed for positive request");
+    throw new Error("agent_template generator failed for positive request");
   }
   const result = (() => {
     try {
@@ -244,7 +247,7 @@ function runPositive() {
   });
   if (shipChild.status !== 0) {
     throw new Error(
-      `[quality_agent_profile] ship tool failed (exit ${shipChild.status ?? "unknown"}): ${shipChild.stderr?.trim() || shipChild.stdout?.trim() || "(no output)"}`
+      `[quality_agent_template] ship tool failed (exit ${shipChild.status ?? "unknown"}): ${shipChild.stderr?.trim() || shipChild.stdout?.trim() || "(no output)"}`
     );
   }
   let shipResult;
@@ -306,7 +309,7 @@ function runPositive() {
 function runActionsChecks() {
   const child = runGenerator(actionsRequest);
   if (child.status !== 0) {
-    throw new Error("agent_profile generator failed for actions request");
+    throw new Error("agent_template generator failed for actions request");
   }
   const result = (() => {
     try {
@@ -465,7 +468,7 @@ function main() {
   const mode = getArg("--mode") === "negative" ? "negative" : "positive";
   ensureDir(qualityRoot);
   const report = mode === "negative" ? runNegative() : runPositive();
-  const prefix = `[quality_agent_profile:${mode}]`;
+  const prefix = `[quality_agent_template:${mode}]`;
   if (report.status === "pass") {
     console.log(`${prefix} PASS (reports: ${rel(path.dirname(writeReportDir(report.run_id, mode === "positive" ? "quality_report.json" : "quality_report_negative.json")))})`);
     process.exit(0);

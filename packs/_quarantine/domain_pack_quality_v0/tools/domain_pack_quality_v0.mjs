@@ -4,10 +4,16 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { spawnSync } from 'child_process';
+import { loadStationRegistry, resolvePackPathAbs } from '../../../../tools/station_registry_helpers_v0.mjs';
 
-const repoRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
+const repoRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');
+const registry = loadStationRegistry(repoRoot);
 const qualityRoot = path.join(repoRoot, 'artifacts', 'quality', 'domain_pack_quality');
-const scaffoldGenerator = path.join(repoRoot, 'packs/domain_pack_scaffold_v0/tools/demo_domain_pack_scaffold_v0.mjs');
+const scaffoldGenerator = path.join(
+  resolvePackPathAbs(repoRoot, 'domain_pack_scaffold_v0', registry),
+  'tools',
+  'demo_domain_pack_scaffold_v0.mjs'
+);
 
 function getArg(key) {
   const idx = process.argv.indexOf(key);

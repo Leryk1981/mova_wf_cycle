@@ -5,33 +5,24 @@ import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 import Ajv2020 from "ajv/dist/2020.js";
 import addFormats from "ajv-formats";
+import { loadStationRegistry, resolvePackPathAbs } from "./station_registry_helpers_v0.mjs";
 
 const repoRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
-const runtimePath = path.join(
-  repoRoot,
-  "packs",
-  "mcda_matrix_v0",
-  "runtime",
-  "mcda_score_wsm_minmax_v0.mjs"
-);
-const casesPath = path.join(
-  repoRoot,
-  "packs",
-  "mcda_matrix_v0",
-  "examples",
-  "pos",
-  "pos_cases_v0.json"
-);
+const registry = loadStationRegistry(repoRoot);
+const mcdaPackRoot = resolvePackPathAbs(repoRoot, "mcda_matrix_v0", registry);
+
+const runtimePath = path.join(mcdaPackRoot, "runtime", "mcda_score_wsm_minmax_v0.mjs");
+const casesPath = path.join(mcdaPackRoot, "examples", "pos", "pos_cases_v0.json");
 
 const schemaPaths = [
-  "packs/mcda_matrix_v0/ds/ds.mcda_alternative_v1.json",
-  "packs/mcda_matrix_v0/ds/ds.mcda_criterion_v1.json",
-  "packs/mcda_matrix_v0/ds/ds.mcda_evaluation_v1.json",
-  "packs/mcda_matrix_v0/ds/ds.mcda_constraint_v1.json",
-  "packs/mcda_matrix_v0/ds/ds.mcda_problem_v1.json",
-  "packs/mcda_matrix_v0/ds/ds.mcda_method_config_v1.json",
-  "packs/mcda_matrix_v0/ds/ds.mcda_score_result_v1.json",
-  "packs/mcda_matrix_v0/env/env.mcda_score_request_v1.json"
+  path.join(mcdaPackRoot, "ds", "ds.mcda_alternative_v1.json"),
+  path.join(mcdaPackRoot, "ds", "ds.mcda_criterion_v1.json"),
+  path.join(mcdaPackRoot, "ds", "ds.mcda_evaluation_v1.json"),
+  path.join(mcdaPackRoot, "ds", "ds.mcda_constraint_v1.json"),
+  path.join(mcdaPackRoot, "ds", "ds.mcda_problem_v1.json"),
+  path.join(mcdaPackRoot, "ds", "ds.mcda_method_config_v1.json"),
+  path.join(mcdaPackRoot, "ds", "ds.mcda_score_result_v1.json"),
+  path.join(mcdaPackRoot, "env", "env.mcda_score_request_v1.json")
 ];
 
 const EPSILON = 1e-4;
@@ -39,6 +30,16 @@ const EPSILON = 1e-4;
 function readJson(relPath) {
   const absPath = path.isAbsolute(relPath) ? relPath : path.join(repoRoot, relPath);
   return JSON.parse(fs.readFileSync(absPath, "utf8"));
+}
+
+function resolvePackRef(relPath) {
+  if (!relPath) return relPath;
+  const normalized = relPath.replace(/\\/g, "/");
+  const prefix = "packs/mcda_matrix_v0/";
+  if (normalized.startsWith(prefix)) {
+    return path.join(mcdaPackRoot, normalized.slice(prefix.length));
+  }
+  return relPath;
 }
 
 function ensureDir(dirPath) {
@@ -80,7 +81,7 @@ function buildAjv() {
 }
 
 function validateResult(ajv, result) {
-  const schema = readJson("packs/mcda_matrix_v0/ds/ds.mcda_score_result_v1.json");
+  const schema = readJson(path.join(mcdaPackRoot, "ds", "ds.mcda_score_result_v1.json"));
   const valid = ajv.validate(schema.$id, result);
   return { valid, errors: ajv.errors || [] };
 }
@@ -148,7 +149,8 @@ function main() {
       caseErrors.push("missing env_file in case");
     }
 
-    const env = testCase.env_file ? readJson(testCase.env_file) : null;
+    const envPathSrc = resolvePackRef(testCase.env_file);
+    const env = envPathSrc ? readJson(envPathSrc) : null;
     const envPath = path.join(baseDir, `case_${caseId}_env.json`);
     if (env) {
       fs.writeFileSync(envPath, JSON.stringify(env, null, 2));
@@ -219,7 +221,7 @@ function main() {
     report.cases.push({
       id: caseId,
       problem_file: testCase.problem_file,
-      env_file: testCase.env_file || null,
+      env_file: envPathSrc ? path.relative(repoRoot, envPathSrc).replace(/\\/g, "/") : null,
       pass: casePass,
       errors: caseErrors,
       env: env ? path.relative(repoRoot, envPath).replace(/\\/g, "/") : null,

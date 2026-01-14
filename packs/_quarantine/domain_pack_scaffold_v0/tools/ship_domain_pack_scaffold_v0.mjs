@@ -4,10 +4,13 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import crypto from "node:crypto";
 import { spawnSync } from "node:child_process";
+import { loadStationRegistry, resolvePackPathAbs } from "../../../../tools/station_registry_helpers_v0.mjs";
 
-const repoRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
-const generatorScript = path.join(repoRoot, "packs", "agent_profile_v0", "tools", "agent_profile_generate_v0.mjs");
-const defaultRequest = path.join(repoRoot, "packs", "agent_profile_v0", "docs", "examples", "pos", "agent_profile_request_min.json");
+const repoRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "..");
+const registry = loadStationRegistry(repoRoot);
+const packDir = resolvePackPathAbs(repoRoot, "domain_pack_scaffold_v0", registry);
+const generatorScript = path.join(packDir, "tools", "domain_pack_scaffold_generate_v0.mjs");
+const defaultRequest = path.join(packDir, "docs", "examples", "pos", "domain_pack_scaffold_request_min.json");
 
 function ensureDir(dirPath) {
   fs.mkdirSync(dirPath, { recursive: true });
@@ -79,7 +82,7 @@ function run() {
   fs.cpSync(bundleDir, bundleTarget, { recursive: true });
 
   const manifest = {
-    agent_id: "agent_profile",
+    agent_id: "domain_pack_scaffold",
     mova_version: "4.1.1",
     created_at: new Date().toISOString(),
     files: computeFiles(bundleTarget)
@@ -99,6 +102,6 @@ function run() {
 try {
   run();
 } catch (error) {
-  console.error(`[ship_agent_profile] ${error.message}`);
+  console.error(`[ship_domain_pack_scaffold] ${error.message}`);
   process.exit(1);
 }

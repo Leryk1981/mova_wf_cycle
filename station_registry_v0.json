@@ -1,0 +1,20 @@
+{
+  "station_core": {
+    "allowed_pack_ids": [
+      "agent_runner_v0"
+    ],
+    "quarantine_dir": "packs/_quarantine",
+    "golden_dir": "packs"
+  },
+  "executors_policy": {
+    "cloudflare": {
+      "opt_in_env": "CF_ENABLE",
+      "default_enabled": false
+    },
+    "opencode": {
+      "opt_in_env": "OPENCODE_ENABLE",
+      "default_enabled": false
+    }
+  },
+  "notes": "Station core keeps agent_runner_v0 in packs/, moves other packs to packs/_quarantine, and treats Cloudflare/OpenCode executors as opt-in only."
+}

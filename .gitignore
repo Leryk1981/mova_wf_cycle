@@ -37,6 +37,8 @@ executors/cloudflare_worker_gateway_v0/worker/wrangler.dev.jsonc
 lab/flashslot_runs/
 lab/episodes/
 lab/repo_snapshot_runs/
+lab/examples/wf_cycle_public_fixture/compare/**
+!lab/examples/wf_cycle_public_fixture/compare/ABC_summary.md
 lab/secrets/
 
 
@@ -44,6 +46,7 @@ lab/secrets/
 skills/skill_ingest_run_with_skillseeker_basic/tests/tmp*/
 /artifacts/run_gates/*
 !/artifacts/run_gates/.gitkeep
+/artifacts/audit_station/**
 /artifacts/station_cycle/**
 /artifacts/finish_branch/**
 /artifacts/flashslot_publish/**

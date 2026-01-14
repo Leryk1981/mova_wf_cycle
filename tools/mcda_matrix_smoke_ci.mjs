@@ -5,26 +5,23 @@ import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 import Ajv2020 from "ajv/dist/2020.js";
 import addFormats from "ajv-formats";
+import { loadStationRegistry, resolvePackPathAbs } from "./station_registry_helpers_v0.mjs";
 
 const repoRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
+const registry = loadStationRegistry(repoRoot);
+const mcdaPackRoot = resolvePackPathAbs(repoRoot, "mcda_matrix_v0", registry);
 
-const runtimePath = path.join(
-  repoRoot,
-  "packs",
-  "mcda_matrix_v0",
-  "runtime",
-  "mcda_score_wsm_minmax_v0.mjs"
-);
+const runtimePath = path.join(mcdaPackRoot, "runtime", "mcda_score_wsm_minmax_v0.mjs");
 
 const schemaPaths = [
-  "packs/mcda_matrix_v0/ds/ds.mcda_alternative_v1.json",
-  "packs/mcda_matrix_v0/ds/ds.mcda_criterion_v1.json",
-  "packs/mcda_matrix_v0/ds/ds.mcda_evaluation_v1.json",
-  "packs/mcda_matrix_v0/ds/ds.mcda_constraint_v1.json",
-  "packs/mcda_matrix_v0/ds/ds.mcda_problem_v1.json",
-  "packs/mcda_matrix_v0/ds/ds.mcda_method_config_v1.json",
-  "packs/mcda_matrix_v0/ds/ds.mcda_score_result_v1.json",
-  "packs/mcda_matrix_v0/env/env.mcda_score_request_v1.json"
+  path.join(mcdaPackRoot, "ds", "ds.mcda_alternative_v1.json"),
+  path.join(mcdaPackRoot, "ds", "ds.mcda_criterion_v1.json"),
+  path.join(mcdaPackRoot, "ds", "ds.mcda_evaluation_v1.json"),
+  path.join(mcdaPackRoot, "ds", "ds.mcda_constraint_v1.json"),
+  path.join(mcdaPackRoot, "ds", "ds.mcda_problem_v1.json"),
+  path.join(mcdaPackRoot, "ds", "ds.mcda_method_config_v1.json"),
+  path.join(mcdaPackRoot, "ds", "ds.mcda_score_result_v1.json"),
+  path.join(mcdaPackRoot, "env", "env.mcda_score_request_v1.json")
 ];
 
 function readJson(relPath) {
@@ -49,7 +46,7 @@ function main() {
   const artifactsDir = path.join(repoRoot, "artifacts", "mcda_matrix", runId);
   ensureDir(artifactsDir);
 
-  const inputEnv = readJson("packs/mcda_matrix_v0/examples/pos/mcda_score_request_small_v0.json");
+  const inputEnv = readJson(path.join(mcdaPackRoot, "examples", "pos", "mcda_score_request_small_v0.json"));
 
   const inputPath = path.join(artifactsDir, "input_env.json");
   fs.writeFileSync(inputPath, JSON.stringify(inputEnv, null, 2));
@@ -74,7 +71,7 @@ function main() {
     if (schema.$id) ajv.addSchema(schema, schema.$id);
   }
 
-  const resultSchema = readJson("packs/mcda_matrix_v0/ds/ds.mcda_score_result_v1.json");
+  const resultSchema = readJson(path.join(mcdaPackRoot, "ds", "ds.mcda_score_result_v1.json"));
   const valid = ajv.validate(resultSchema.$id, result);
   const report = {
     ok: !!valid,

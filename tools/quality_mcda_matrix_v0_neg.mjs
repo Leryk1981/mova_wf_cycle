@@ -3,27 +3,27 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
+import { loadStationRegistry, resolvePackPathAbs } from "./station_registry_helpers_v0.mjs";
 
 const repoRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
-const runtimePath = path.join(
-  repoRoot,
-  "packs",
-  "mcda_matrix_v0",
-  "runtime",
-  "mcda_score_wsm_minmax_v0.mjs"
-);
-const casesPath = path.join(
-  repoRoot,
-  "packs",
-  "mcda_matrix_v0",
-  "examples",
-  "neg",
-  "neg_cases_v0.json"
-);
+const registry = loadStationRegistry(repoRoot);
+const mcdaPackRoot = resolvePackPathAbs(repoRoot, "mcda_matrix_v0", registry);
+const runtimePath = path.join(mcdaPackRoot, "runtime", "mcda_score_wsm_minmax_v0.mjs");
+const casesPath = path.join(mcdaPackRoot, "examples", "neg", "neg_cases_v0.json");
 
 function readJson(relPath) {
   const absPath = path.isAbsolute(relPath) ? relPath : path.join(repoRoot, relPath);
   return JSON.parse(fs.readFileSync(absPath, "utf8"));
+}
+
+function resolvePackRef(relPath) {
+  if (!relPath) return relPath;
+  const normalized = relPath.replace(/\\/g, "/");
+  const prefix = "packs/mcda_matrix_v0/";
+  if (normalized.startsWith(prefix)) {
+    return path.join(mcdaPackRoot, normalized.slice(prefix.length));
+  }
+  return relPath;
 }
 
 function ensureDir(dirPath) {
@@ -73,7 +73,8 @@ function main() {
       report.status = "fail";
     }
 
-    const env = testCase.env_file ? readJson(testCase.env_file) : null;
+    const envPathSrc = resolvePackRef(testCase.env_file);
+    const env = envPathSrc ? readJson(envPathSrc) : null;
     const envPath = path.join(baseDir, `case_${caseId}_env.json`);
     if (env) {
       fs.writeFileSync(envPath, JSON.stringify(env, null, 2));
@@ -88,6 +89,7 @@ function main() {
       id: caseId,
       problem_file: testCase.problem_file,
       env_file: testCase.env_file || null,
+      env_resolved: envPathSrc ? path.relative(repoRoot, envPathSrc).replace(/\\/g, "/") : null,
       expected_fail: expectedFail,
       exit_code: result.exit_code,
       pass,
